@@ -8,12 +8,18 @@ import 'package:epesantren_mob/app/api/address/kota_kab/kota_kab_repository.dart
 import 'package:epesantren_mob/app/api/address/provinsi/provinsi_api.dart';
 import 'package:epesantren_mob/app/api/address/provinsi/provinsi_model.dart';
 import 'package:epesantren_mob/app/api/address/provinsi/provinsi_repository.dart';
+import 'package:epesantren_mob/app/api/auth/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 class RegisterController extends GetxController {
+  final AuthRepository _authRepository;
+
+  RegisterController(this._authRepository);
+
   RxList<ProvinsModel> provinsiDataList = <ProvinsModel>[].obs;
+
   // Repositories
   late ProvinsiRepository provinsiRepository;
   late final KotaKabRepository kotaKabRepository;
@@ -45,6 +51,7 @@ class RegisterController extends GetxController {
   RxBool isLoadingDistrict = false.obs;
   RxBool isLoadingKecamatan = false.obs;
   RxBool isLoadingDesaKelurahan = false.obs;
+
   Future<void> fetchProvinsi() async {
     try {
       final data = await provinsiRepository.provinsiResponse();
@@ -121,6 +128,8 @@ class RegisterController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final ImagePicker picker = ImagePicker();
 
+  final isLoading = false.obs;
+
   // NAVIGASI STEP
   void nextStep() {
     if (stepIndex.value < 7) {
@@ -158,6 +167,7 @@ class RegisterController extends GetxController {
 
   // LIST NON FORMAL DINAMIS
   final pendidikanNonFormal = <String>[].obs;
+
   // RIWAYAT PENDIDIKAN
   final sd = ''.obs;
   final smp = ''.obs;
@@ -165,6 +175,7 @@ class RegisterController extends GetxController {
   final s1 = ''.obs;
   final s2 = ''.obs;
   final s3 = ''.obs;
+
   void tambahPendidikanNonFormal() {
     pendidikanNonFormal.add('');
   }
@@ -176,23 +187,59 @@ class RegisterController extends GetxController {
     organisasiList.add('');
   }
 
-  // SUBMIT AKHIR (DUMMY DULU)
-  void submitAkhir() {
-    final data = {
-      "pengguna": pengguna.value,
-      "nama": namaLengkap.value,
-      "panggilan": namaPanggilan.value,
+  // SUBMIT AKHIR
+  Future<void> submitAkhir() async {
+    // Form validation could be added here
+
+    final payload = {
+      "full_name": namaLengkap.value,
+      "nick_name": namaPanggilan.value,
       "nik": nik.value,
       "phone": phone.value,
-      "alamat": alamatLengkap.value,
+      "birth_place": tempatLahir.value,
+      "birth_date": tanggalLahir.value,
+      "gender": jenisKelamin.value,
+      "job": pekerjaan.value,
+      "province_id": selectedProvinsi.value?.id,
+      "district_id": selectedDistrict.value?.id,
+      "subdistrict_id": selectedKecamatan.value?.id,
+      "village_id": selectedDesaKelurahan.value?.id,
+      "address": alamatLengkap.value,
       "rt": rt.value,
       "rw": rw.value,
-      "pekerjaan": pekerjaan.value,
-      "fotoProfil": fotoProfil.value?.path,
-      "berkas1": fotoBerkas1.value?.path,
+      "pendidikan": {
+        "sd": sd.value,
+        "smp": smp.value,
+        "sma": sma.value,
+        "s1": s1.value,
+        "non_formal": pendidikanNonFormal,
+      },
+      "organisasi": organisasiList,
     };
 
-    debugPrint(data.toString());
-    Get.snackbar("REGISTER", "Semua data sudah lengkap (dummy)");
+    try {
+      isLoading.value = true;
+      final success = await _authRepository.register(payload);
+
+      if (success) {
+        Get.snackbar("Sukses", "Pendaftaran berhasil terkirim.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white);
+        Get.offAllNamed('/login');
+      } else {
+        Get.snackbar("Gagal", "Terjadi kesalahan saat mendaftar.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar("Error", e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

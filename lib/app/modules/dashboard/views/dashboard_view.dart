@@ -132,60 +132,105 @@ class HomePage extends GetView<DashboardController> {
   }
 
   Widget _beritaTab() {
-    return GetX<DashboardController>(
-      builder: (c) {
-        return Column(
-          children: [
-            Row(
-              children: List.generate(
-                c.beritaTabs.length,
-                (i) => Expanded(
-                  child: GestureDetector(
-                    onTap: () => c.changeBerita(i),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: c.selectedBeritaIndex.value == i
-                            ? Colors.grey.shade300
-                            : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        c.beritaTabs[i],
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
+    return Obx(() {
+      if (controller.isLoadingBerita.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (controller.beritaList.isEmpty) {
+        return const Center(child: Text("Belum ada berita terbaru"));
+      }
+
+      return Column(
+        children: [
+          SizedBox(
+            height: 100,
+            child: PageView.builder(
+              itemCount: controller.beritaList.length,
+              onPageChanged: (i) => controller.changeBerita(i),
+              itemBuilder: (context, i) {
+                final berita = controller.beritaList[i];
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                      )
+                    ],
                   ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(12)),
+                        child: berita.image != null
+                            ? Image.network(berita.image!,
+                                width: 100, height: 100, fit: BoxFit.cover)
+                            : Container(
+                                width: 100,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image)),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                berita.category ?? "News",
+                                style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                berita.title ?? "",
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              controller.beritaList.length,
+              (i) => Container(
+                width: controller.selectedBeritaIndex.value == i ? 16 : 8,
+                height: 4,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: controller.selectedBeritaIndex.value == i
+                      ? Colors.black
+                      : Colors.grey,
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
-
-            const SizedBox(height: 6),
-
-            // Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                c.beritaTabs.length,
-                (i) => Container(
-                  width: 8,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: c.selectedBeritaIndex.value == i
-                        ? Colors.black
-                        : Colors.grey,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            )
-          ],
-        );
-      },
-    );
+          )
+        ],
+      );
+    });
   }
 
   Widget _menuList() {

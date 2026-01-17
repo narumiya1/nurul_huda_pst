@@ -38,8 +38,9 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 30),
               const Text("Username"),
               TextField(
-                onChanged: (v) => controller.username.value = v,
+                controller: controller.emailController,
                 decoration: InputDecoration(
+                  hintText: "Email atau Username",
                   filled: true,
                   fillColor: Colors.grey.shade200,
                   border: OutlineInputBorder(
@@ -51,9 +52,10 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 16),
               const Text("Password"),
               TextField(
+                controller: controller.passwordController,
                 obscureText: true,
-                onChanged: (v) => controller.password.value = v,
                 decoration: InputDecoration(
+                  hintText: "Password",
                   filled: true,
                   fillColor: Colors.grey.shade200,
                   border: OutlineInputBorder(
@@ -64,15 +66,25 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: controller.loginProcess,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text("MASUK"),
-                ),
+                child: Obx(() => ElevatedButton(
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : controller.loginProcess,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff0F3D26),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: controller.isLoading.value
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text("MASUK"),
+                    )),
               ),
               const SizedBox(height: 20),
               Center(

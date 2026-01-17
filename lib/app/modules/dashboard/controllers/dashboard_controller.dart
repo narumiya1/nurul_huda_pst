@@ -1,12 +1,31 @@
+import 'package:epesantren_mob/app/api/news/news_model.dart';
+import 'package:epesantren_mob/app/api/news/news_repository.dart';
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
-  //TODO: Implement DashboardController
+  final NewsRepository _newsRepository;
 
-  final count = 0.obs;
+  DashboardController(this._newsRepository);
+
+  final beritaList = <BeritaModel>[].obs;
+  final isLoadingBerita = false.obs;
+
   @override
   void onInit() {
     super.onInit();
+    fetchBerita();
+  }
+
+  Future<void> fetchBerita() async {
+    try {
+      isLoadingBerita.value = true;
+      final data = await _newsRepository.getAllNews();
+      beritaList.assignAll(data);
+    } catch (e) {
+      Get.snackbar("Error", "Gagal memuat berita: $e");
+    } finally {
+      isLoadingBerita.value = false;
+    }
   }
 
   var selectedIndex = 0.obs;
@@ -18,25 +37,7 @@ class DashboardController extends GetxController {
   final selectedBeritaIndex = 0.obs;
   final bottomIndex = 0.obs;
 
-  final beritaTabs = [
-    'Berita Terbaru',
-    'Berita 1',
-    'Berita 2',
-    'Berita 3',
-  ];
   void changeBerita(int index) {
     selectedBeritaIndex.value = index;
   }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
 }

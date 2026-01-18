@@ -30,17 +30,18 @@ class GlassmorphicCard extends StatelessWidget {
         child: Container(
           padding: padding ?? const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: gradient ?? LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(opacity + 0.1),
-                Colors.white.withOpacity(opacity),
-              ],
-            ),
+            gradient: gradient ??
+                LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: opacity + 0.1),
+                    Colors.white.withValues(alpha: opacity),
+                  ],
+                ),
             borderRadius: borderRadius ?? BorderRadius.circular(20),
             border: Border.all(
-              color: borderColor ?? Colors.white.withOpacity(0.2),
+              color: borderColor ?? Colors.white.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -118,16 +119,19 @@ class _AnimatedCardState extends State<AnimatedCard>
               margin: widget.margin,
               padding: widget.padding ?? const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: widget.gradient == null ? (widget.color ?? Colors.white) : null,
+                color: widget.gradient == null
+                    ? (widget.color ?? Colors.white)
+                    : null,
                 gradient: widget.gradient,
                 borderRadius: widget.borderRadius ?? BorderRadius.circular(20),
-                boxShadow: widget.boxShadow ?? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: widget.boxShadow ??
+                    [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
               ),
               child: widget.child,
             ),

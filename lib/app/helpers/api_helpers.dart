@@ -16,8 +16,6 @@ class ApiHelper {
         uri,
         headers: header,
       );
-      // Debug basic info
-      print('API GET: $uri -> status=${response.statusCode}');
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {
@@ -55,8 +53,6 @@ class ApiHelper {
       final response = await client.get(
         uri,
       );
-      // Debug basic info
-      print('API GET: $uri -> status=${response.statusCode}');
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {
@@ -96,7 +92,7 @@ class ApiHelper {
         uri,
         headers: header,
       );
-      print('API DELETE: $uri -> status=${response.statusCode}');
+      // debug removed
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {
@@ -138,7 +134,7 @@ class ApiHelper {
         headers: header,
         body: jsonEncode(jsonBody),
       );
-      print('API POST: $uri -> status=${response.statusCode}');
+      // debug removed
       switch (response.statusCode) {
         case HttpStatus.ok:
         case HttpStatus.created:
@@ -184,7 +180,7 @@ class ApiHelper {
         headers: header,
         body: jsonEncode(jsonBody),
       );
-      print('API PATCH: $uri -> status=${response.statusCode}');
+      // debug removed
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {
@@ -247,7 +243,7 @@ class ApiHelper {
 
       final streamedRespoonse = await x.send();
       final response = await http.Response.fromStream(streamedRespoonse);
-      print('API MULTIPART POST: $uri -> status=${response.statusCode}');
+      // debug removed
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {

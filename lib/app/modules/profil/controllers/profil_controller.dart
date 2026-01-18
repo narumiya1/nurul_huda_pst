@@ -47,7 +47,7 @@ class ProfilController extends GetxController {
           TextButton(
             onPressed: () async {
               await LocalStorage.clearAll();
-              Get.offAllNamed(Routes.WELCOME);
+              Get.offAllNamed(Routes.welcome);
             },
             child: const Text('Keluar', style: TextStyle(color: Colors.red)),
           ),

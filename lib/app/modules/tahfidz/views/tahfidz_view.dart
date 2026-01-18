@@ -60,7 +60,7 @@ class TahfidzView extends GetView<TahfidzController> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00B894).withOpacity(0.3),
+                color: const Color(0xFF00B894).withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -207,7 +207,7 @@ class TahfidzView extends GetView<TahfidzController> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

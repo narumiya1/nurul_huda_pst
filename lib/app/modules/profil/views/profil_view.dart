@@ -63,11 +63,11 @@ class ProfilView extends GetView<ProfilController> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border:
-                  Border.all(color: Colors.white.withOpacity(0.5), width: 3),
+                  Border.all(color: Colors.white.withValues(alpha: 0.5), width: 3),
             ),
             child: CircleAvatar(
               radius: 50,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               child: const Icon(Icons.person, size: 56, color: Colors.white),
             ),
           ),
@@ -84,7 +84,7 @@ class ProfilView extends GetView<ProfilController> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Obx(() => Text(
@@ -126,7 +126,7 @@ class ProfilView extends GetView<ProfilController> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: AppColors.primary),
@@ -189,7 +189,7 @@ class ProfilView extends GetView<ProfilController> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: (isLogout ? AppColors.error : AppColors.primary)
-                    .withOpacity(0.1),
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon,

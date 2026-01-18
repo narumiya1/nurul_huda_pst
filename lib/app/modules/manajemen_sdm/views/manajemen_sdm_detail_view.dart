@@ -53,11 +53,11 @@ class ManajemenSdmDetailView extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: AppColors.primary.withOpacity(0.2), width: 2),
+                  color: AppColors.primary.withValues(alpha: 0.2), width: 2),
             ),
             child: CircleAvatar(
               radius: 40,
-              backgroundColor: AppColors.primary.withOpacity(0.1),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
               backgroundImage:
                   (user['original']?['details']?['photo_url'] != null)
                       ? NetworkImage(user['original']['details']['photo_url']!)
@@ -104,9 +104,9 @@ class ManajemenSdmDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         text,

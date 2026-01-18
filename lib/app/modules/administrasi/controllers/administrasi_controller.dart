@@ -83,7 +83,7 @@ class AdministrasiController extends GetxController {
           return;
         }
       } catch (e) {
-        print('Error fetching real administrasi data: $e');
+        // Handle error silently
       }
 
       // Fallback or Initial Mock Data
@@ -189,7 +189,7 @@ class AdministrasiController extends GetxController {
         'Mengunduh',
         'Sedang menyiapkan berkas $fileName...',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.primary.withOpacity(0.1),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
         colorText: AppColors.primary,
         duration: const Duration(seconds: 2),
       );
@@ -210,7 +210,7 @@ class AdministrasiController extends GetxController {
         'Berhasil',
         'Berkas $fileName berhasil diunduh ke folder Download.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success.withOpacity(0.1),
+        backgroundColor: AppColors.success.withValues(alpha: 0.1),
         colorText: AppColors.success,
         icon: const Icon(Icons.check_circle, color: AppColors.success),
       );
@@ -219,7 +219,7 @@ class AdministrasiController extends GetxController {
         'Gagal',
         'Terjadi kesalahan saat mengunduh berkas.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.error.withOpacity(0.1),
+        backgroundColor: AppColors.error.withValues(alpha: 0.1),
         colorText: AppColors.error,
       );
     }

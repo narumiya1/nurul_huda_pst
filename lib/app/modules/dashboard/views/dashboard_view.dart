@@ -163,7 +163,7 @@ class HomePage extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -175,12 +175,12 @@ class HomePage extends GetView<DashboardController> {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border:
-                  Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5), width: 2),
             ),
             child: CircleAvatar(
               radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               child: const Icon(
                 Icons.person,
                 color: Colors.white,
@@ -218,7 +218,7 @@ class HomePage extends GetView<DashboardController> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Obx(() => Text(
@@ -236,7 +236,7 @@ class HomePage extends GetView<DashboardController> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -317,7 +317,7 @@ class HomePage extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -439,7 +439,7 @@ class HomePage extends GetView<DashboardController> {
                         : Container(
                             width: 100,
                             height: 180,
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             child: const Icon(Icons.image,
                                 color: AppColors.primary, size: 40),
                           ),
@@ -454,7 +454,7 @@ class HomePage extends GetView<DashboardController> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
+                              color: AppColors.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -565,7 +565,6 @@ class HomePage extends GetView<DashboardController> {
 
     return Obx(() {
       final role = controller.userRole.toLowerCase();
-      print('Current user role: $role');
 
       // Filter items based on role
       final filteredItems = allMenuItems.where((item) {
@@ -579,8 +578,6 @@ class HomePage extends GetView<DashboardController> {
       // If no menu items match, show all items (for debugging or unrecognized roles)
       final displayItems = filteredItems.isEmpty ? allMenuItems : filteredItems;
 
-      print('Filtered items count: ${filteredItems.length}');
-      print('Display items count: ${displayItems.length}');
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -597,50 +594,47 @@ class HomePage extends GetView<DashboardController> {
             onTap: () {
               try {
                 final title = item['title']?.toString() ?? 'Fitur';
-                print('Attempting to navigate to: $title');
 
                 switch (title) {
                   case 'Master Data':
-                    Get.toNamed(Routes.MANAJEMEN_SDM);
+                    Get.toNamed(Routes.manajemenSdm);
                     break;
                   case 'Keuangan':
-                    Get.toNamed(Routes.KEUANGAN);
+                    Get.toNamed(Routes.keuangan);
                     break;
                   case 'PSB':
-                    Get.toNamed(Routes.PSB);
+                    Get.toNamed(Routes.psb);
                     break;
                   case 'Akademik & Pondok':
-                    Get.toNamed(Routes.AKADEMIK_PONDOK);
+                    Get.toNamed(Routes.akademikPondok);
                     break;
                   case 'Pondok':
-                    Get.toNamed(Routes.PONDOK);
+                    Get.toNamed(Routes.pondok);
                     break;
                   case 'Tahfidz':
-                    Get.toNamed(Routes.TAHFIDZ);
+                    Get.toNamed(Routes.tahfidz);
                     break;
                   case 'Administrasi':
-                    Get.toNamed(Routes.ADMINISTRASI);
+                    Get.toNamed(Routes.administrasi);
                     break;
                   case 'Akademik':
-                    Get.toNamed(Routes.AKTIVITAS);
+                    Get.toNamed(Routes.aktivitas);
                     break;
                   case 'Kedisiplinan':
                   case 'Absensi':
-                    Get.toNamed(Routes.ABSENSI);
+                    Get.toNamed(Routes.absensi);
                     break;
                   case 'Monitoring':
-                    Get.toNamed(Routes.MONITORING);
+                    Get.toNamed(Routes.monitoring);
                     break;
                   case 'Profil':
-                    Get.toNamed(Routes.PROFIL);
+                    Get.toNamed(Routes.profil);
                     break;
                   default:
-                    print('Navigating to placeholder for: $title');
-                    Get.toNamed(Routes.FEATURE_PLACEHOLDER, arguments: title);
+                    Get.toNamed(Routes.featurePlaceholder, arguments: title);
                 }
-              } catch (e, stack) {
-                print('Navigation error: $e');
-                print('Stack trace: $stack');
+              } catch (e) {
+                // Navigation error
               }
             },
             child: Column(
@@ -651,7 +645,7 @@ class HomePage extends GetView<DashboardController> {
                     color: (item['color'] is Color
                             ? item['color'] as Color
                             : Colors.grey)
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Icon(
@@ -702,7 +696,7 @@ class ChatPage extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -750,7 +744,7 @@ class NotifikasiPage extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.accentOrange.withOpacity(0.1),
+                color: AppColors.accentOrange.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -809,11 +803,11 @@ class ProfilPage extends GetView<DashboardController> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.5), width: 3),
+                          color: Colors.white.withValues(alpha: 0.5), width: 3),
                     ),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       child: const Icon(Icons.person,
                           size: 56, color: Colors.white),
                     ),
@@ -832,7 +826,7 @@ class ProfilPage extends GetView<DashboardController> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Obx(() => Text(
@@ -903,7 +897,7 @@ class ProfilPage extends GetView<DashboardController> {
                       );
                       if (confirm == true) {
                         await LocalStorage.clearAll();
-                        Get.offAllNamed(Routes.WELCOME);
+                        Get.offAllNamed(Routes.welcome);
                       }
                     },
                   ),
@@ -938,8 +932,8 @@ class ProfilPage extends GetView<DashboardController> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isLogout
-                    ? AppColors.error.withOpacity(0.1)
-                    : AppColors.primary.withOpacity(0.1),
+                    ? AppColors.error.withValues(alpha: 0.1)
+                    : AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

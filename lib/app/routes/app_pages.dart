@@ -38,89 +38,89 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.WELCOME;
+  static const initial = Routes.welcome;
 
   static final routes = [
     GetPage(
-      name: _Paths.WELCOME,
+      name: _Paths.welcome,
       page: () => const WelcomeView(),
       binding: WelcomeBinding(),
     ),
     GetPage(
-      name: _Paths.LOGIN,
+      name: _Paths.login,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),
     GetPage(
-      name: _Paths.REGISTER,
+      name: _Paths.register,
       page: () => const RegisterView(),
       binding: RegisterBinding(),
     ),
     GetPage(
-      name: _Paths.DASHBOARD,
+      name: _Paths.dashboard,
       page: () => const DashboardView(),
       binding: DashboardBinding(),
     ),
     GetPage(
-      name: _Paths.FEATURE_PLACEHOLDER,
+      name: _Paths.featurePlaceholder,
       page: () => const FeaturePlaceholderView(),
     ),
     GetPage(
-      name: _Paths.KEUANGAN,
+      name: _Paths.keuangan,
       page: () => const KeuanganView(),
       binding: KeuanganBinding(),
     ),
     GetPage(
-      name: _Paths.ABSENSI,
+      name: _Paths.absensi,
       page: () => const AbsensiView(),
       binding: AbsensiBinding(),
     ),
     GetPage(
-      name: _Paths.TAHFIDZ,
+      name: _Paths.tahfidz,
       page: () => const TahfidzView(),
       binding: TahfidzBinding(),
     ),
     GetPage(
-      name: _Paths.AKTIVITAS,
+      name: _Paths.aktivitas,
       page: () => const AktivitasView(),
       binding: AktivitasBinding(),
     ),
     GetPage(
-      name: _Paths.PROFIL,
+      name: _Paths.profil,
       page: () => const ProfilView(),
       binding: ProfilBinding(),
     ),
     GetPage(
-      name: _Paths.MANAJEMEN_SDM,
+      name: _Paths.manajemenSdm,
       page: () => const ManajemenSdmView(),
       binding: ManajemenSdmBinding(),
     ),
     GetPage(
-      name: _Paths.MANAJEMEN_SDM_DETAIL,
+      name: _Paths.manajemenSdmDetail,
       page: () => const ManajemenSdmDetailView(),
     ),
     GetPage(
-      name: _Paths.PSB,
+      name: _Paths.psb,
       page: () => const PsbView(),
       binding: PsbBinding(),
     ),
     GetPage(
-      name: _Paths.PONDOK,
+      name: _Paths.pondok,
       page: () => const PondokView(),
       binding: PondokBinding(),
     ),
     GetPage(
-      name: _Paths.ADMINISTRASI,
+      name: _Paths.administrasi,
       page: () => const AdministrasiView(),
       binding: AdministrasiBinding(),
     ),
     GetPage(
-      name: _Paths.MONITORING,
+      name: _Paths.monitoring,
       page: () => const MonitoringView(),
       binding: MonitoringBinding(),
     ),
     GetPage(
-      name: _Paths.AKADEMIK_PONDOK,
+      name: _Paths.akademikPondok,
       page: () => const AkademikPondokView(),
       binding: AkademikPondokBinding(),
     ),

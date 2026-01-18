@@ -5,7 +5,8 @@ class ApiConfig {
   // For Remote Server: use the remote host address
 
   // === LOCAL DEVELOPMENT ===
-  static const baseUrlAddress = "10.0.2.2";
+  static const baseUrlAddress =
+      "192.168.18.76"; // Gunakan IP komputer untuk HP/Emulator
   static const port = "8000";
   static const useHttps = false;
 

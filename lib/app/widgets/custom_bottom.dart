@@ -16,7 +16,7 @@ class CustomBottomNav extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -27,9 +27,12 @@ class CustomBottomNav extends GetView<DashboardController> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(Icons.home_rounded, Icons.home_outlined, "Beranda", 0),
-            _navItem(Icons.chat_bubble_rounded, Icons.chat_bubble_outline_rounded, "Pesan", 1),
-            _navItem(Icons.notifications_rounded, Icons.notifications_outlined, "Notifikasi", 2),
-            _navItem(Icons.person_rounded, Icons.person_outline_rounded, "Profil", 3),
+            _navItem(Icons.chat_bubble_rounded,
+                Icons.chat_bubble_outline_rounded, "Pesan", 1),
+            _navItem(Icons.notifications_rounded, Icons.notifications_outlined,
+                "Notifikasi", 2),
+            _navItem(Icons.person_rounded, Icons.person_outline_rounded,
+                "Profil", 3),
           ],
         ),
       ),
@@ -49,7 +52,9 @@ class CustomBottomNav extends GetView<DashboardController> {
           vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(

@@ -55,7 +55,7 @@ class PimpinanApi {
 
   /// Fetch Dashboard stats for Pimpinan
   Future<Map<String, dynamic>> getDashboardStats() async {
-    final uri = ApiHelper.buildUri(endpoint: 'homepage');
+    final uri = ApiHelper.buildUri(endpoint: 'dashboard-stats');
 
     return await _apiHelper.getData(
       uri: uri,
@@ -131,12 +131,12 @@ class PimpinanApi {
   }
 
   /// Fetch Master Data Users (General Sdm)
-  /// Types: santri, guru, staff, orangtua, pimpinan, rois
+  /// Types: santri, guru, staff, orangtua, pimpinan, rois, siswa
   Future<Map<String, dynamic>> getUsersByType(String type,
       {String? search}) async {
     String endpoint;
-    if (type == 'staff') {
-      endpoint = 'staff';
+    if (type == 'siswa') {
+      endpoint = 'siswa';
     } else {
       endpoint = 'users/$type';
     }

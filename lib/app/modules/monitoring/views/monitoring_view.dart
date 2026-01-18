@@ -157,7 +157,7 @@ class MonitoringView extends GetView<MonitoringController> {
               const SizedBox(height: 12),
               LinearProgressIndicator(
                 value: item['progress'],
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 color: AppColors.primary,
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
@@ -212,7 +212,7 @@ class MonitoringView extends GetView<MonitoringController> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           progressColor: AppColors.primary,
-          backgroundColor: AppColors.primary.withOpacity(0.1),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
           circularStrokeCap: CircularStrokeCap.round,
         ),
         const SizedBox(height: 30),

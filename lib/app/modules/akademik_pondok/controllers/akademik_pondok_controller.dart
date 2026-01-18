@@ -69,11 +69,13 @@ class AkademikPondokController extends GetxController {
       }
 
       String? tingkatId;
-      if (selectedTingkat.value == 'VII')
+      if (selectedTingkat.value == 'VII') {
         tingkatId = '1';
-      else if (selectedTingkat.value == 'VIII')
+      } else if (selectedTingkat.value == 'VIII') {
         tingkatId = '2';
-      else if (selectedTingkat.value == 'IX') tingkatId = '3';
+      } else if (selectedTingkat.value == 'IX') {
+        tingkatId = '3';
+      }
 
       final response = await _pimpinanRepository.getLaporanAbsensi(
           startDate: startDate, endDate: endDate, tingkatId: tingkatId);
@@ -89,7 +91,7 @@ class AkademikPondokController extends GetxController {
         filteredLaporanAbsensi.assignAll(laporanAbsensi);
       }
     } catch (e) {
-      print('Error Absensi: $e');
+      // Handle error silently
       // Keep existing mock fallback if failed
     }
   }
@@ -117,7 +119,6 @@ class AkademikPondokController extends GetxController {
           }).toList());
         }
       } catch (e) {
-        print('Error fetching real kurikulum: $e');
         // Fallback or Initial Mock Data
         dataKurikulum.assignAll([
           {
@@ -169,10 +170,11 @@ class AkademikPondokController extends GetxController {
                 kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
               }
               // Try to extract score
-              if (item['nilai_akhir'] != null)
+              if (item['nilai_akhir'] != null) {
                 score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
-              else if (item['nilai'] != null)
+              } else if (item['nilai'] != null) {
                 score = double.tryParse(item['nilai'].toString()) ?? 0;
+              }
             }
 
             if (!groupedScores.containsKey(kelasName)) {
@@ -183,13 +185,14 @@ class AkademikPondokController extends GetxController {
 
           rekapNilai.assignAll(groupedScores.entries.map((entry) {
             final scores = entry.value;
-            if (scores.isEmpty)
+            if (scores.isEmpty) {
               return {
                 'tingkat': entry.key,
                 'rata_rata': 0.0,
                 'tertinggi': 0.0,
                 'terendah': 0.0
               };
+            }
             final avg = scores.reduce((a, b) => a + b) / scores.length;
             final max = scores.reduce((a, b) => a > b ? a : b);
             final min = scores.reduce((a, b) => a < b ? a : b);
@@ -201,11 +204,8 @@ class AkademikPondokController extends GetxController {
               'terendah': min
             };
           }).toList());
-        } else {
-          throw Exception('Empty data'); // Trigger fallback
         }
       } catch (e) {
-        print('Error Rekap: $e');
         rekapNilai.assignAll([
           {
             'tingkat': 'VII',
@@ -242,14 +242,9 @@ class AkademikPondokController extends GetxController {
                 'category': item['tipe'] ?? 'Umum'
               };
             }).toList());
-          } else {
-            throw Exception('Empty agenda');
-          }
-        } else {
-          throw Exception('No agenda data');
+          } else {}
         }
       } catch (e) {
-        print('Error Agenda: $e');
         agendaKegiatan.assignAll([
           {
             'time': '04:30',
@@ -278,10 +273,11 @@ class AkademikPondokController extends GetxController {
         // Assuming response is standard Laravel pagination or list
         List rawTahfidz = [];
         if (response['data'] != null) {
-          if (response['data'] is List)
+          if (response['data'] is List) {
             rawTahfidz = response['data'];
-          else if (response['data']['data'] is List)
+          } else if (response['data']['data'] is List) {
             rawTahfidz = response['data']['data'];
+          }
         }
 
         if (rawTahfidz.isNotEmpty) {
@@ -296,11 +292,8 @@ class AkademikPondokController extends GetxController {
               'type': 'Setoran Hafalan'
             };
           }).toList());
-        } else {
-          throw Exception('Empty tahfidz');
         }
       } catch (e) {
-        print('Error Tahfidz: $e');
         progressTahfidz.assignAll([
           {
             'nama': 'Kelompok Abu Bakar',
@@ -338,11 +331,8 @@ class AkademikPondokController extends GetxController {
             },
             {'label': 'Alpa', 'value': s['total_alpha'] ?? 0, 'color': 'red'},
           ]);
-        } else {
-          throw Exception('No summary');
         }
       } catch (e) {
-        print('Error Absensi: $e');
         laporanAbsensi.assignAll([
           {'label': 'Hadir', 'value': 280, 'color': 'green'},
           {'label': 'Izin', 'value': 12, 'color': 'blue'},

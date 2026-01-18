@@ -69,7 +69,7 @@ class AbsensiView extends GetView<AbsensiController> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -123,7 +123,7 @@ class AbsensiView extends GetView<AbsensiController> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(_getStatusIcon(status), color: color),
@@ -155,7 +155,7 @@ class AbsensiView extends GetView<AbsensiController> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

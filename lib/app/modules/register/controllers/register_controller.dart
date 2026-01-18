@@ -58,10 +58,7 @@ class RegisterController extends GetxController {
 
       provinsiDataList.assignAll(data);
       allprovinsiDataList.assignAll(data);
-
-      print('✅ ${provinsiDataList.length} provinsi loaded');
     } catch (e) {
-      print("❌ fetchProvinsi error: $e");
       Get.snackbar("Error", "Gagal memuat data provinsi");
     }
   }

@@ -38,7 +38,7 @@ class LoginController extends GetxController {
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.green,
             colorText: Colors.white);
-        Get.offAllNamed(Routes.DASHBOARD);
+        Get.offAllNamed(Routes.dashboard);
       } else {
         Get.snackbar("Login Gagal", "Email atau password salah",
             snackPosition: SnackPosition.BOTTOM,

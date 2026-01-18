@@ -126,7 +126,7 @@ class KeuanganController extends GetxController {
             return;
           }
         } catch (e) {
-          print('Error fetching real financial data: $e');
+          // Handle error silently
         }
 
         // Fallback to mock data if API fails or not pimpinan role

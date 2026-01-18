@@ -162,7 +162,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedSemester.value,
+                  initialValue: controller.selectedSemester.value,
                   items: ['Ganjil 2025/2026', 'Genap 2024/2025']
                       .map((s) => DropdownMenuItem(
                             value: s,
@@ -283,7 +283,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (menu['color'] as Color).withOpacity(0.1),
+                    color: (menu['color'] as Color).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(menu['icon'] as IconData,
@@ -389,7 +389,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: AppColors.accentBlue.withOpacity(0.1),
+                      color: AppColors.accentBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8)),
                   child: Text(item['time'],
                       style: const TextStyle(
@@ -403,7 +403,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -461,7 +461,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: item['percent'],
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     color: AppColors.primary,
                     minHeight: 10,
                     borderRadius: BorderRadius.circular(5),
@@ -539,7 +539,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.accentPurple.withOpacity(0.1),
+                          color: AppColors.accentPurple.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(

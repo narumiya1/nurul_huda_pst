@@ -7,31 +7,25 @@ class ProvinsiRepository {
 
   final ProvinsiApi api;
   // final PrefService _authService = Get.find<PrefService>();
-Future<List<ProvinsModel>> provinsiResponse() async {
-  try {
-    final result = await ApiHelper().getDataNoHeader(
-      uri: api.provinsiList(),
-      builder: (response) async {
-        print("RAW RESPONSE => $response");
+  Future<List<ProvinsModel>> provinsiResponse() async {
+    try {
+      final result = await ApiHelper().getDataNoHeader(
+        uri: api.provinsiList(),
+        builder: (response) async {
+          /// 🔥 ambil bagian "data" saja
+          final map = response['data'];
 
-        /// 🔥 ambil bagian "data" saja
-        final map = response['data'];
+          if (map is Map<String, dynamic>) {
+            return map.entries.map((e) => ProvinsModel.fromMap(e)).toList();
+          }
 
-        if (map is Map<String, dynamic>) {
-          return map.entries
-              .map((e) => ProvinsModel.fromMap(e))
-              .toList();
-        }
+          return <ProvinsModel>[];
+        },
+      );
 
-        return <ProvinsModel>[];
-      },
-    );
-
-    return result;
-  } catch (e) {
-    print("❌ provinsiResponse error: $e");
-    rethrow;
+      return result;
+    } catch (e) {
+      rethrow;
+    }
   }
-}
-
 }

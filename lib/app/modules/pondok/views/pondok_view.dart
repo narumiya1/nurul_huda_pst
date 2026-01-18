@@ -86,7 +86,7 @@ class PondokView extends GetView<PondokController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.cardShadow,
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +143,7 @@ class PondokView extends GetView<PondokController> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: (isFull ? AppColors.error : AppColors.primary)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -165,7 +165,7 @@ class PondokView extends GetView<PondokController> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: (isFull ? AppColors.error : AppColors.success)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(

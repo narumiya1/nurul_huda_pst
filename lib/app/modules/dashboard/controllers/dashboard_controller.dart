@@ -1,5 +1,10 @@
 import 'package:epesantren_mob/app/api/news/news_model.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:epesantren_mob/app/api/guru/guru_repository.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
+import 'package:epesantren_mob/app/api/rois/rois_repository.dart';
+import 'package:epesantren_mob/app/api/sdm/sdm_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:epesantren_mob/app/api/news/news_repository.dart';
 import 'package:get/get.dart';
@@ -7,8 +12,21 @@ import 'package:get/get.dart';
 class DashboardController extends GetxController {
   final NewsRepository _newsRepository;
   final PimpinanRepository _pimpinanRepository;
+  final GuruRepository _guruRepository;
+  final SantriRepository _santriRepository;
+  final OrangtuaRepository _orangtuaRepository;
+  final RoisRepository _roisRepository;
 
-  DashboardController(this._newsRepository, this._pimpinanRepository);
+  DashboardController(
+    this._newsRepository,
+    this._pimpinanRepository,
+    this._guruRepository,
+    this._santriRepository,
+    this._orangtuaRepository,
+    this._roisRepository,
+    SdmRepository
+        sdmRepository, // Keep it in constructor but don't save to field if unused
+  );
 
   final beritaList = <BeritaModel>[].obs;
   final isLoadingBerita = false.obs;
@@ -24,76 +42,149 @@ class DashboardController extends GetxController {
   }
 
   Future<void> loadQuickStats() async {
-    // Mock data for quick stats initially or for other roles
-    if (userRole == 'pimpinan') {
+    final role = userRole;
+
+    if (role == 'superadmin' ||
+        role == 'pimpinan' ||
+        role == 'staff_pesantren' ||
+        role == 'staff_keuangan') {
       try {
         final data = await _pimpinanRepository.getDashboardStats();
-        // Assuming API returns { 'data': { 'stats': { 'santri': X, 'guru': Y, 'saldo': Z } } }
-        // Adjust mapping based on actual API response
-        if (data['data'] != null) {
-          final stats = data['data'];
+        final stats = data['data'] ?? data;
+        quickStats.value = {
+          'stat1': {
+            'label': 'Santri',
+            'value': stats['santri_count']?.toString() ?? '0',
+            'icon': 'people'
+          },
+          'stat2': {
+            'label': 'Guru',
+            'value': stats['guru_count']?.toString() ?? '0',
+            'icon': 'school'
+          },
+          'stat3': {
+            'label': 'Alumni',
+            'value': stats['alumni_count']?.toString() ?? '0',
+            'icon': 'workspace_premium'
+          },
+        };
+        return;
+      } catch (e) {
+        // Handle error silently or with a proper logger
+      }
+    } else if (role == 'guru') {
+      try {
+        final data = await _guruRepository.getDashboardStats();
+        if (data != null) {
           quickStats.value = {
             'stat1': {
-              'label': 'Santri',
-              'value': stats['santri_count']?.toString() ?? '1,234',
-              'icon': 'people'
+              'label': 'Total Kelas',
+              'value': data['total_kelas']?.toString() ?? '0',
+              'icon': 'room'
             },
             'stat2': {
-              'label': 'Guru',
-              'value': stats['guru_count']?.toString() ?? '45',
-              'icon': 'school'
+              'label': 'Total Mapel',
+              'value': data['total_mapel']?.toString() ?? '0',
+              'icon': 'assignment'
             },
             'stat3': {
-              'label': 'Alumni',
-              'value': stats['alumni_count']?.toString() ?? '280',
-              'icon': 'workspace_premium'
+              'label': 'Siswa Diampu',
+              'value': data['total_siswa']?.toString() ?? '0',
+              'icon': 'groups'
             },
           };
           return;
         }
       } catch (e) {
-        print('Error loading stats from API: $e');
+        // Handle error
       }
-
-      // Fallback to mock data if API fails
-      quickStats.value = {
-        'stat1': {'label': 'Santri', 'value': '1,234', 'icon': 'people'},
-        'stat2': {'label': 'Guru', 'value': '45', 'icon': 'school'},
-        'stat3': {
-          'label': 'Saldo Kas',
-          'value': '150M',
-          'icon': 'account_balance_wallet'
-        },
-      };
-    } else if (userRole == 'guru') {
-      quickStats.value = {
-        'stat1': {'label': 'Siswa', 'value': '32', 'icon': 'people'},
-        'stat2': {'label': 'Tugas', 'value': '12', 'icon': 'assignment'},
-        'stat3': {'label': 'Absensi', 'value': '98%', 'icon': 'check_circle'},
-      };
-    } else {
-      quickStats.value = {
-        'stat1': {'label': 'Santri', 'value': '1,234', 'icon': 'people'},
-        'stat2': {'label': 'Guru', 'value': '45', 'icon': 'school'},
-        'stat3': {
-          'label': 'Alumni',
-          'value': '280',
-          'icon': 'workspace_premium'
-        },
-      };
+    } else if (role == 'santri' || role == 'siswa') {
+      try {
+        final profile = await _santriRepository.getMyProfile();
+        final bills = await _santriRepository.getMyBills();
+        quickStats.value = {
+          'stat1': {
+            'label': 'Tingkat',
+            'value': profile?['tingkat']?['nama_tingkat'] ?? '-',
+            'icon': 'trending_up'
+          },
+          'stat2': {
+            'label': 'Tagihan',
+            'value': bills is List ? bills.length.toString() : '0',
+            'icon': 'account_balance_wallet'
+          },
+          'stat3': {
+            'label': 'Hafalan',
+            'value': 'Aktif',
+            'icon': 'auto_stories'
+          },
+        };
+        return;
+      } catch (e) {
+        // Handle error
+      }
+    } else if (role == 'orangtua') {
+      try {
+        final children = await _orangtuaRepository.getMyChildren();
+        quickStats.value = {
+          'stat1': {
+            'label': 'Anak',
+            'value': children.length.toString(),
+            'icon': 'family_restroom'
+          },
+          'stat2': {'label': 'Tagihan', 'value': 'Cek', 'icon': 'payments'},
+          'stat3': {
+            'label': 'Laporan',
+            'value': 'Tersedia',
+            'icon': 'description'
+          },
+        };
+        return;
+      } catch (e) {
+        // Handle error
+      }
+    } else if (role == 'roissantri') {
+      try {
+        final santri = await _roisRepository.getSantri();
+        final perizinan = await _roisRepository.getPerizinan();
+        quickStats.value = {
+          'stat1': {
+            'label': 'Santri Kamar',
+            'value': santri.length.toString(),
+            'icon': 'people'
+          },
+          'stat2': {
+            'label': 'Perizinan',
+            'value': perizinan.length.toString(),
+            'icon': 'assignment'
+          },
+          'stat3': {'label': 'Absensi', 'value': 'Cek', 'icon': 'check_circle'},
+        };
+        return;
+      } catch (e) {
+        // Handle error
+      }
     }
+
+    // Default Fallback
+    quickStats.value = {
+      'stat1': {'label': 'Santri', 'value': '...', 'icon': 'people'},
+      'stat2': {'label': 'Guru', 'value': '...', 'icon': 'school'},
+      'stat3': {'label': 'Alumni', 'value': '...', 'icon': 'workspace_premium'},
+    };
   }
 
   void loadUserData() {
     userData.value = LocalStorage.getUser();
-    print('Loaded User Data: ${userData.value}');
   }
 
   String get userRole {
     final role = userData.value?['role'];
     if (role == null) return 'netizen';
-    if (role is String) return role;
-    if (role is Map) return role['role_name'] ?? 'netizen';
+    if (role is String) return role.toLowerCase();
+    if (role is Map) {
+      return (role['role_name'] ?? 'netizen').toString().toLowerCase();
+    }
     return 'netizen';
   }
 
@@ -109,8 +200,9 @@ class DashboardController extends GetxController {
     final role = userData.value?['role'];
     if (role == null) return 'Pengguna';
     if (role is String) return role;
-    if (role is Map)
+    if (role is Map) {
       return role['description'] ?? role['role_name'] ?? 'Pengguna';
+    }
     return 'Pengguna';
   }
 

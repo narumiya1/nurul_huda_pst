@@ -70,7 +70,7 @@ class WelcomeView extends GetView<WelcomeController> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.15),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                   ),
@@ -120,7 +120,7 @@ class WelcomeView extends GetView<WelcomeController> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -161,10 +161,10 @@ class WelcomeView extends GetView<WelcomeController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.15),
+          color: AppColors.primary.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -198,7 +198,7 @@ class WelcomeView extends GetView<WelcomeController> {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 30,
             offset: const Offset(0, -10),
           ),
@@ -213,7 +213,7 @@ class WelcomeView extends GetView<WelcomeController> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -260,7 +260,7 @@ class WelcomeView extends GetView<WelcomeController> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),

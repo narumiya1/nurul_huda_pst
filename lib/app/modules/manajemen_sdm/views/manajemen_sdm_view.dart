@@ -45,7 +45,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                     children: [
                       Icon(Icons.people_outline,
                           size: 80,
-                          color: AppColors.textLight.withOpacity(0.5)),
+                          color: AppColors.textLight.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       const Text(
                         'Data tidak ditemukan',
@@ -121,7 +121,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         border: isSelected
                             ? null
                             : Border.all(
-                                color: AppColors.textLight.withOpacity(0.2)),
+                                color:
+                                    AppColors.textLight.withValues(alpha: 0.2)),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -151,7 +152,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
     final String status = user['status'] ?? '';
 
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.MANAJEMEN_SDM_DETAIL, arguments: user),
+      onTap: () => Get.toNamed(Routes.manajemenSdmDetail, arguments: user),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
@@ -165,7 +166,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _getRoleColor(role).withOpacity(0.1),
+                color: _getRoleColor(role).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -217,8 +218,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: status == 'Aktif'
-                              ? AppColors.success.withOpacity(0.1)
-                              : AppColors.error.withOpacity(0.1),
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -262,6 +263,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         return AppColors.primary;
       case 'Santri':
         return const Color(0xFF00B894);
+      case 'Siswa':
+        return const Color(0xFF6C5CE7);
       default:
         return AppColors.textLight;
     }
@@ -279,6 +282,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         return Icons.family_restroom_outlined;
       case 'Santri':
         return Icons.face_outlined;
+      case 'Siswa':
+        return Icons.child_care_outlined;
       default:
         return Icons.person_outline;
     }

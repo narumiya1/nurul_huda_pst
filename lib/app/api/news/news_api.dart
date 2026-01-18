@@ -30,7 +30,6 @@ class NewsApi {
 
           return newsJson.map((json) => BeritaModel.fromJson(json)).toList();
         } catch (e) {
-          print('News parsing error: $e');
           return <BeritaModel>[];
         }
       },

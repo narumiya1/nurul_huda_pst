@@ -18,7 +18,8 @@ class ManajemenSdmController extends GetxController {
     'Guru',
     'Staff',
     'Orang Tua',
-    'Santri'
+    'Santri',
+    'Siswa'
   ];
 
   @override
@@ -76,8 +77,7 @@ class ManajemenSdmController extends GetxController {
       users.assignAll(results);
       filteredUsers.assignAll(users);
     } catch (e) {
-      print('Error fetching users: $e');
-      // Optional: keep empty or show error state
+      // Handle error silently
     } finally {
       isLoading.value = false;
     }
@@ -98,19 +98,31 @@ class ManajemenSdmController extends GetxController {
       String status = 'Non-Aktif';
 
       if (item is Map) {
+        // Support for nested User (like in Siswa record)
+        Map? userObj = item;
+        if (item['user'] != null && item['user'] is Map) {
+          userObj = item['user'] as Map;
+        }
+
         // Name
-        if (item['details'] != null && item['details']['full_name'] != null) {
-          name = item['details']['full_name'];
-        } else if (item['name'] != null) {
-          name = item['name'];
+        if (userObj['details'] != null &&
+            userObj['details'] is Map &&
+            userObj['details']['full_name'] != null) {
+          name = userObj['details']['full_name'];
+        } else if (userObj['name'] != null) {
+          name = userObj['name'];
+        } else if (item['full_name'] != null) {
+          name = item['full_name'];
         }
 
         // Email
-        if (item['email'] != null) email = item['email'];
+        if (userObj['email'] != null) email = userObj['email'];
 
         // Status
         if (item['is_active'] == 1 ||
             item['is_active'] == true ||
+            userObj['is_active'] == 1 ||
+            userObj['is_active'] == true ||
             item['status'] == 'aktif') {
           status = 'Aktif';
         }

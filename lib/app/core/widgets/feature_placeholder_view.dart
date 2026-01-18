@@ -31,7 +31,7 @@ class FeaturePlaceholderView extends StatelessWidget {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Stack(
@@ -44,7 +44,7 @@ class FeaturePlaceholderView extends StatelessWidget {
                       return CircularProgressIndicator(
                         value: value,
                         strokeWidth: 2,
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                       );
                     },
                   ),

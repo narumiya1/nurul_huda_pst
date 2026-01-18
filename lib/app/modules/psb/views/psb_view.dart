@@ -84,9 +84,9 @@ class PsbView extends GetView<PsbController> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +104,7 @@ class PsbView extends GetView<PsbController> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -176,7 +176,7 @@ class PsbView extends GetView<PsbController> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: Text(
                   item['name'][0],
                   style: const TextStyle(
@@ -248,7 +248,7 @@ class PsbView extends GetView<PsbController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

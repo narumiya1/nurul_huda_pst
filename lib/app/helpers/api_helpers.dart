@@ -22,11 +22,18 @@ class ApiHelper {
             final data = jsonDecode(response.body);
             return builder(data);
           } catch (e) {
-            final bodyPreview = response.body.length > 300
-                ? response.body.substring(0, 300)
-                : response.body;
-            throw Exception(
-                'Invalid JSON response from $uri (status ${response.statusCode}). Body preview: $bodyPreview');
+            // Try sanitizing body (remove BOM)
+            try {
+              final cleanBody = response.body.trim().replaceAll('\uFEFF', '');
+              final data = jsonDecode(cleanBody);
+              return builder(data);
+            } catch (e2) {
+              final bodyPreview = response.body.length > 300
+                  ? response.body.substring(0, 300)
+                  : response.body;
+              throw Exception(
+                  'Invalid JSON response from $uri (status ${response.statusCode}). Error: $e. Body preview: $bodyPreview');
+            }
           }
         case HttpStatus.notFound:
           throw Exception("endpoint not found");

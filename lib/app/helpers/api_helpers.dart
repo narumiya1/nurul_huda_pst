@@ -282,12 +282,12 @@ class ApiHelper {
     Map<String, String>? params,
   }) {
     var uri = Uri(
-      // *change to http for local backend
-      scheme: "https",
+      // Use http for local, https for remote
+      scheme: ApiConfig.useHttps ? "https" : "http",
       host: ApiConfig.baseUrlAddress,
 
-      // *uncomment this for local backend
-      // port: int.parse(ApiConfig.port),
+      // Include port for local backend
+      port: ApiConfig.port.isNotEmpty ? int.parse(ApiConfig.port) : null,
 
       path: "${ApiConfig.api}$endpoint",
       queryParameters: params,

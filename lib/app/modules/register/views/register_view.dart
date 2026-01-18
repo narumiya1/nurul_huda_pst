@@ -186,7 +186,7 @@ class RegisterDataDiriView extends GetView<RegisterController> {
     return Obx(() => Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
           child: DropdownButtonFormField<String>(
-            value: controller.pengguna.value.isEmpty
+            initialValue: controller.pengguna.value.isEmpty
                 ? null
                 : controller.pengguna.value,
             hint: const Text("Pilih Pengguna"),
@@ -243,7 +243,7 @@ class RegisterAlamatView extends GetView<RegisterController> {
           textInput("Kecamatan", controller.kecamatan),
           textInput("Desa/Kelurahan", controller.desa), **/
           Obx(() => DropdownButtonFormField<ProvinsModel>(
-                value: controller.selectedProvinsi.value,
+                initialValue: controller.selectedProvinsi.value,
                 items: controller.provinsiDataList
                     .map((p) => DropdownMenuItem(
                           value: p,
@@ -269,7 +269,7 @@ class RegisterAlamatView extends GetView<RegisterController> {
                 hint: const Text("Pilih Provinsi"),
               )),
           Obx(() => DropdownButtonFormField<ProvinsModel>(
-                value: controller.selectedDistrict.value,
+                initialValue: controller.selectedDistrict.value,
                 items: controller.districtList
                     .map((d) => DropdownMenuItem(
                           value: d,
@@ -318,7 +318,7 @@ class RegisterAlamatView extends GetView<RegisterController> {
           //           : const Text('Pilih Kecamatan'),
           //     )),
           Obx(() => DropdownButtonFormField<ProvinsModel>(
-                value: controller.selectedKecamatan.value,
+                initialValue: controller.selectedKecamatan.value,
                 decoration: const InputDecoration(
                   labelText: 'Kecamatan',
                 ),
@@ -371,7 +371,7 @@ class RegisterAlamatView extends GetView<RegisterController> {
           //           : const Text('Pilih Desa / Kelurahan'),
           //     )),
           Obx(() => DropdownButtonFormField<ProvinsModel>(
-                value: controller.selectedDesaKelurahan.value,
+                initialValue: controller.selectedDesaKelurahan.value,
                 decoration: const InputDecoration(
                   labelText: 'Desa / Kelurahan',
                 ),

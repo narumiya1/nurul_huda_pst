@@ -3,10 +3,10 @@ import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 class AuthApi {
   final ApiHelper _apiHelper = ApiHelper();
 
-  Future<dynamic> login(String email, String password) async {
+  Future<dynamic> login(String login, String password) async {
     final uri = ApiHelper.buildUri(endpoint: 'login');
     final body = {
-      'email': email,
+      'login': login,
       'password': password,
     };
 

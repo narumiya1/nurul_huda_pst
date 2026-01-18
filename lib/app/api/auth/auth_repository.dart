@@ -6,16 +6,24 @@ class AuthRepository {
 
   AuthRepository(this._authApi);
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String login, String password) async {
     try {
-      final response = await _authApi.login(email, password);
+      final response = await _authApi.login(login, password);
+
+      // Debug: print response structure
+      print('Login Response: $response');
 
       // Standard response from Laravel API our project: {status, data, message, code}
       // data might contain token and user info
       if (response['status'] == true) {
         final data = response['data'];
+        print('Login Data: $data');
+
         final token = data['token'];
         final user = data['user'];
+
+        print('Token: $token');
+        print('User: $user');
 
         if (token != null) {
           await LocalStorage.saveToken(token);
@@ -27,6 +35,7 @@ class AuthRepository {
       }
       return false;
     } catch (e) {
+      print('Login Error: $e');
       rethrow;
     }
   }

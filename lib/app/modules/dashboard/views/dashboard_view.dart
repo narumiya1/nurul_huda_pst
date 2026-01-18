@@ -1,12 +1,15 @@
 import 'package:epesantren_mob/app/widgets/custom_bottom.dart';
+import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-
+import '../../../routes/app_pages.dart';
 import '../controllers/dashboard_controller.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DashboardView extends GetView<DashboardController> {
-  const DashboardView({Key? key}) : super(key: key);
+  const DashboardView({super.key});
+
   Widget _buildPage(int index) {
     switch (index) {
       case 0:
@@ -24,306 +27,946 @@ class DashboardView extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Obx(
-        () => AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) {
-            return ScaleTransition(
-              scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-              ),
-              child: FadeTransition(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Obx(
+          () => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
                 opacity: animation,
                 child: child,
-              ),
-            );
-          },
-          child: _buildPage(controller.selectedIndex.value),
+              );
+            },
+            child: _buildPage(controller.selectedIndex.value),
+          ),
         ),
+        bottomNavigationBar: const CustomBottomNav(),
       ),
-      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }
 
 class HomePage extends GetView<DashboardController> {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _appBar(),
-      body: SingleChildScrollView(
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeCard(),
+                  const SizedBox(height: 24),
+                  _buildQuickStats(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle("Berita Terbaru", onSeeAll: () {}),
+                  const SizedBox(height: 16),
+                  _buildNewsSection(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle("Menu Utama", onSeeAll: () {}),
+                  const SizedBox(height: 16),
+                  _buildMenuGrid(),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      floating: true,
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      expandedHeight: 80,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          padding: const EdgeInsets.fromLTRB(20, 50, 20, 0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: AppShadows.softShadow,
+                ),
+                child: Image.asset('assets/logos.png', height: 32, width: 32),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Sentral Nurulhuda",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      "Sistem Manajemen Pesantren",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: AppShadows.softShadow,
+                ),
+                child: const Badge(
+                  smallSize: 8,
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textSecondary,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWelcomeCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border:
+                  Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 32,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Text(
+                      "Assalamu'alaikum! 👋",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Obx(() => Text(
+                      controller.userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )),
+                const SizedBox(height: 2),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Obx(() => Text(
+                        controller.userRoleLabel,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.qr_code_scanner_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Obx(() {
+      if (controller.quickStats.isEmpty) return const SizedBox.shrink();
+
+      return Row(
+        children: [
+          _buildStatCard(
+            icon: _getIconData(controller.quickStats['stat1']?['icon']),
+            value: controller.quickStats['stat1']?['value'] ?? "0",
+            label: controller.quickStats['stat1']?['label'] ?? "",
+            color: AppColors.accentBlue,
+          ),
+          const SizedBox(width: 12),
+          _buildStatCard(
+            icon: _getIconData(controller.quickStats['stat2']?['icon']),
+            value: controller.quickStats['stat2']?['value'] ?? "0",
+            label: controller.quickStats['stat2']?['label'] ?? "",
+            color: AppColors.accentPurple,
+          ),
+          const SizedBox(width: 12),
+          _buildStatCard(
+            icon: _getIconData(controller.quickStats['stat3']?['icon']),
+            value: controller.quickStats['stat3']?['value'] ?? "0",
+            label: controller.quickStats['stat3']?['label'] ?? "",
+            color: AppColors.accentOrange,
+          ),
+        ],
+      );
+    });
+  }
+
+  IconData _getIconData(String? iconName) {
+    switch (iconName) {
+      case 'people':
+        return Icons.people_outline;
+      case 'school':
+        return Icons.school_outlined;
+      case 'account_balance_wallet':
+        return Icons.account_balance_wallet_outlined;
+      case 'assignment':
+        return Icons.assignment_outlined;
+      case 'check_circle':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.workspace_premium_outlined;
+    }
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: AppShadows.cardShadow,
+        ),
         child: Column(
           children: [
-            _welcomeCard(),
-            const SizedBox(height: 12),
-            _beritaTab(),
-            const SizedBox(height: 20),
-            _menuList(),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _appBar() {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: Colors.white,
-      titleSpacing: 0,
-      title: Row(
-        children: [
-          const SizedBox(width: 16),
-          Image.asset('assets/logos.png', height: 28),
-          const SizedBox(width: 8),
-          const Text(
-            "Sentral Nurulhuda",
-            style: TextStyle(color: Colors.black),
+  Widget _buildSectionTitle(String title, {VoidCallback? onSeeAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings, color: Colors.black),
-          onPressed: () {},
-        )
+        ),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: const Text(
+              "Lihat Semua",
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _welcomeCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xff0F3D26),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 22,
-            backgroundImage: AssetImage('assets/avatar.png'),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                "Selamat Datang Ridwan",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "Pengurus Pesantren",
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _beritaTab() {
+  Widget _buildNewsSection() {
     return Obx(() {
       if (controller.isLoadingBerita.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        );
       }
 
       if (controller.beritaList.isEmpty) {
-        return const Center(child: Text("Belum ada berita terbaru"));
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: AppShadows.cardShadow,
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.newspaper_outlined,
+                  color: AppColors.textLight, size: 40),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  "Belum ada berita terbaru",
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        );
       }
 
-      return Column(
-        children: [
-          SizedBox(
-            height: 100,
-            child: PageView.builder(
-              itemCount: controller.beritaList.length,
-              onPageChanged: (i) => controller.changeBerita(i),
-              itemBuilder: (context, i) {
-                final berita = controller.beritaList[i];
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                      )
-                    ],
+      return SizedBox(
+        height: 180,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: controller.beritaList.length,
+          itemBuilder: (context, index) {
+            final berita = controller.beritaList[index];
+            return Container(
+              width: 280,
+              margin: EdgeInsets.only(
+                  right: index < controller.beritaList.length - 1 ? 16 : 0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppShadows.cardShadow,
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(20)),
+                    child: berita.image != null
+                        ? Image.network(
+                            berita.image!,
+                            width: 100,
+                            height: 180,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 100,
+                            height: 180,
+                            color: AppColors.primary.withOpacity(0.1),
+                            child: const Icon(Icons.image,
+                                color: AppColors.primary, size: 40),
+                          ),
                   ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.horizontal(
-                            left: Radius.circular(12)),
-                        child: berita.image != null
-                            ? Image.network(berita.image!,
-                                width: 100, height: 100, fit: BoxFit.cover)
-                            : Container(
-                                width: 100,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.image)),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                berita.category ?? "News",
-                                style: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              berita.category ?? "News",
+                              style: const TextStyle(
+                                color: AppColors.success,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(height: 4),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            berita.title ?? "",
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              height: 1.3,
+                            ),
+                          ),
+                          const Spacer(),
+                          const Row(
+                            children: [
+                              Icon(Icons.access_time,
+                                  size: 12, color: AppColors.textLight),
+                              SizedBox(width: 4),
                               Text(
-                                berita.title ?? "",
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 13),
+                                "2 jam lalu",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.textLight,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      )
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              controller.beritaList.length,
-              (i) => Container(
-                width: controller.selectedBeritaIndex.value == i ? 16 : 8,
-                height: 4,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  color: controller.selectedBeritaIndex.value == i
-                      ? Colors.black
-                      : Colors.grey,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+                ],
               ),
-            ),
-          )
-        ],
+            );
+          },
+        ),
       );
     });
   }
 
-  Widget _menuList() {
-    return Column(
-      children: [
-        _menuItem(
-          title: "Manajemen SDM",
-          color: Colors.blue,
-          icon: Icons.groups,
-        ),
-        _menuItem(
-          title: "Manajemen Dokumen",
-          color: Colors.redAccent,
-          icon: Icons.folder,
-        ),
-        _menuItem(
-          title: "Manajemen Kurikulum",
-          color: Colors.indigo,
-          icon: Icons.menu_book,
-        ),
-        _menuItem(
-          title: "Manajemen Aktivitas",
-          color: Colors.lightGreen,
-          icon: Icons.event,
-        ),
-        _menuItem(
-          title: "Manajemen Keuangan",
-          color: Colors.green.shade900,
-          icon: Icons.account_balance_wallet,
-        ),
-      ],
-    );
-  }
+  Widget _buildMenuGrid() {
+    final allMenuItems = [
+      {
+        'title': 'Master Data',
+        'icon': Icons.people_alt_outlined,
+        'color': AppColors.accentBlue,
+        'roles': ['pimpinan', 'staff_pesantren', 'staff_keuangan']
+      },
+      {
+        'title': 'PSB',
+        'icon': Icons.app_registration_rounded,
+        'color': AppColors.accentPurple,
+        'roles': ['pimpinan', 'staff_pesantren']
+      },
+      {
+        'title': 'Akademik & Pondok',
+        'icon': Icons.menu_book_outlined,
+        'color': const Color(0xFF6C5CE7),
+        'roles': ['pimpinan']
+      },
+      {
+        'title': 'Akademik',
+        'icon': Icons.school_outlined,
+        'color': AppColors.accentBlue,
+        'roles': ['staff_pesantren', 'guru', 'santri', 'siswa']
+      },
+      {
+        'title': 'Pondok',
+        'icon': Icons.home_work_outlined,
+        'color': const Color(0xFF6C5CE7),
+        'roles': ['staff_pesantren', 'guru', 'santri', 'rois']
+      },
+      {
+        'title': 'Keuangan',
+        'icon': Icons.account_balance_wallet_outlined,
+        'color': AppColors.primary,
+        'roles': ['pimpinan', 'staff_keuangan', 'santri', 'siswa', 'orangtua']
+      },
+      {
+        'title': 'Administrasi',
+        'icon': Icons.assignment_outlined,
+        'color': const Color(0xFFE17055),
+        'roles': ['pimpinan', 'staff_pesantren']
+      },
+      {
+        'title': 'Kedisiplinan',
+        'icon': Icons.gavel_outlined,
+        'color': AppColors.error,
+        'roles': ['guru', 'rois']
+      },
+      {
+        'title': 'Monitoring',
+        'icon': Icons.analytics_outlined,
+        'color': AppColors.accentOrange,
+        'roles': ['orangtua']
+      },
+    ];
 
-  Widget _menuItem({
-    required String title,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+    return Obx(() {
+      final role = controller.userRole.toLowerCase();
+      print('Current user role: $role');
+
+      // Filter items based on role
+      final filteredItems = allMenuItems.where((item) {
+        final roles = item['roles'];
+        if (roles == null) return true; // Show if no roles defined
+        if (roles is! List) return true;
+        final allowedRoles = List<String>.from(roles);
+        return allowedRoles.contains(role);
+      }).toList();
+
+      // If no menu items match, show all items (for debugging or unrecognized roles)
+      final displayItems = filteredItems.isEmpty ? allMenuItems : filteredItems;
+
+      print('Filtered items count: ${filteredItems.length}');
+      print('Display items count: ${displayItems.length}');
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: displayItems.length,
+        itemBuilder: (context, index) {
+          final item = displayItems[index];
+          return GestureDetector(
+            onTap: () {
+              try {
+                final title = item['title']?.toString() ?? 'Fitur';
+                print('Attempting to navigate to: $title');
+
+                switch (title) {
+                  case 'Master Data':
+                    Get.toNamed(Routes.MANAJEMEN_SDM);
+                    break;
+                  case 'Keuangan':
+                    Get.toNamed(Routes.KEUANGAN);
+                    break;
+                  case 'PSB':
+                    Get.toNamed(Routes.PSB);
+                    break;
+                  case 'Akademik & Pondok':
+                    Get.toNamed(Routes.AKADEMIK_PONDOK);
+                    break;
+                  case 'Pondok':
+                    Get.toNamed(Routes.PONDOK);
+                    break;
+                  case 'Tahfidz':
+                    Get.toNamed(Routes.TAHFIDZ);
+                    break;
+                  case 'Administrasi':
+                    Get.toNamed(Routes.ADMINISTRASI);
+                    break;
+                  case 'Akademik':
+                    Get.toNamed(Routes.AKTIVITAS);
+                    break;
+                  case 'Kedisiplinan':
+                  case 'Absensi':
+                    Get.toNamed(Routes.ABSENSI);
+                    break;
+                  case 'Monitoring':
+                    Get.toNamed(Routes.MONITORING);
+                    break;
+                  case 'Profil':
+                    Get.toNamed(Routes.PROFIL);
+                    break;
+                  default:
+                    print('Navigating to placeholder for: $title');
+                    Get.toNamed(Routes.FEATURE_PLACEHOLDER, arguments: title);
+                }
+              } catch (e, stack) {
+                print('Navigation error: $e');
+                print('Stack trace: $stack');
+              }
+            },
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: (item['color'] is Color
+                            ? item['color'] as Color
+                            : Colors.grey)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(
+                    item['icon'] is IconData
+                        ? item['icon'] as IconData
+                        : Icons.help_outline,
+                    color: item['color'] is Color
+                        ? item['color'] as Color
+                        : Colors.grey,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item['title']?.toString() ?? '',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
-          )
-        ],
-      ),
-    );
+          );
+        },
+      );
+    });
   }
 }
 
 class ChatPage extends GetView<DashboardController> {
-  const ChatPage({Key? key}) : super(key: key);
+  const ChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Chat Page")),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text("Pesan"),
+        backgroundColor: AppColors.background,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 64,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Pesan",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Fitur pesan akan segera tersedia",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class NotifikasiPage extends GetView<DashboardController> {
-  const NotifikasiPage({Key? key}) : super(key: key);
+  const NotifikasiPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Notifikasi Page")),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text("Notifikasi"),
+        backgroundColor: AppColors.background,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.accentOrange.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_outlined,
+                size: 64,
+                color: AppColors.accentOrange,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Notifikasi",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Tidak ada notifikasi baru",
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class ProfilPage extends GetView<DashboardController> {
-  const ProfilPage({Key? key}) : super(key: key);
+  const ProfilPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("Profil Page")),
+      backgroundColor: AppColors.background,
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            // Header Profile
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.5), width: 3),
+                    ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      child: const Icon(Icons.person,
+                          size: 56, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Obx(() => Text(
+                        controller.userName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Obx(() => Text(
+                          controller.userRoleLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        )),
+                  ),
+                ],
+              ),
+            ),
+
+            // Menu Items
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  _buildProfileMenuItem(
+                    icon: Icons.person_outline,
+                    title: "Edit Profil",
+                    onTap: () {},
+                  ),
+                  _buildProfileMenuItem(
+                    icon: Icons.lock_outline,
+                    title: "Ubah Password",
+                    onTap: () {},
+                  ),
+                  _buildProfileMenuItem(
+                    icon: Icons.notifications_outlined,
+                    title: "Pengaturan Notifikasi",
+                    onTap: () {},
+                  ),
+                  _buildProfileMenuItem(
+                    icon: Icons.help_outline,
+                    title: "Bantuan",
+                    onTap: () {},
+                  ),
+                  _buildProfileMenuItem(
+                    icon: Icons.info_outline,
+                    title: "Tentang Aplikasi",
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 20),
+                  _buildProfileMenuItem(
+                    icon: Icons.logout,
+                    title: "Keluar",
+                    isLogout: true,
+                    onTap: () async {
+                      final confirm = await Get.dialog<bool>(
+                        AlertDialog(
+                          title: const Text('Keluar'),
+                          content:
+                              const Text('Apakah Anda yakin ingin keluar?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false),
+                              child: const Text('Batal'),
+                            ),
+                            TextButton(
+                              onPressed: () => Get.back(result: true),
+                              child: const Text('Keluar',
+                                  style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await LocalStorage.clearAll();
+                        Get.offAllNamed(Routes.WELCOME);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isLogout = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppShadows.cardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isLogout
+                    ? AppColors.error.withOpacity(0.1)
+                    : AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isLogout ? AppColors.error : AppColors.primary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isLogout ? AppColors.error : AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.textLight,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

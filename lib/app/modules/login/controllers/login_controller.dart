@@ -11,10 +11,15 @@ class LoginController extends GetxController {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final isLoading = false.obs;
+  final showPassword = false.obs;
+
+  void togglePasswordVisibility() {
+    showPassword.value = !showPassword.value;
+  }
 
   Future<void> loginProcess() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar("Error", "Email dan password harus diisi",
+      Get.snackbar("Error", "Email/Username dan password harus diisi",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white);

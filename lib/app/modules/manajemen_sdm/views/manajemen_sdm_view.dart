@@ -18,6 +18,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         foregroundColor: AppColors.textPrimary,
         centerTitle: true,
         actions: [
+          /* 
           Obx(() => controller.canManage
               ? IconButton(
                   onPressed: () {},
@@ -25,6 +26,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                       color: AppColors.primary),
                 )
               : const SizedBox.shrink()),
+          */
         ],
       ),
       body: Column(
@@ -238,11 +240,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               ),
             ),
             Obx(() => controller.canManage
-                ? IconButton(
-                    onPressed: () {},
-                    icon:
-                        const Icon(Icons.more_vert, color: AppColors.textLight),
-                  )
+                ? const SizedBox.shrink() // Removed "More" button
                 : const SizedBox.shrink()),
           ],
         ),

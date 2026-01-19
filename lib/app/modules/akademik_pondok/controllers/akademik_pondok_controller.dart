@@ -1,9 +1,14 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:get/get.dart';
 import '../../../helpers/local_storage.dart';
 
 class AkademikPondokController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
+  final SantriRepository _santriRepository = SantriRepository();
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
 
@@ -15,6 +20,7 @@ class AkademikPondokController extends GetxController {
   final progressTahfidz = <Map<String, dynamic>>[].obs;
   final laporanAbsensi = <Map<String, dynamic>>[].obs;
   final dataKurikulum = <Map<String, dynamic>>[].obs;
+  final tugasList = <Map<String, dynamic>>[].obs;
 
   // Filtered Data
   final filteredRekapNilai = <Map<String, dynamic>>[].obs;
@@ -22,6 +28,7 @@ class AkademikPondokController extends GetxController {
   final filteredTahfidz = <Map<String, dynamic>>[].obs;
   final filteredLaporanAbsensi = <Map<String, dynamic>>[].obs;
   final filteredKurikulum = <Map<String, dynamic>>[].obs;
+  final filteredTugas = <Map<String, dynamic>>[].obs;
 
   // Filter States
   final selectedTingkat = 'Semua'.obs;
@@ -33,6 +40,10 @@ class AkademikPondokController extends GetxController {
   final selectedAbsensiPeriod = 'Hari Ini'.obs;
 
   final selectedIndex = (-1).obs; // -1 for main grid menu
+
+  // Assignment Logic
+  final selectedAssignmentFile = Rxn<File>();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void onInit() {
@@ -51,6 +62,58 @@ class AkademikPondokController extends GetxController {
         userRole.value =
             (role['role_name'] ?? 'netizen').toString().toLowerCase();
       }
+    }
+  }
+
+  Future<void> pickAssignmentFile() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        selectedAssignmentFile.value = File(image.path);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil gambar: $e');
+    }
+  }
+
+  void clearAssignmentFile() {
+    selectedAssignmentFile.value = null;
+  }
+
+  Future<void> submitTugas(String tugasId, String jawaban) async {
+    try {
+      if (jawaban.isEmpty && selectedAssignmentFile.value == null) {
+        Get.snackbar('Peringatan', 'Mohon isi jawaban atau upload file.',
+            backgroundColor: Get.theme.colorScheme.error,
+            colorText: Get.theme.colorScheme.onError);
+        return;
+      }
+
+      isLoading.value = true;
+      Get.back();
+      Get.snackbar('Info', 'Sedang mengirim tugas...',
+          showProgressIndicator: true);
+
+      final fields = {
+        'tugas_sekolah_id': tugasId,
+        'text_submission': jawaban,
+      };
+
+      final success = await _santriRepository.submitTugas(fields,
+          file: selectedAssignmentFile.value);
+
+      if (success) {
+        Get.snackbar('Sukses', 'Tugas berhasil dikirim!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        clearAssignmentFile();
+      } else {
+        Get.snackbar('Gagal', 'Gagal mengirim tugas',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -92,7 +155,6 @@ class AkademikPondokController extends GetxController {
       }
     } catch (e) {
       // Handle error silently
-      // Keep existing mock fallback if failed
     }
   }
 
@@ -102,6 +164,24 @@ class AkademikPondokController extends GetxController {
       await Future.delayed(const Duration(seconds: 1));
 
       await fetchLaporanAbsensi();
+
+      // Tugas Sekolah (1.B)
+      try {
+        final data = await _santriRepository.getTugasSekolah();
+        tugasList
+            .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+      } catch (e) {
+        // Fallback for demo if API fails
+        tugasList.assignAll([
+          {
+            'id': '1',
+            'judul': 'Latihan Fiqih Bab 1',
+            'mapel': {'nama_mapel': 'Fiqih'},
+            'deadline': '2025-01-20',
+            'description': 'Kerjakan halaman 10-12 di buku paket.'
+          }
+        ]);
+      }
 
       // Try fetching real Kurikulum data
       try {
@@ -160,16 +240,12 @@ class AkademikPondokController extends GetxController {
           final Map<String, List<double>> groupedScores = {};
 
           for (var item in rawNilai) {
-            // Adapt based on actual API structure
-            // Assuming item has 'kelas' object or similar
             String kelasName = 'Umum';
             double score = 0;
             if (item is Map) {
-              // Try to extract class name safely
               if (item['kelas'] != null && item['kelas'] is Map) {
                 kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
               }
-              // Try to extract score
               if (item['nilai_akhir'] != null) {
                 score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
               } else if (item['nilai'] != null) {
@@ -270,7 +346,6 @@ class AkademikPondokController extends GetxController {
       // 3. Progress Tahfidz (Using latest 5 entries as progress log instead of group summary)
       try {
         final response = await _pimpinanRepository.getTahfidz();
-        // Assuming response is standard Laravel pagination or list
         List rawTahfidz = [];
         if (response['data'] != null) {
           if (response['data'] is List) {
@@ -353,6 +428,7 @@ class AkademikPondokController extends GetxController {
     filteredTahfidz.assignAll(progressTahfidz);
     filteredLaporanAbsensi.assignAll(laporanAbsensi);
     filteredKurikulum.assignAll(dataKurikulum);
+    filteredTugas.assignAll(tugasList);
   }
 
   void applyFilters() {
@@ -404,6 +480,9 @@ class AkademikPondokController extends GetxController {
     }
 
     filteredKurikulum.assignAll(tempKurikulum);
+
+    // Filter Tugas (Currently no filter impl, just copy)
+    filteredTugas.assignAll(tugasList);
   }
 
   void resetFilters() {

@@ -4,7 +4,6 @@ import 'package:epesantren_mob/app/api/pimpinan/pimpinan_api.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:epesantren_mob/app/api/guru/guru_api.dart';
 import 'package:epesantren_mob/app/api/guru/guru_repository.dart';
-import 'package:epesantren_mob/app/api/santri/santri_api.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/api/orangtua/orangtua_api.dart';
 import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
@@ -24,7 +23,7 @@ class DashboardBinding extends Bindings {
         NewsRepository(NewsApi()),
         PimpinanRepository(PimpinanApi()),
         GuruRepository(GuruApi()),
-        SantriRepository(SantriApi()),
+        SantriRepository(),
         OrangtuaRepository(OrangtuaApi()),
         RoisRepository(RoisApi()),
         SdmRepository(SdmApi()),

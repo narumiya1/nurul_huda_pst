@@ -33,6 +33,12 @@ import '../modules/monitoring/views/monitoring_view.dart';
 import '../modules/akademik_pondok/bindings/akademik_pondok_binding.dart';
 import '../modules/akademik_pondok/views/akademik_pondok_view.dart';
 
+import '../modules/pelanggaran/bindings/pelanggaran_binding.dart';
+import '../modules/pelanggaran/views/pelanggaran_view.dart';
+
+import '../modules/teacher_area/bindings/teacher_area_binding.dart';
+import '../modules/teacher_area/views/teacher_area_view.dart';
+
 part 'app_routes.dart';
 
 class AppPages {
@@ -45,6 +51,11 @@ class AppPages {
       name: _Paths.welcome,
       page: () => const WelcomeView(),
       binding: WelcomeBinding(),
+    ),
+    GetPage(
+      name: _Paths.pelanggaran,
+      page: () => const PelanggaranView(),
+      binding: PelanggaranBinding(),
     ),
     GetPage(
       name: _Paths.login,
@@ -123,6 +134,11 @@ class AppPages {
       name: _Paths.akademikPondok,
       page: () => const AkademikPondokView(),
       binding: AkademikPondokBinding(),
+    ),
+    GetPage(
+      name: _Paths.teacherArea,
+      page: () => const TeacherAreaView(),
+      binding: TeacherAreaBinding(),
     ),
   ];
 }

@@ -110,7 +110,7 @@ class DashboardController extends GetxController {
           },
           'stat2': {
             'label': 'Tagihan',
-            'value': bills is List ? bills.length.toString() : '0',
+            'value': bills.length.toString(),
             'icon': 'account_balance_wallet'
           },
           'stat3': {

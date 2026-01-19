@@ -561,6 +561,12 @@ class HomePage extends GetView<DashboardController> {
         'color': AppColors.accentOrange,
         'roles': ['orangtua']
       },
+      {
+        'title': 'Area Guru',
+        'icon': Icons.edit_note,
+        'color': AppColors.success,
+        'roles': ['guru', 'rois', 'staff_pesantren']
+      },
     ];
 
     return Obx(() {
@@ -626,6 +632,9 @@ class HomePage extends GetView<DashboardController> {
                     break;
                   case 'Monitoring':
                     Get.toNamed(Routes.monitoring);
+                    break;
+                  case 'Area Guru':
+                    Get.toNamed(Routes.teacherArea);
                     break;
                   case 'Profil':
                     Get.toNamed(Routes.profil);

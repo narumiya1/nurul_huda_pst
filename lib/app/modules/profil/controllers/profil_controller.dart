@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:epesantren_mob/app/helpers/api_helpers.dart';
+import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import '../../../helpers/local_storage.dart';
 import '../../../routes/app_pages.dart';
 
 class ProfilController extends GetxController {
+  final ApiHelper _apiHelper = ApiHelper();
   final isLoading = false.obs;
   final userData = Rxn<Map<String, dynamic>>();
 
   final fullNameController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
+  final emailController = TextEditingController();
+
+  // Password fields
+  final oldPasswordController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final obscureOld = true.obs;
+  final obscureNew = true.obs;
+  final obscureConfirm = true.obs;
+
+  Map<String, String> _getAuthHeader() {
+    final token = LocalStorage.getToken();
+    return ApiHelper.tokenHeader(token ?? '');
+  }
 
   @override
   void onInit() {
@@ -23,6 +40,7 @@ class ProfilController extends GetxController {
       fullNameController.text = userData.value?['details']?['full_name'] ?? '';
       phoneController.text = userData.value?['details']?['phone'] ?? '';
       addressController.text = userData.value?['details']?['address'] ?? '';
+      emailController.text = userData.value?['email'] ?? '';
     }
   }
 
@@ -33,6 +51,110 @@ class ProfilController extends GetxController {
   String get userRole => userData.value?['role']?['description'] ?? 'Pengguna';
   String get userEmail => userData.value?['email'] ?? '-';
   String get userPhone => userData.value?['details']?['phone'] ?? '-';
+
+  Future<void> updateProfile() async {
+    if (fullNameController.text.isEmpty) {
+      Get.snackbar('Peringatan', 'Nama lengkap tidak boleh kosong',
+          backgroundColor: AppColors.warning, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      final uri = ApiHelper.buildUri(endpoint: 'user/update-profile');
+      final body = {
+        'full_name': fullNameController.text,
+        'phone': phoneController.text,
+        'address': addressController.text,
+        'email': emailController.text,
+      };
+
+      final response = await _apiHelper.postData(
+        uri: uri,
+        jsonBody: body,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response['user'] != null) {
+        // Update local storage
+        LocalStorage.saveUser(response['user']);
+        userData.value = response['user'];
+
+        Get.back();
+        Get.snackbar('Sukses', 'Profil berhasil diperbarui',
+            backgroundColor: AppColors.success, colorText: Colors.white);
+      } else {
+        Get.snackbar('Gagal', response['message'] ?? 'Gagal memperbarui profil',
+            backgroundColor: AppColors.error, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: AppColors.error, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> changePassword() async {
+    if (oldPasswordController.text.isEmpty ||
+        newPasswordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      Get.snackbar('Peringatan', 'Semua field harus diisi',
+          backgroundColor: AppColors.warning, colorText: Colors.white);
+      return;
+    }
+
+    if (newPasswordController.text.length < 6) {
+      Get.snackbar('Peringatan', 'Password baru minimal 6 karakter',
+          backgroundColor: AppColors.warning, colorText: Colors.white);
+      return;
+    }
+
+    if (newPasswordController.text != confirmPasswordController.text) {
+      Get.snackbar('Peringatan', 'Konfirmasi password tidak cocok',
+          backgroundColor: AppColors.warning, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      final uri = ApiHelper.buildUri(endpoint: 'user/change-password');
+      final body = {
+        'old_password': oldPasswordController.text,
+        'new_password': newPasswordController.text,
+        'new_password_confirmation': confirmPasswordController.text,
+      };
+
+      final response = await _apiHelper.postData(
+        uri: uri,
+        jsonBody: body,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response['status'] == true || response['success'] == true) {
+        // Clear password fields
+        oldPasswordController.clear();
+        newPasswordController.clear();
+        confirmPasswordController.clear();
+
+        Get.back();
+        Get.snackbar('Sukses', 'Password berhasil diubah',
+            backgroundColor: AppColors.success, colorText: Colors.white);
+      } else {
+        Get.snackbar('Gagal', response['message'] ?? 'Gagal mengubah password',
+            backgroundColor: AppColors.error, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: AppColors.error, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> logout() async {
     Get.dialog(
@@ -61,6 +183,10 @@ class ProfilController extends GetxController {
     fullNameController.dispose();
     phoneController.dispose();
     addressController.dispose();
+    emailController.dispose();
+    oldPasswordController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
     super.onClose();
   }
 }

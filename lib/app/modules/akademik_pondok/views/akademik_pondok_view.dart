@@ -223,6 +223,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         return 'Laporan Absensi';
       case 4:
         return 'Data Kurikulum';
+      case 5:
+        return 'Tugas Sekolah';
       default:
         return 'Detail';
     }
@@ -254,6 +256,11 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Kurikulum',
         'icon': Icons.library_books_rounded,
         'color': AppColors.accentPurple
+      },
+      {
+        'title': 'Tugas Sekolah',
+        'icon': Icons.assignment,
+        'color': Colors.blueGrey
       },
     ];
 
@@ -315,6 +322,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         return _buildAttendanceReport();
       case 4:
         return _buildCurriculumData();
+      case 5:
+        return _buildTugasSekolah();
       default:
         return const SizedBox.shrink();
     }
@@ -581,5 +590,168 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             );
           },
         ));
+  }
+
+  Widget _buildTugasSekolah() {
+    return Obx(() {
+      if (controller.filteredTugas.isEmpty) {
+        return const Center(
+            child: Text("Tidak ada tugas saat ini.",
+                style: TextStyle(color: Colors.grey)));
+      }
+      return ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: controller.filteredTugas.length,
+        itemBuilder: (context, index) {
+          final item = controller.filteredTugas[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppShadows.cardShadow,
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              title: Text(item['judul'] ?? 'Tugas',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    Text(item['mapel'] is Map
+                        ? item['mapel']['nama_mapel'] ?? '-'
+                        : 'Mapel Lain'),
+                    const SizedBox(height: 4),
+                    Text('Deadline: ${item['deadline'] ?? '-'}',
+                        style: const TextStyle(
+                            color: AppColors.error, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    Text(item['description'] ?? '',
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ]),
+              trailing: ElevatedButton(
+                onPressed: () => _showSubmissionForm(context, item),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8)),
+                child: const Text('Kirim',
+                    style: TextStyle(fontSize: 12, color: Colors.white)),
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  void _showSubmissionForm(BuildContext context, Map<String, dynamic> task) {
+    controller.clearAssignmentFile();
+    final textController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text('Kirim Tugas: ${task['judul']}',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                const Text('Jawaban / Catatan'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: textController,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: 'Tulis jawaban atau link tugas di sini...',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Obx(() {
+                  final file = controller.selectedAssignmentFile.value;
+                  return Column(
+                    children: [
+                      if (file != null)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.description,
+                                  color: AppColors.primary),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: Text(file.path.split('/').last,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis)),
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
+                                onPressed: controller.clearAssignmentFile,
+                              )
+                            ],
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: controller.pickAssignmentFile,
+                        icon: const Icon(Icons.upload_file),
+                        label: Text(
+                            file == null ? 'Upload Foto Tugas' : 'Ganti Foto'),
+                        style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12))),
+                      ),
+                    ],
+                  );
+                }),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : () {
+                                controller.submitTugas(
+                                    task['id']?.toString() ?? '',
+                                    textController.text);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: controller.isLoading.value
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2))
+                            : const Text('Kirim Jawaban',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                      )),
+                )
+              ]))),
+      isScrollControlled: true,
+    );
   }
 }

@@ -1,10 +1,14 @@
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:epesantren_mob/app/helpers/api_helpers.dart';
+import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../helpers/local_storage.dart';
 
 class KeuanganController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
+  final ApiHelper _apiHelper = ApiHelper();
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
 
@@ -19,17 +23,26 @@ class KeuanganController extends GetxController {
   // For Santri/Siswa/OrangTua
   final bills = <Map<String, dynamic>>[].obs;
 
+  // Payment Methods (Bank Accounts)
+  final paymentMethods = <Map<String, dynamic>>[].obs;
+
   // Filter States
   final selectedType = 'Semua'.obs; // Semua, Masuk, Keluar
   final selectedPeriod = 'bulanan'.obs; // daily, weekly, monthly, yearly
   final selectedStatus = 'Semua'.obs; // Semua, Lunas, Belum Lunas
   final searchQuery = ''.obs;
 
+  Map<String, String> _getAuthHeader() {
+    final token = LocalStorage.getToken();
+    return ApiHelper.tokenHeader(token ?? '');
+  }
+
   @override
   void onInit() {
     super.onInit();
     _loadUserRole();
     fetchKeuanganData();
+    fetchPaymentMethods();
   }
 
   @override
@@ -239,5 +252,58 @@ class KeuanganController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> fetchPaymentMethods() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'payment-methods');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response != null && response['data'] != null) {
+        final List rawList = response['data'] is List
+            ? response['data']
+            : (response['data']['data'] ?? []);
+        paymentMethods.assignAll(rawList
+            .where((e) => e['is_active'] == true || e['is_active'] == 1)
+            .map((e) => e as Map<String, dynamic>)
+            .toList());
+      }
+    } catch (e) {
+      // Fallback mock data
+      paymentMethods.assignAll([
+        {
+          'id': 1,
+          'bank_name': 'Bank BRI',
+          'account_number': '0123456789012345',
+          'account_holder': 'Yayasan Nurul Huda',
+          'description': 'Rekening Utama Pesantren',
+          'is_active': true,
+        },
+        {
+          'id': 2,
+          'bank_name': 'Bank Mandiri',
+          'account_number': '1234567890123456',
+          'account_holder': 'Yayasan Nurul Huda',
+          'description': 'Rekening Alternatif',
+          'is_active': true,
+        },
+      ]);
+    }
+  }
+
+  void copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    Get.snackbar(
+      'Tersalin!',
+      'Nomor rekening berhasil disalin',
+      backgroundColor: AppColors.success,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
   }
 }

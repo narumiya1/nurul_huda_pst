@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
@@ -392,22 +393,214 @@ class KeuanganView extends GetView<KeuanganController> {
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 8),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Metode Pembayaran Aktif', style: TextStyle(fontSize: 12)),
-              Row(
+          InkWell(
+            onTap: () => _showPaymentMethodsBottomSheet(),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Virtual Account ',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  Icon(Icons.arrow_forward_ios, size: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance,
+                          color: AppColors.primary, size: 20),
+                      SizedBox(width: 12),
+                      Text('Lihat Rekening Pembayaran',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                              fontSize: 14)),
+                    ],
+                  ),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 14, color: AppColors.primary),
                 ],
               ),
-            ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showPaymentMethodsBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.account_balance, color: AppColors.primary),
+                  SizedBox(width: 12),
+                  Text('Rekening Pembayaran',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Transfer ke salah satu rekening berikut untuk melakukan pembayaran:',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              Obx(() {
+                if (controller.paymentMethods.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text('Tidak ada rekening tersedia'),
+                    ),
+                  );
+                }
+                return Column(
+                  children: controller.paymentMethods.map((method) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.account_balance,
+                                    color: AppColors.primary, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      method['bank_name'] ?? 'Bank',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                    ),
+                                    if (method['description'] != null)
+                                      Text(
+                                        method['description'],
+                                        style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Nomor Rekening',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11)),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  method['account_number'] ?? '-',
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => controller.copyToClipboard(
+                                    method['account_number'] ?? ''),
+                                icon: const Icon(Icons.copy,
+                                    color: AppColors.primary, size: 20),
+                                tooltip: 'Salin',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Atas Nama',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11)),
+                          const SizedBox(height: 4),
+                          Text(
+                            method['account_holder'] ?? '-',
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              }),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: AppColors.warning, size: 20),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Setelah transfer, simpan bukti pembayaran dan konfirmasi ke bagian keuangan pesantren.',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Tutup',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 

@@ -17,17 +17,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
         centerTitle: true,
-        actions: [
-          /* 
-          Obx(() => controller.canManage
-              ? IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.person_add_outlined,
-                      color: AppColors.primary),
-                )
-              : const SizedBox.shrink()),
-          */
-        ],
+        actions: const [],
       ),
       body: Column(
         children: [

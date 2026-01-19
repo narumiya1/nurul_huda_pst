@@ -18,7 +18,7 @@ class PelanggaranController extends GetxController {
       final data = await _repository.getPelanggaran();
       pelanggaranList.assignAll(data);
     } catch (e) {
-      print('Error: $e');
+      // Error handled silently
     } finally {
       isLoading.value = false;
     }

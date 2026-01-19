@@ -70,7 +70,7 @@ class AbsensiController extends GetxController
       perizinanList
           .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
     } catch (e) {
-      print('Error fetching perizinan: $e');
+      // Error handled silently
     }
   }
 

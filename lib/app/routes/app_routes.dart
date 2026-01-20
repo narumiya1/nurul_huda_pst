@@ -23,6 +23,7 @@ abstract class Routes {
   static const pelanggaran = _Paths.pelanggaran;
   static const teacherArea = _Paths.teacherArea;
   static const beritaDetail = _Paths.beritaDetail;
+  static const jadwalPelajaran = _Paths.jadwalPelajaran;
 }
 
 abstract class _Paths {
@@ -47,4 +48,5 @@ abstract class _Paths {
   static const akademikPondok = '/akademik-pondok';
   static const pelanggaran = '/pelanggaran';
   static const teacherArea = '/teacher-area';
+  static const jadwalPelajaran = '/jadwal-pelajaran';
 }

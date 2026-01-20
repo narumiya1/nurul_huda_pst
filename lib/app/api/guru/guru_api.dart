@@ -54,4 +54,24 @@ class GuruApi {
       header: _getAuthHeader(),
     );
   }
+
+  Future<dynamic> getAbsensi({
+    required int sekolahId,
+    required int kelasId,
+    required String tanggal,
+  }) async {
+    final uri = ApiHelper.buildUri(
+      endpoint: 'absensi-siswa',
+      params: {
+        'sekolah_id': sekolahId.toString(),
+        'kelas_id': kelasId.toString(),
+        'tanggal': tanggal,
+      },
+    );
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
 }

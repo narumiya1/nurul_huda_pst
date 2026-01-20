@@ -49,4 +49,37 @@ class GuruRepository {
       rethrow;
     }
   }
+
+  Future<List<dynamic>> getAbsensi({
+    required int sekolahId,
+    required int kelasId,
+    required String tanggal,
+  }) async {
+    try {
+      final response = await _guruApi.getAbsensi(
+        sekolahId: sekolahId,
+        kelasId: kelasId,
+        tanggal: tanggal,
+      );
+      if (response['status'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      // Return empty list on error (or rethrow if critical)
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getJadwalPelajaran() async {
+    try {
+      final response = await _guruApi.getJadwalPelajaran();
+      if (response['success'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

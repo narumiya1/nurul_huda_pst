@@ -11,7 +11,6 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-<<<<<<< HEAD
       body: CustomScrollView(
         controller: controller.scrollController,
         slivers: [
@@ -73,26 +72,6 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               ),
             ),
           ),
-=======
-      appBar: AppBar(
-        title: const Text('Manajemen SDM'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: AppColors.textPrimary,
-        centerTitle: true,
-        actions: const [],
-      ),
-      body: Column(
-        children: [
-          _buildSearchAndFilters(),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
-              }
->>>>>>> aeb8aa4c18dbdb0a98c7cb53548089f674e66965
 
           // Role Filter Grid
           SliverToBoxAdapter(

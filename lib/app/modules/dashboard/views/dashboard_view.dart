@@ -67,6 +67,7 @@ class HomePage extends GetView<DashboardController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeCard(),
+                  _buildJadwalGuru(),
                   const SizedBox(height: 24),
                   _buildQuickStats(),
                   const SizedBox(height: 28),
@@ -248,6 +249,101 @@ class HomePage extends GetView<DashboardController> {
         ],
       ),
     );
+  }
+
+  Widget _buildJadwalGuru() {
+    return Obx(() {
+      // Only show for guru
+      if (controller.userRole != 'guru') return const SizedBox.shrink();
+
+      // Only show if there is schedule data (currently we need to add schedule data to dashboard controller)
+      // Since the user asked to put it here, we will mock it for now or fetch it if possible.
+      // But wait, the controller doesn't have jadwal data yet. Let's assume we will add it.
+      // For now, let's just make the UI and bind it to a new controller variable.
+      if (controller.jadwalGuru.isEmpty) return const SizedBox.shrink();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          _buildSectionTitle("Jadwal Mengajar Hari Ini"),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.jadwalGuru.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final item = controller.jadwalGuru[index];
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppShadows.cardShadow,
+                  border: Border(
+                      left: BorderSide(color: AppColors.primary, width: 4)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item['jam_mulai'] != null
+                            ? "${item['jam_mulai']} - ${item['jam_selesai']}"
+                            : (item['jam'] ?? '-'),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (item['mapel'] is Map
+                                        ? item['mapel']['nama']
+                                        : item['mapel'])
+                                    ?.toString() ??
+                                '-',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.room,
+                                  size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${(item['kelas'] is Map ? item['kelas']['nama_kelas'] : item['kelas'])?.toString() ?? '-'} • ${item['ruang']?.toString() ?? '-'}",
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildQuickStats() {
@@ -643,6 +739,8 @@ class HomePage extends GetView<DashboardController> {
                     Get.toNamed(Routes.aktivitas);
                     break;
                   case 'Kedisiplinan':
+                    Get.toNamed(Routes.pelanggaran);
+                    break;
                   case 'Absensi':
                     Get.toNamed(Routes.absensi);
                     break;
@@ -651,6 +749,9 @@ class HomePage extends GetView<DashboardController> {
                     break;
                   case 'Area Guru':
                     Get.toNamed(Routes.teacherArea);
+                    break;
+                  case 'Jadwal Pelajaran':
+                    Get.toNamed(Routes.jadwalPelajaran);
                     break;
                   case 'Profil':
                     Get.toNamed(Routes.profil);

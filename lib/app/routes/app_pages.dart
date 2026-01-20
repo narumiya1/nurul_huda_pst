@@ -39,6 +39,8 @@ import '../modules/pelanggaran/views/pelanggaran_view.dart';
 import '../modules/teacher_area/bindings/teacher_area_binding.dart';
 import '../modules/teacher_area/views/teacher_area_view.dart';
 import '../modules/dashboard/views/berita_detail_view.dart';
+import '../modules/jadwal_pelajaran/bindings/jadwal_pelajaran_binding.dart';
+import '../modules/jadwal_pelajaran/views/jadwal_pelajaran_view.dart';
 
 part 'app_routes.dart';
 
@@ -144,6 +146,11 @@ class AppPages {
     GetPage(
       name: _Paths.beritaDetail,
       page: () => const BeritaDetailView(),
+    ),
+    GetPage(
+      name: _Paths.jadwalPelajaran,
+      page: () => const JadwalPelajaranView(),
+      binding: JadwalPelajaranBinding(),
     ),
   ];
 }

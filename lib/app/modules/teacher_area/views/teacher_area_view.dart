@@ -7,21 +7,29 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
   const TeacherAreaView({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Area Guru'),
+          title: const Text('Area Guru',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.textPrimary,
           bottom: const TabBar(
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
+            indicatorWeight: 3,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold),
             tabs: [
-              Tab(icon: Icon(Icons.fact_check), text: 'Input Absensi'),
-              Tab(icon: Icon(Icons.menu_book), text: 'Setoran Tahfidz'),
+              Tab(icon: Icon(Icons.fact_check_outlined), text: 'Absensi'),
+              Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tahfidz'),
+              Tab(icon: Icon(Icons.calendar_today_outlined), text: 'Jadwal'),
             ],
           ),
         ),
@@ -29,6 +37,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
           children: [
             _buildAbsensiTab(),
             _buildTahfidzTab(),
+            _buildJadwalTab(),
           ],
         ),
       ),
@@ -101,8 +110,25 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: controller.siswaList.length,
+                    itemCount: controller.siswaList.length +
+                        (controller.currentPage.value <
+                                controller.lastPage.value
+                            ? 1
+                            : 0),
                     itemBuilder: (context, index) {
+                      if (index == controller.siswaList.length) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: controller.isLoadingMore.value
+                                ? const CircularProgressIndicator()
+                                : TextButton(
+                                    onPressed: controller.loadMoreSiswa,
+                                    child: const Text("Muat Lebih Banyak"),
+                                  ),
+                          ),
+                        );
+                      }
                       final siswa = controller.siswaList[index];
                       final siswaId = siswa['id'] as int;
                       final name = siswa['details']?['full_name'] ??
@@ -126,7 +152,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                 backgroundColor:
                                     AppColors.primary.withValues(alpha: 0.1),
                                 child: Text(
-                                  name[0].toUpperCase(),
+                                  name.isNotEmpty ? name[0].toUpperCase() : 'S',
                                   style:
                                       const TextStyle(color: AppColors.primary),
                                 ),
@@ -237,28 +263,120 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Santri Selector
+          // Santri Selector with Search
           const Text('Pilih Santri',
               style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                initialValue: controller.selectedSantri.value,
-                decoration: InputDecoration(
-                  hintText: 'Pilih santri...',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: controller.searchController,
+            onChanged: controller.onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Ketik nama santri...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: Obx(() => controller.isLoadingSantri.value
+                  ? Container(
+                      width: 20,
+                      height: 20,
+                      padding: const EdgeInsets.all(12),
+                      child: const CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.primary),
+                    )
+                  : const SizedBox.shrink()),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Obx(() => Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
-                items: controller.santriList.map((santri) {
-                  return DropdownMenuItem(
-                    value: santri,
-                    child: Text(santri['details']?['full_name'] ??
-                        santri['username'] ??
-                        'Santri'),
-                  );
-                }).toList(),
-                onChanged: (val) => controller.selectedSantri.value = val,
+                child: controller.santriList.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Center(
+                          child: Text('Tidak ada santri ditemukan',
+                              style: TextStyle(color: Colors.grey)),
+                        ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: controller.santriList.length,
+                        separatorBuilder: (_, __) =>
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                        itemBuilder: (context, index) {
+                          final s = controller.santriList[index];
+                          final isSelected =
+                              controller.selectedSantriId.value ==
+                                  (s['user_id'] ?? s['id']);
+
+                          String name = 'Santri';
+                          if (s['user'] != null &&
+                              s['user']['details'] != null) {
+                            name = s['user']['details']['full_name'] ??
+                                s['user']['username'] ??
+                                name;
+                          } else if (s['details'] != null) {
+                            name = s['details']['full_name'] ??
+                                s['username'] ??
+                                name;
+                          } else if (s['full_name'] != null) {
+                            name = s['full_name'];
+                          }
+
+                          final nis = s['nis'] ?? '-';
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.primary.withValues(alpha: 0.1),
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : 'S',
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(name,
+                                style: TextStyle(
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.textPrimary,
+                                )),
+                            subtitle: Text('NIS: $nis',
+                                style: const TextStyle(fontSize: 12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                            selected: isSelected,
+                            selectedTileColor:
+                                AppColors.primary.withValues(alpha: 0.05),
+                            onTap: () {
+                              controller.selectedSantriId.value =
+                                  s['user_id'] ?? s['id'];
+                              controller.searchController.text = name;
+                              controller.selectedSantriName.value = name;
+                            },
+                          );
+                        },
+                      ),
               )),
           const SizedBox(height: 20),
 
@@ -373,5 +491,127 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
         ],
       ),
     );
+  }
+
+  Widget _buildJadwalTab() {
+    return Obx(() {
+      if (controller.isLoadingJadwal.value) {
+        return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary));
+      }
+
+      return DefaultTabController(
+        length: controller.days.length,
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              child: TabBar(
+                isScrollable: true,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                indicatorColor: AppColors.primary,
+                tabs: controller.days.map((day) => Tab(text: day)).toList(),
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                children: controller.days.map((day) {
+                  final items = controller.groupedJadwal[day] ?? [];
+                  if (items.isEmpty) {
+                    return const Center(
+                      child: Text("Tidak ada jadwal",
+                          style: TextStyle(color: Colors.grey)),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final mapel = item['mapel'];
+                      final kelas = item['kelas'];
+                      final mapelName =
+                          (mapel is Map ? mapel['nama'] : mapel) ?? '-';
+                      final kelasName =
+                          (kelas is Map ? kelas['nama_kelas'] : kelas) ?? '-';
+                      final ruang = item['ruang'] ?? '-';
+                      final jamMulai = item['jam_mulai'] != null
+                          ? item['jam_mulai'].toString().substring(0, 5)
+                          : '-';
+                      final jamSelesai = item['jam_selesai'] != null
+                          ? item['jam_selesai'].toString().substring(0, 5)
+                          : '-';
+
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: AppShadows.cardShadow,
+                          border: Border(
+                              left: BorderSide(
+                                  color: AppColors.primary, width: 4)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "$jamMulai - $jamSelesai",
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    mapelName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.room,
+                                          size: 14, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "$kelasName • $ruang",
+                                        style: const TextStyle(
+                                            color: Colors.grey, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

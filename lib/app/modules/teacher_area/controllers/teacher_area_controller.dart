@@ -24,10 +24,17 @@ class TeacherAreaController extends GetxController {
   // Tahfidz
   final santriList = <dynamic>[].obs;
   final selectedSantriId = Rxn<int>();
+  final selectedKelasTahfidz = Rxn<Map<String, dynamic>>();
   final isLoadingSantri = false.obs;
   final searchController = TextEditingController();
   final selectedSantriName = Rxn<String>(); // Handle name display
   Timer? _debounce;
+
+  // Hafalan List (recent submissions)
+  final hafalanList = <dynamic>[].obs;
+  final isLoadingHafalan = false.obs;
+  final selectedKelasRiwayat =
+      Rxn<Map<String, dynamic>>(); // Filter for riwayat
 
   // Form fields for Tahfidz
   final surahController = TextEditingController();
@@ -55,7 +62,8 @@ class TeacherAreaController extends GetxController {
   Future<void> loadDashboard() async {
     userDetails.value = LocalStorage.getUser();
     fetchKelasList();
-    fetchSantriList();
+    // fetchSantriList(); // Removed to enforce class filter first
+    fetchHafalanList(); // Load recent tahfidz submissions
     fetchJadwalHariIni();
     fetchStats();
   }
@@ -360,10 +368,49 @@ class TeacherAreaController extends GetxController {
   }
 
   // ========== TAHFIDZ ==========
+  Future<void> fetchHafalanList() async {
+    try {
+      isLoadingHafalan.value = true;
+
+      final params = <String, String>{'per_page': '20'};
+      if (selectedKelasRiwayat.value != null) {
+        params['kelas_id'] = selectedKelasRiwayat.value!['id'].toString();
+      }
+
+      final uri = ApiHelper.buildUri(
+        endpoint: 'tahfidz/hafalan',
+        params: params,
+      );
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response != null && response['data'] != null) {
+        final rawData = response['data'];
+        if (rawData is Map && rawData['data'] is List) {
+          hafalanList.assignAll(rawData['data']);
+        } else if (rawData is List) {
+          hafalanList.assignAll(rawData);
+        }
+      }
+      debugPrint('DEBUG: Fetched ${hafalanList.length} hafalan records');
+    } catch (e) {
+      debugPrint('DEBUG: Error fetching hafalan list: $e');
+      hafalanList.clear();
+    } finally {
+      isLoadingHafalan.value = false;
+    }
+  }
+
   Future<void> fetchSantriList({String? query}) async {
     try {
       isLoadingSantri.value = true;
-      final data = await _santriRepository.getSantriList(search: query);
+      final data = await _santriRepository.getSantriList(
+        search: query,
+        kelasId: selectedKelasTahfidz.value?['id'],
+      );
       santriList.assignAll(data);
     } catch (e) {
       santriList.clear();
@@ -374,11 +421,25 @@ class TeacherAreaController extends GetxController {
 
   Future<void> submitTahfidz() async {
     if (selectedSantriId.value == null) {
-      Get.snackbar('Peringatan', 'Pilih santri terlebih dahulu');
+      Get.snackbar(
+        'Peringatan',
+        'Pilih santri terlebih dahulu',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 3),
+      );
       return;
     }
     if (surahController.text.isEmpty || ayatController.text.isEmpty) {
-      Get.snackbar('Peringatan', 'Isi surah dan ayat');
+      Get.snackbar(
+        'Peringatan',
+        'Isi surah dan ayat',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 3),
+      );
       return;
     }
 
@@ -396,6 +457,8 @@ class TeacherAreaController extends GetxController {
         'catatan': catatanController.text,
       };
 
+      debugPrint('DEBUG: Submitting tahfidz with body: $body');
+
       final response = await _apiHelper.postData(
         uri: uri,
         jsonBody: body,
@@ -403,10 +466,10 @@ class TeacherAreaController extends GetxController {
         header: _getAuthHeader(),
       );
 
+      debugPrint('DEBUG: Tahfidz response: $response');
+
       if (response['success'] == true) {
-        Get.snackbar('Sukses', 'Setoran tahfidz berhasil dicatat!',
-            backgroundColor: Colors.green, colorText: Colors.white);
-        // Reset form
+        // Reset form first
         surahController.clear();
         ayatController.clear();
         catatanController.clear();
@@ -414,13 +477,43 @@ class TeacherAreaController extends GetxController {
         selectedSantriId.value = null;
         selectedSantriName.value = null;
         searchController.clear();
-        Get.back();
+        selectedKelasTahfidz.value = null;
+        santriList.clear();
+
+        Get.snackbar(
+          'Sukses',
+          'Setoran tahfidz berhasil dicatat!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 3),
+          icon: const Icon(Icons.check_circle, color: Colors.white),
+        );
+
+        // Refresh hafalan list
+        fetchHafalanList();
       } else {
-        Get.snackbar('Gagal', response['message'] ?? 'Gagal menyimpan',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(
+          'Gagal',
+          response['message'] ?? 'Gagal menyimpan setoran',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 4),
+          icon: const Icon(Icons.error, color: Colors.white),
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan: $e');
+      debugPrint('DEBUG: Tahfidz error: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 4),
+        icon: const Icon(Icons.error_outline, color: Colors.white),
+      );
     } finally {
       isLoading.value = false;
     }

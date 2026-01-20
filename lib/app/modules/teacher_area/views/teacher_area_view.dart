@@ -6,6 +6,15 @@ import '../controllers/teacher_area_controller.dart';
 class TeacherAreaView extends GetView<TeacherAreaController> {
   const TeacherAreaView({super.key});
 
+  // Helper method to capitalize each word in a string
+  String _capitalizeWords(String text) {
+    if (text.isEmpty) return text;
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   @override
   @override
   Widget build(BuildContext context) {
@@ -258,11 +267,332 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
   }
 
   Widget _buildTahfidzTab() {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          // Sub-tabs for Tahfidz
+          Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              indicator: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: Colors.white,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history, size: 18),
+                      SizedBox(width: 8),
+                      Text('Riwayat'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_circle_outline, size: 18),
+                      SizedBox(width: 8),
+                      Text('Input Setoran'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Tab content
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildRiwayatSetoranTab(),
+                _buildInputSetoranTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tab Riwayat Setoran
+  Widget _buildRiwayatSetoranTab() {
+    return Column(
+      children: [
+        // Filter Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: Row(
+            children: [
+              Expanded(
+                child: Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
+                      value: controller.selectedKelasRiwayat.value,
+                      decoration: InputDecoration(
+                        hintText: 'Semua Kelas',
+                        prefixIcon: const Icon(Icons.filter_list, size: 20),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        isDense: true,
+                      ),
+                      items: [
+                        const DropdownMenuItem<Map<String, dynamic>>(
+                          value: null,
+                          child: Text('Semua Kelas'),
+                        ),
+                        ...controller.kelasList.map((kelas) {
+                          return DropdownMenuItem(
+                            value: kelas,
+                            child: Text(kelas['nama_kelas'] ?? 'Kelas'),
+                          );
+                        }),
+                      ],
+                      onChanged: (val) {
+                        controller.selectedKelasRiwayat.value = val;
+                        controller.fetchHafalanList();
+                      },
+                    )),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: controller.fetchHafalanList,
+                tooltip: 'Refresh',
+              ),
+            ],
+          ),
+        ),
+
+        // Content
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoadingHafalan.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (controller.hafalanList.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.menu_book_outlined,
+                        size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      controller.selectedKelasRiwayat.value != null
+                          ? 'Belum ada setoran untuk kelas ini'
+                          : 'Belum ada setoran tahfidz',
+                      style: const TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: controller.fetchHafalanList,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: controller.hafalanList.length,
+                itemBuilder: (context, index) {
+                  final hafalan = controller.hafalanList[index];
+
+                  // Parse santri name - handle nested structure
+                  String santriName = 'Santri';
+                  if (hafalan['santri'] != null) {
+                    if (hafalan['santri']['details'] != null) {
+                      santriName = hafalan['santri']['details']['full_name'] ??
+                          santriName;
+                    } else if (hafalan['santri']['user'] != null &&
+                        hafalan['santri']['user']['details'] != null) {
+                      santriName = hafalan['santri']['user']['details']
+                              ['full_name'] ??
+                          santriName;
+                    }
+                  }
+
+                  final surah = hafalan['surah'] ?? '-';
+                  final ayatRange = hafalan['ayat_range'] ?? '-';
+                  final tanggal = hafalan['tanggal_setoran'] ?? '-';
+                  final kualitas = hafalan['kualitas'] ?? 'lancar';
+                  final juz = hafalan['juz'];
+
+                  Color kualitasColor;
+                  IconData kualitasIcon;
+                  switch (kualitas) {
+                    case 'lancar':
+                      kualitasColor = Colors.green;
+                      kualitasIcon = Icons.check_circle;
+                      break;
+                    case 'cukup_lancar':
+                      kualitasColor = Colors.orange;
+                      kualitasIcon = Icons.check_circle_outline;
+                      break;
+                    default:
+                      kualitasColor = Colors.red;
+                      kualitasIcon = Icons.refresh;
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: AppShadows.cardShadow,
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
+                        child: Text(
+                          santriName.isNotEmpty
+                              ? santriName[0].toUpperCase()
+                              : 'S',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        santriName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.book,
+                                  size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$surah: $ayatRange',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              if (juz != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'Juz $juz',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today,
+                                  size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                tanggal,
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: kualitasColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(kualitasIcon, size: 16, color: kualitasColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              _capitalizeWords(kualitas.replaceAll('_', ' ')),
+                              style: TextStyle(
+                                color: kualitasColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  // Tab Input Setoran
+  Widget _buildInputSetoranTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Kelas Selector
+          const Text('Pilih Kelas',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
+                value: controller.selectedKelasTahfidz.value,
+                decoration: InputDecoration(
+                  hintText: 'Pilih kelas...',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                items: controller.kelasList.map((kelas) {
+                  return DropdownMenuItem(
+                    value: kelas,
+                    child: Text(kelas['nama_kelas'] ?? 'Kelas'),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  controller.selectedKelasTahfidz.value = val;
+                  controller.fetchSantriList();
+                },
+              )),
+          const SizedBox(height: 20),
+
           // Santri Selector with Search
           const Text('Pilih Santri',
               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -302,81 +632,92 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[200]!),
                 ),
-                child: controller.santriList.isEmpty
+                child: controller.selectedKelasTahfidz.value == null
                     ? const Padding(
                         padding: EdgeInsets.all(20),
                         child: Center(
-                          child: Text('Tidak ada santri ditemukan',
+                          child: Text('Pilih kelas terlebih dahulu',
                               style: TextStyle(color: Colors.grey)),
                         ),
                       )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: controller.santriList.length,
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1, indent: 16, endIndent: 16),
-                        itemBuilder: (context, index) {
-                          final s = controller.santriList[index];
-                          final isSelected =
-                              controller.selectedSantriId.value ==
-                                  (s['user_id'] ?? s['id']);
-
-                          String name = 'Santri';
-                          if (s['user'] != null &&
-                              s['user']['details'] != null) {
-                            name = s['user']['details']['full_name'] ??
-                                s['user']['username'] ??
-                                name;
-                          } else if (s['details'] != null) {
-                            name = s['details']['full_name'] ??
-                                s['username'] ??
-                                name;
-                          } else if (s['full_name'] != null) {
-                            name = s['full_name'];
-                          }
-
-                          final nis = s['nis'] ?? '-';
-
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.primary.withValues(alpha: 0.1),
-                              child: Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : 'S',
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                    : controller.santriList.isEmpty &&
+                            !controller.isLoadingSantri.value
+                        ? const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(
+                              child: Text('Tidak ada santri ditemukan',
+                                  style: TextStyle(color: Colors.grey)),
                             ),
-                            title: Text(name,
-                                style: TextStyle(
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: isSelected
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: controller.santriList.length,
+                            separatorBuilder: (_, __) => const Divider(
+                                height: 1, indent: 16, endIndent: 16),
+                            itemBuilder: (context, index) {
+                              final s = controller.santriList[index];
+                              final isSelected =
+                                  controller.selectedSantriId.value == s['id'];
+
+                              String name = 'Santri';
+                              if (s['user'] != null &&
+                                  s['user']['details'] != null) {
+                                name = s['user']['details']['full_name'] ??
+                                    s['user']['username'] ??
+                                    name;
+                              } else if (s['details'] != null) {
+                                name = s['details']['full_name'] ??
+                                    s['username'] ??
+                                    name;
+                              } else if (s['full_name'] != null) {
+                                name = s['full_name'];
+                              }
+
+                              final nis = s['nis'] ?? '-';
+
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: isSelected
                                       ? AppColors.primary
-                                      : AppColors.textPrimary,
-                                )),
-                            subtitle: Text('NIS: $nis',
-                                style: const TextStyle(fontSize: 12)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                            selected: isSelected,
-                            selectedTileColor:
-                                AppColors.primary.withValues(alpha: 0.05),
-                            onTap: () {
-                              controller.selectedSantriId.value =
-                                  s['user_id'] ?? s['id'];
-                              controller.searchController.text = name;
-                              controller.selectedSantriName.value = name;
+                                      : AppColors.primary
+                                          .withValues(alpha: 0.1),
+                                  child: Text(
+                                    name.isNotEmpty
+                                        ? name[0].toUpperCase()
+                                        : 'S',
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(name,
+                                    style: TextStyle(
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.textPrimary,
+                                    )),
+                                subtitle: Text('NIS: $nis',
+                                    style: const TextStyle(fontSize: 12)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                                selected: isSelected,
+                                selectedTileColor:
+                                    AppColors.primary.withValues(alpha: 0.05),
+                                onTap: () {
+                                  // Use santri.id, not user_id
+                                  controller.selectedSantriId.value = s['id'];
+                                  controller.searchController.text = name;
+                                  controller.selectedSantriName.value = name;
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
+                          ),
               )),
           const SizedBox(height: 20),
 
@@ -385,7 +726,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<int>(
-                initialValue: controller.selectedJuz.value,
+                value: controller.selectedJuz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih juz...',
                   border: OutlineInputBorder(

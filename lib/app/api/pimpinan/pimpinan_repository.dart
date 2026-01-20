@@ -118,4 +118,60 @@ class PimpinanRepository {
       rethrow;
     }
   }
+
+  Future<dynamic> createSantri(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createSantri(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createStaff(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createStaff(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getSekolahList() async {
+    try {
+      return await _pimpinanApi.getSekolahList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createSiswa(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createSiswa(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createPondokBlok(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createPondokBlok(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createPondokKamar(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createPondokKamar(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> assignSantriToKamar(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.assignSantriToKamar(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

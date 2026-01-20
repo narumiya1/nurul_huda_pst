@@ -1,6 +1,7 @@
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../helpers/local_storage.dart';
 
 class ManajemenSdmController extends GetxController {
@@ -207,5 +208,104 @@ class ManajemenSdmController extends GetxController {
     // Debounce search ideally
     currentSearchQuery = query;
     fetchUsers(selectedRole.value, refresh: true);
+  }
+
+  Future<void> addSantri(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createSantri(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Santri berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Santri or Semua
+      if (selectedRole.value == 'Santri' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan santri: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addStaff(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createStaff(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Staff berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Staff or Semua
+      if (selectedRole.value == 'Staff' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan staff: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<List<dynamic>> fetchSekolahList() async {
+    try {
+      return await _repository.getSekolahList();
+    } catch (e) {
+      debugPrint('Failed to fetch sekolah: $e');
+      return [];
+    }
+  }
+
+  Future<void> addSiswa(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createSiswa(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Siswa berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Siswa or Semua
+      if (selectedRole.value == 'Siswa' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan siswa: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

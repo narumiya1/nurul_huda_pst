@@ -71,9 +71,10 @@ class GuruRepository {
     }
   }
 
-  Future<List<dynamic>> getJadwalPelajaran() async {
+  Future<List<dynamic>> getJadwalPelajaran(
+      {Map<String, String>? params}) async {
     try {
-      final response = await _guruApi.getJadwalPelajaran();
+      final response = await _guruApi.getJadwalPelajaran(params: params);
       if (response['success'] == true) {
         return response['data'] ?? [];
       }
@@ -81,5 +82,21 @@ class GuruRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<List<dynamic>> getTodaySchedule() async {
+    final now = DateTime.now();
+    final dayNames = [
+      'Ahad',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu'
+    ];
+    final hari = dayNames[now.weekday % 7];
+
+    return await getJadwalPelajaran(params: {'hari': hari});
   }
 }

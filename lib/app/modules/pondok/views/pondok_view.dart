@@ -16,7 +16,7 @@ class PondokView extends GetView<PondokController> {
         actions: [
           Obx(() => controller.canManage
               ? IconButton(
-                  onPressed: () {},
+                  onPressed: () => _showAddBlokForm(context),
                   icon: const Icon(Icons.add_business_outlined,
                       color: AppColors.primary),
                 )
@@ -221,7 +221,8 @@ class PondokView extends GetView<PondokController> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Navigate to room management
+                              controller.selectedBlok.value = dorm;
+                              _showManageRoomsSheet(context, dorm);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -242,6 +243,279 @@ class PondokView extends GetView<PondokController> {
           ),
         );
       },
+    );
+  }
+
+  void _showAddBlokForm(BuildContext context) {
+    final nameController = TextEditingController();
+    final lokasiController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tambah Asrama Baru',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nama Asrama / Blok',
+                hintText: 'e.g. Blok A (Abu Bakar)',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: lokasiController,
+              decoration: const InputDecoration(
+                labelText: 'Lokasi',
+                hintText: 'e.g. Timur Masjid',
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => controller.addBlok(
+                  nameController.text,
+                  lokasiController.text,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('Simpan Asrama',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showManageRoomsSheet(BuildContext context, Map<String, dynamic> blok) {
+    controller.fetchRooms(blok['id'].toString());
+
+    Get.bottomSheet(
+      isScrollControlled: true,
+      Container(
+        height: Get.height * 0.8,
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Daftar Kamar',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(blok['name'] ?? 'Blok',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 14)),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () => _showAddKamarForm(context, blok['id']),
+                  icon: const Icon(Icons.add_circle_outline,
+                      color: AppColors.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Obx(() {
+                if (controller.isRoomLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (controller.roomList.isEmpty) {
+                  return const Center(
+                      child: Text('Belum ada kamar di blok ini'));
+                }
+
+                return ListView.builder(
+                  itemCount: controller.roomList.length,
+                  itemBuilder: (context, index) {
+                    final room = controller.roomList[index];
+                    final santriCount = room['santri_count'] ?? 0;
+                    final kapasitas = room['kapasitas'] ?? 0;
+                    final isFull = santriCount >= kapasitas;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(room['nama_kamar'] ?? 'Kamar',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                                const SizedBox(height: 4),
+                                Text('$santriCount/$kapasitas Santri',
+                                    style: TextStyle(
+                                        color: isFull
+                                            ? AppColors.error
+                                            : AppColors.textSecondary,
+                                        fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: isFull
+                                ? null
+                                : () =>
+                                    _showAssignSantriForm(context, room['id']),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                            child: const Text('Isi Santri',
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddKamarForm(BuildContext context, int blokId) {
+    final nameController = TextEditingController();
+    final kapasitasController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tambah Kamar Baru',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nama / Nomor Kamar',
+                hintText: 'e.g. Kamar 01',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: kapasitasController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Kapasitas Santri',
+                hintText: 'e.g. 10',
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => controller.addKamar(
+                  blokId,
+                  nameController.text,
+                  int.tryParse(kapasitasController.text) ?? 0,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('Simpan Kamar',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAssignSantriForm(BuildContext context, int kamarId) {
+    final santriIdController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tempatkan Santri',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Masukkan ID Santri yang akan ditempatkan di kamar ini.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: santriIdController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'ID Santri',
+                hintText: 'e.g. 15',
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => controller.assignSantri(
+                  int.tryParse(santriIdController.text) ?? 0,
+                  kamarId,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('Proses Penempatan',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

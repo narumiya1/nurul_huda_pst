@@ -11,6 +11,10 @@ class PondokController extends GetxController {
   final dormList = <Map<String, dynamic>>[].obs;
   final userRole = 'netizen'.obs;
 
+  final selectedBlok = Rxn<Map<String, dynamic>>();
+  final roomList = <dynamic>[].obs;
+  final isRoomLoading = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -110,6 +114,81 @@ class PondokController extends GetxController {
     } catch (e) {
       // Fallback to mock data on error
       _loadMockData();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchRooms(String blokId) async {
+    try {
+      isRoomLoading.value = true;
+      final response = await _repository.getPondokKamar(blokId: blokId);
+      if (response['success'] == true) {
+        roomList.assignAll(response['data'] ?? []);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal memuat daftar kamar: $e');
+    } finally {
+      isRoomLoading.value = false;
+    }
+  }
+
+  Future<void> addBlok(String name, String lokasi) async {
+    try {
+      isLoading.value = true;
+      await _repository.createPondokBlok({
+        'nama_blok': name,
+        'lokasi': lokasi,
+      });
+      Get.back();
+      Get.snackbar('Sukses', 'Berhasil menambah asrama');
+      fetchPondokData();
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal menambah asrama: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addKamar(int blokId, String name, int kapasitas) async {
+    try {
+      isLoading.value = true;
+      await _repository.createPondokKamar({
+        'blok_id': blokId,
+        'nama_kamar': name,
+        'kapasitas': kapasitas,
+      });
+      Get.back();
+      Get.snackbar('Sukses', 'Berhasil menambah kamar');
+      fetchRooms(blokId.toString());
+      fetchPondokData();
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal menambah kamar: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> assignSantri(int santriId, int kamarId) async {
+    try {
+      isLoading.value = true;
+      final response = await _repository.assignSantriToKamar({
+        'santri_id': santriId,
+        'kamar_id': kamarId,
+      });
+      if (response['success'] == true) {
+        Get.back();
+        Get.snackbar('Sukses', 'Santri berhasil ditempatkan');
+        if (selectedBlok.value != null) {
+          fetchRooms(selectedBlok.value!['id'].toString());
+        }
+        fetchPondokData();
+      } else {
+        Get.snackbar(
+            'Gagal', response['message'] ?? 'Gagal menempatkan santri');
+      }
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal menempatkan santri: $e');
     } finally {
       isLoading.value = false;
     }

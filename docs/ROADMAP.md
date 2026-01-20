@@ -61,7 +61,29 @@ Empower staff to manage daily operations via mobile.
   - Copy-to-clipboard functionality for account numbers.
   - Instructions for manual confirmation after transfer.
 
-## 4. General Improvements ✅ COMPLETED
+## 4. Modul Staff & Administrasi (Priority: Medium) ✅ COMPLETED
+### A. Manajemen SDM (Master Data) ✅
+- **Goal**: View and manage staff, teachers, and student data.
+- **Mobile Implementation**: ✅ Done
+  - `ManajemenSdmView` with role-based filtering.
+  - Search functionality for all users.
+  - Detail view for user profiles.
+
+### B. Penerimaan Santri Baru (PSB) ✅
+- **Goal**: Monitor and verify new student registrations.
+- **Mobile Implementation**: ✅ Done
+  - `PsbView` with dashboard statistics (Total, Verified, Pending).
+  - List of registrants with status badges.
+  - Search by name or NISN.
+
+### C. Administrasi & Arsip ✅
+- **Goal**: Manage digital correspondences and archives.
+- **Mobile Implementation**: ✅ Done
+  - `AdministrasiView` with tabbed interface (Archives vs Downloads).
+  - Filter by document type and status.
+  - PDF preview and download capabilities.
+
+## 5. General Improvements ✅ COMPLETED
 
 ### A. Profile Edit ✅
 **Goal**: Allow users to update their profile information.
@@ -93,7 +115,8 @@ Empower staff to manage daily operations via mobile.
 
 All major features have been implemented:
 - ✅ Student Interactive Features (Perizinan, Tugas, Pelanggaran)
-- ✅ Teacher/Staff Features (Absensi, Tahfidz)
+- ✅ Teacher Features (Absensi, Tahfidz, Jadwal)
+- ✅ Staff/Admin Features (PSB, Master Data, Administrasi)
 - ✅ Finance Features (Manual Bank Payment)
 - ✅ General Improvements (Profile Edit, Password Change, About/Help)
 

@@ -205,13 +205,11 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
             _buildAddOptionItem(
               icon: Icons.school_outlined,
               color: const Color(0xFF3498DB),
-              title: 'Tambah Guru',
-              subtitle: 'Input data pengajar baru',
+              title: 'Tambah Siswa',
+              subtitle: 'Input data siswa sekolah',
               onTap: () {
                 Get.back();
-                Get.snackbar('Info', 'Fitur Tambah Guru akan segera hadir',
-                    backgroundColor: AppColors.primary,
-                    colorText: Colors.white);
+                _showAddSiswaForm(context);
               },
             ),
             const SizedBox(height: 16),
@@ -222,22 +220,18 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               subtitle: 'Input data santri baru',
               onTap: () {
                 Get.back();
-                Get.snackbar('Info', 'Fitur Tambah Santri akan segera hadir',
-                    backgroundColor: AppColors.primary,
-                    colorText: Colors.white);
+                _showAddSantriForm(context);
               },
             ),
             const SizedBox(height: 16),
             _buildAddOptionItem(
-              icon: Icons.work_outline,
-              color: const Color(0xFFE67E22),
+              icon: Icons.badge_outlined,
+              color: const Color(0xFFE17055),
               title: 'Tambah Staff',
-              subtitle: 'Input data karyawan/staff',
+              subtitle: 'Input data staff baru',
               onTap: () {
                 Get.back();
-                Get.snackbar('Info', 'Fitur Tambah Staff akan segera hadir',
-                    backgroundColor: AppColors.primary,
-                    colorText: Colors.white);
+                _showAddStaffForm(context);
               },
             ),
           ],
@@ -699,5 +693,443 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
       default:
         return Icons.person_outline;
     }
+  }
+
+  void _showAddSantriForm(BuildContext context) {
+    final nameController = TextEditingController();
+    final nisController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+    final addressController = TextEditingController();
+    final gender = 'L'.obs;
+    final dobController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tambah Santri Baru',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nisController,
+                decoration: const InputDecoration(labelText: 'NIS'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: 'No. HP / WA'),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              Obx(() => DropdownButtonFormField<String>(
+                    initialValue: gender.value,
+                    decoration:
+                        const InputDecoration(labelText: 'Jenis Kelamin'),
+                    items: const [
+                      DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
+                      DropdownMenuItem(value: 'P', child: Text('Perempuan')),
+                    ],
+                    onChanged: (val) => gender.value = val!,
+                  )),
+              const SizedBox(height: 12),
+              TextField(
+                controller: dobController,
+                decoration: const InputDecoration(
+                  labelText: 'Tanggal Lahir (YYYY-MM-DD)',
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                readOnly: true,
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        DateTime.now().subtract(const Duration(days: 365 * 10)),
+                    firstDate: DateTime(1990),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date != null) {
+                    dobController.text = date.toIso8601String().split('T')[0];
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(labelText: 'Alamat'),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isEmpty ||
+                        nisController.text.isEmpty ||
+                        emailController.text.isEmpty) {
+                      Get.snackbar('Error', 'Mohon lengkapi data wajib',
+                          backgroundColor: AppColors.error,
+                          colorText: Colors.white);
+                      return;
+                    }
+
+                    controller.addSantri({
+                      'full_name': nameController.text,
+                      'nis': nisController.text,
+                      'email': emailController.text,
+                      'no_hp': phoneController.text,
+                      'alamat': addressController.text,
+                      'jenis_kelamin': gender.value,
+                      'tanggal_lahir': dobController.text,
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Simpan Data',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showAddStaffForm(BuildContext context) {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final roleName = 'staff_pesantren'.obs;
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tambah Staff Baru',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmPasswordController,
+                decoration:
+                    const InputDecoration(labelText: 'Konfirmasi Password'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 12),
+              Obx(() => DropdownButtonFormField<String>(
+                    initialValue: roleName.value,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'staff_pesantren',
+                          child: Text('Staff Pesantren')),
+                      DropdownMenuItem(
+                          value: 'staff_keuangan',
+                          child: Text('Staff Keuangan')),
+                    ],
+                    onChanged: (val) => roleName.value = val!,
+                  )),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isEmpty ||
+                        emailController.text.isEmpty ||
+                        passwordController.text.isEmpty) {
+                      Get.snackbar('Error', 'Mohon lengkapi data wajib',
+                          backgroundColor: AppColors.error,
+                          colorText: Colors.white);
+                      return;
+                    }
+
+                    if (passwordController.text !=
+                        confirmPasswordController.text) {
+                      Get.snackbar('Error', 'Password konfirmasi tidak cocok',
+                          backgroundColor: AppColors.error,
+                          colorText: Colors.white);
+                      return;
+                    }
+
+                    controller.addStaff({
+                      'full_name': nameController.text,
+                      'email': emailController.text,
+                      'password': passwordController.text,
+                      'password_confirmation': confirmPasswordController.text,
+                      'role_name': roleName.value,
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Simpan Data',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showAddSiswaForm(BuildContext context) async {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final nisController = TextEditingController();
+    final nisnController = TextEditingController();
+    final tahunMasukController =
+        TextEditingController(text: DateTime.now().year.toString());
+    final phoneController = TextEditingController();
+
+    final selectedSekolah = Rxn<int>();
+    final sekolahList = <dynamic>[].obs;
+    final isLoadingSekolah = true.obs;
+
+    final isJugaSantri = false.obs;
+    final nisSantriController = TextEditingController();
+
+    // Fetch sekolah list
+    try {
+      final res = await controller.fetchSekolahList();
+      sekolahList.value = res;
+    } finally {
+      isLoadingSekolah.value = false;
+    }
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tambah Siswa Baru',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Data Utama ---
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailController,
+                decoration:
+                    const InputDecoration(labelText: 'Email (untuk login)'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: nisController,
+                      decoration:
+                          const InputDecoration(labelText: 'NIS (Sekolah)'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: nisnController,
+                      decoration: const InputDecoration(labelText: 'NISN'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // --- Sekolah Dropdown ---
+              Obx(() => isLoadingSekolah.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<int>(
+                      initialValue: selectedSekolah.value,
+                      decoration: const InputDecoration(labelText: 'Sekolah'),
+                      items: sekolahList
+                          .map((s) => DropdownMenuItem<int>(
+                                value: s['id'],
+                                child: Text(
+                                    s['nama_sekolah'] ?? 'Sekolah #${s['id']}'),
+                              ))
+                          .toList(),
+                      onChanged: (val) => selectedSekolah.value = val,
+                    )),
+
+              const SizedBox(height: 12),
+              TextField(
+                controller: tahunMasukController,
+                decoration: const InputDecoration(labelText: 'Tahun Masuk'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                decoration:
+                    const InputDecoration(labelText: 'No. HP (Opsional)'),
+                keyboardType: TextInputType.phone,
+              ),
+
+              const SizedBox(height: 16),
+              const Divider(),
+
+              // --- Opsi Santri ---
+              Obx(() => CheckboxListTile(
+                    title: const Text('Juga Terdaftar sebagai Santri?'),
+                    value: isJugaSantri.value,
+                    onChanged: (val) => isJugaSantri.value = val ?? false,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  )),
+
+              Obx(() => isJugaSantri.value
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextField(
+                        controller: nisSantriController,
+                        decoration: const InputDecoration(
+                          labelText: 'NIS Santri (Opsional)',
+                          helperText:
+                              'Jika kosong, akan digenerate otomatis S-[NIS]',
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink()),
+
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isEmpty ||
+                        emailController.text.isEmpty ||
+                        nisController.text.isEmpty ||
+                        selectedSekolah.value == null) {
+                      Get.snackbar('Error',
+                          'Mohon lengkapi data wajib (Nama, Email, NIS, Sekolah)',
+                          backgroundColor: AppColors.error,
+                          colorText: Colors.white);
+                      return;
+                    }
+
+                    final data = {
+                      'full_name': nameController.text,
+                      'email': emailController.text,
+                      'nis': nisController.text,
+                      'nisn': nisnController.text,
+                      'sekolah_id': selectedSekolah.value,
+                      'tahun_masuk': int.tryParse(tahunMasukController.text) ??
+                          DateTime.now().year,
+                      'phone': phoneController.text,
+                      'juga_santri': isJugaSantri.value,
+                    };
+
+                    if (isJugaSantri.value &&
+                        nisSantriController.text.isNotEmpty) {
+                      data['nis_santri'] = nisSantriController.text;
+                    }
+
+                    controller.addSiswa(data);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Simpan Data Siswa',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 }

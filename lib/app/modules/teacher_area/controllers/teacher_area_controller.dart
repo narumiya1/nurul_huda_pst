@@ -143,12 +143,12 @@ class TeacherAreaController extends GetxController {
   Future<void> fetchKelasList() async {
     try {
       isLoading.value = true;
-      print('DEBUG: Fetching kelas list...');
+      debugPrint('DEBUG: Fetching kelas list...');
       final data = await _guruRepository.getMyKelas();
-      print('DEBUG: Kelas list response: $data');
+      debugPrint('DEBUG: Kelas list response: $data');
 
       if (data.isEmpty) {
-        print('DEBUG: Kelas list is empty, using fallback mock');
+        debugPrint('DEBUG: Kelas list is empty, using fallback mock');
         kelasList.assignAll([
           {
             'id': 1,
@@ -170,11 +170,11 @@ class TeacherAreaController extends GetxController {
           }
           return map;
         }).toList();
-        print('DEBUG: Normalized kelas list: $normalized');
+        debugPrint('DEBUG: Normalized kelas list: $normalized');
         kelasList.assignAll(normalized);
       }
     } catch (e) {
-      print('DEBUG: Error fetching kelas list: $e');
+      debugPrint('DEBUG: Error fetching kelas list: $e');
       // Fallback
       kelasList.clear();
       // Ensure fallback shows even on error for debugging
@@ -202,7 +202,7 @@ class TeacherAreaController extends GetxController {
         isLoadingMore.value = true;
       }
 
-      print(
+      debugPrint(
           'DEBUG: Fetching siswa for kelasId: $kelasId, Page: ${currentPage.value}');
       final uri = ApiHelper.buildUri(
         endpoint: 'siswa',
@@ -213,14 +213,14 @@ class TeacherAreaController extends GetxController {
           'page': currentPage.value.toString(),
         },
       );
-      print('DEBUG: URI: $uri');
+      debugPrint('DEBUG: URI: $uri');
 
       final response = await _apiHelper.getData(
         uri: uri,
         builder: (data) => data,
         header: _getAuthHeader(),
       );
-      print('DEBUG: Response received (truncated)');
+      debugPrint('DEBUG: Response received (truncated)');
 
       if (response != null && response['data'] != null) {
         // Handle pagination meta
@@ -233,12 +233,12 @@ class TeacherAreaController extends GetxController {
             ? response['data']
             : (response['data']['data'] ?? []);
 
-        print('DEBUG: Raw List length: ${rawList.length}');
+        debugPrint('DEBUG: Raw List length: ${rawList.length}');
 
         List<Map<String, dynamic>> mappedList = [];
 
         if (rawList.isEmpty && refresh) {
-          print('DEBUG: List empty, using fallback demo data');
+          debugPrint('DEBUG: List empty, using fallback demo data');
           // Demo data only on refresh/first load if empty
           mappedList = [
             {
@@ -281,7 +281,7 @@ class TeacherAreaController extends GetxController {
               }
             }
           } catch (e) {
-            print('Error fetching existing attendance: $e');
+            debugPrint('Error fetching existing attendance: $e');
           }
         } else {
           siswaList.addAll(mappedList);
@@ -294,10 +294,10 @@ class TeacherAreaController extends GetxController {
           }
         }
       } else {
-        print('DEBUG: Response data is null');
+        debugPrint('DEBUG: Response data is null');
       }
     } catch (e) {
-      print('DEBUG: Error fetching siswa: $e');
+      debugPrint('DEBUG: Error fetching siswa: $e');
       Get.snackbar('Error', 'Gagal memuat daftar siswa: $e');
     } finally {
       isLoading.value = false;

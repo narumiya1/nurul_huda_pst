@@ -76,7 +76,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
                             santriName,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -184,7 +184,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                 children: [
                   Expanded(
                     child: Obx(() => DropdownButtonFormField<int>(
-                          value: controller.selectedKelasId.value,
+                          initialValue: controller.selectedKelasId.value,
                           isExpanded: true,
                           decoration: InputDecoration(
                             hintText: 'Kelas',
@@ -211,7 +211,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Obx(() => DropdownButtonFormField<int>(
-                          value: controller.selectedKamarId.value,
+                          initialValue: controller.selectedKamarId.value,
                           isExpanded: true,
                           decoration: InputDecoration(
                             hintText: 'Kamar',
@@ -484,7 +484,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                           const SizedBox(height: 4),
                           Text(
                             santriName,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,

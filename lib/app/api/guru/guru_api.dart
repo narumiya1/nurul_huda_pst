@@ -36,8 +36,9 @@ class GuruApi {
     );
   }
 
-  Future<dynamic> getJadwalPelajaran() async {
-    final uri = ApiHelper.buildUri(endpoint: 'jadwal-pelajaran');
+  Future<dynamic> getJadwalPelajaran({Map<String, String>? params}) async {
+    final uri =
+        ApiHelper.buildUri(endpoint: 'jadwal-pelajaran', params: params);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,

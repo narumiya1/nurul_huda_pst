@@ -187,4 +187,84 @@ class PimpinanApi {
       header: _getAuthHeader(),
     );
   }
+
+  /// Create New Santri (Add to Master Data)
+  Future<dynamic> createSantri(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'santri');
+
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Staff (Add to Master Data)
+  Future<dynamic> createStaff(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'users/staff');
+
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get Sekolah List for dropdown
+  Future<List<dynamic>> getSekolahList() async {
+    final uri = ApiHelper.buildUri(endpoint: 'sekolah');
+
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data'] is List ? data['data'] : [],
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Siswa
+  Future<dynamic> createSiswa(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'siswa');
+
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Pondok Blok
+  Future<dynamic> createPondokBlok(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'pondok/blok');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Pondok Kamar
+  Future<dynamic> createPondokKamar(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'pondok/kamar');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Assign Santri to Kamar
+  Future<dynamic> assignSantriToKamar(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'pondok/assign-santri');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
 }

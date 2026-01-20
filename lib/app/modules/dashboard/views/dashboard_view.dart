@@ -281,7 +281,7 @@ class HomePage extends GetView<DashboardController> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: AppShadows.cardShadow,
-                  border: Border(
+                  border: const Border(
                       left: BorderSide(color: AppColors.primary, width: 4)),
                 ),
                 child: Row(

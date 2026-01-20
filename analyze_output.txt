@@ -1,0 +1,12 @@
+Analyzing android_epesantren...                                 
+
+   info - Don't invoke 'print' in production code - lib\app\helpers\api_helpers.dart:21:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\app\modules\absensi\controllers\absensi_controller.dart:73:7 - avoid_print
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\app\modules\keuangan\views\keuangan_view.dart:2:8 - unnecessary_import
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/widgets.dart' - lib\app\modules\manajemen_sdm\controllers\manajemen_sdm_controller.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\app\modules\pelanggaran\controllers\pelanggaran_controller.dart:21:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\app\modules\teacher_area\views\teacher_area_view.dart:57:23 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\app\modules\teacher_area\views\teacher_area_view.dart:245:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\app\modules\teacher_area\views\teacher_area_view.dart:270:17 - deprecated_member_use
+
+8 issues found. (ran in 1.1s)

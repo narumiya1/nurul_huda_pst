@@ -29,6 +29,17 @@ class BeritaModel {
     );
   }
 
+  String? get imageUrl {
+    if (image == null || image!.isEmpty) return null;
+    if (image!.startsWith('http')) return image;
+
+    // Default to 10.0.2.2 for emulator if not specified,
+    // better to use config/ApiHelper if available.
+    // Since this is a model, maybe just return what it is and let view handle it.
+    // BUT looking at other parts, we prefix it.
+    return 'http://10.0.2.2:8000${image!.startsWith('/') ? image! : '/$image'}';
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

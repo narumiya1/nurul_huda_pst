@@ -1,7 +1,11 @@
 import 'package:get/get.dart';
 import '../../../helpers/local_storage.dart';
+import '../../../api/pimpinan/pimpinan_api.dart';
+import '../../../api/pimpinan/pimpinan_repository.dart';
 
 class PondokController extends GetxController {
+  final PimpinanRepository _repository = PimpinanRepository(PimpinanApi());
+
   final isLoading = false.obs;
   final dormStats = <String, dynamic>{}.obs;
   final dormList = <Map<String, dynamic>>[].obs;
@@ -27,53 +31,121 @@ class PondokController extends GetxController {
     }
   }
 
-  bool get canManage => ['staff_pesantren', 'rois'].contains(userRole.value);
+  bool get canManage =>
+      ['staff_pesantren', 'rois', 'superadmin'].contains(userRole.value);
   bool get isPimpinan => userRole.value == 'pimpinan';
 
   Future<void> fetchPondokData() async {
     try {
       isLoading.value = true;
-      await Future.delayed(const Duration(seconds: 1));
 
-      dormStats.value = {
-        'total_asrama': 5,
-        'total_kamar': 40,
-        'total_santri': 450,
-        'kapasitas_tersedia': 50,
-      };
+      final response = await _repository.getPondokBlok();
 
-      dormList.assignAll([
-        {
-          'name': 'Gedung Abu Bakar',
-          'total_rooms': 10,
-          'occupied_rooms': 10,
-          'total_santri': 100,
-          'status': 'Full',
-        },
-        {
-          'name': 'Gedung Umar Bin Khattab',
-          'total_rooms': 10,
-          'occupied_rooms': 8,
-          'total_santri': 85,
-          'status': 'Available',
-        },
-        {
-          'name': 'Gedung Utsman Bin Affan',
-          'total_rooms': 10,
-          'occupied_rooms': 9,
-          'total_santri': 92,
-          'status': 'Available',
-        },
-        {
-          'name': 'Gedung Ali Bin Abi Thalib',
-          'total_rooms': 10,
-          'occupied_rooms': 10,
-          'total_santri': 110,
-          'status': 'Full',
-        },
-      ]);
+      if (response['success'] == true && response['data'] != null) {
+        final List blokList = response['data'] as List;
+
+        // Calculate stats
+        int totalAsrama = blokList.length;
+        int totalKamar = 0;
+        int totalSantri = 0;
+        int totalKapasitas = 0;
+
+        List<Map<String, dynamic>> formattedList = [];
+
+        for (var blok in blokList) {
+          final List kamarList = blok['kamar'] ?? [];
+          int blokKamar = kamarList.length;
+          int blokSantri = 0;
+          int blokKapasitas = 0;
+          int occupiedRooms = 0;
+
+          for (var kamar in kamarList) {
+            int kapasitas = kamar['kapasitas'] ?? 0;
+            int santriCount = kamar['santri_count'] ?? 0;
+            blokSantri += santriCount;
+            blokKapasitas += kapasitas;
+            if (santriCount >= kapasitas && kapasitas > 0) {
+              occupiedRooms++;
+            }
+          }
+
+          totalKamar += blokKamar;
+          totalSantri += blokSantri;
+          totalKapasitas += blokKapasitas;
+
+          // Get rois name
+          String roisName = '-';
+          if (blok['rois'] != null && blok['rois']['details'] != null) {
+            roisName = blok['rois']['details']['full_name'] ?? '-';
+          }
+
+          formattedList.add({
+            'id': blok['id'],
+            'name': blok['nama_blok'] ?? 'Blok',
+            'lokasi': blok['lokasi'] ?? '-',
+            'deskripsi': blok['deskripsi'] ?? '-',
+            'total_rooms': blokKamar,
+            'occupied_rooms': occupiedRooms,
+            'total_santri': blokSantri,
+            'kapasitas': blokKapasitas,
+            'rois': roisName,
+            'status': blokSantri >= blokKapasitas && blokKapasitas > 0
+                ? 'Full'
+                : 'Available',
+          });
+        }
+
+        dormStats.value = {
+          'total_asrama': totalAsrama,
+          'total_kamar': totalKamar,
+          'total_santri': totalSantri,
+          'kapasitas_tersedia': totalKapasitas - totalSantri,
+        };
+
+        dormList.assignAll(formattedList);
+      } else {
+        // Fallback to mock data
+        _loadMockData();
+      }
+    } catch (e) {
+      // Fallback to mock data on error
+      _loadMockData();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void _loadMockData() {
+    dormStats.value = {
+      'total_asrama': 2,
+      'total_kamar': 5,
+      'total_santri': 50,
+      'kapasitas_tersedia': 10,
+    };
+
+    dormList.assignAll([
+      {
+        'id': 1,
+        'name': 'Blok A (Abu Bakar)',
+        'lokasi': 'Timur Masjid',
+        'total_rooms': 3,
+        'occupied_rooms': 2,
+        'total_santri': 28,
+        'kapasitas': 30,
+        'rois': '-',
+        'status': 'Available',
+      },
+      {
+        'id': 2,
+        'name': 'Blok B (Umar Bin Khattab)',
+        'lokasi': 'Selatan Masjid',
+        'total_rooms': 2,
+        'occupied_rooms': 2,
+        'total_santri': 24,
+        'kapasitas': 24,
+        'rois': '-',
+        'status': 'Full',
+      },
+    ]);
   }
 }

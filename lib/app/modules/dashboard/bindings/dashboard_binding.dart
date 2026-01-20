@@ -11,6 +11,7 @@ import 'package:epesantren_mob/app/api/rois/rois_api.dart';
 import 'package:epesantren_mob/app/api/rois/rois_repository.dart';
 import 'package:epesantren_mob/app/api/sdm/sdm_api.dart';
 import 'package:epesantren_mob/app/api/sdm/sdm_repository.dart';
+import 'package:epesantren_mob/app/modules/profil/controllers/profil_controller.dart';
 import 'package:get/get.dart';
 
 import '../controllers/dashboard_controller.dart';
@@ -29,5 +30,6 @@ class DashboardBinding extends Bindings {
         SdmRepository(SdmApi()),
       ),
     );
+    Get.lazyPut<ProfilController>(() => ProfilController());
   }
 }

@@ -16,6 +16,10 @@ class ApiHelper {
         uri,
         headers: header,
       );
+
+      // Debug logging for response
+      // print('API GET: $uri -> status=${response.statusCode}, size=${response.body.length}');
+
       switch (response.statusCode) {
         case HttpStatus.ok:
           try {
@@ -38,14 +42,17 @@ class ApiHelper {
         case HttpStatus.notFound:
           throw Exception("endpoint not found");
         case HttpStatus.unauthorized:
-          // LocalPrefsRepository().deleteToken();
-          // LocalPrefsRepository().deleteUser();
-          // LocalPrefsRepository().deleteCurrentProfile();
-          // AppRoutes().clearAndNavigate(AppRoutes.auth);
           throw Exception("token no longer valid");
+        case HttpStatus.forbidden:
+          throw Exception("access forbidden - insufficient permissions");
         default:
-          final data = jsonDecode(response.body);
-          throw Exception(data.toString());
+          try {
+            final data = jsonDecode(response.body);
+            throw Exception(data.toString());
+          } catch (_) {
+            throw Exception(
+                "HTTP ${response.statusCode}: ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}");
+          }
       }
     } on SocketException catch (_) {
       throw Exception("No Internet Connection");

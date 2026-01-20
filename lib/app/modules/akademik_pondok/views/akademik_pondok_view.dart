@@ -11,34 +11,43 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     return Obx(() {
       final isMain = controller.selectedIndex.value == -1;
 
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: Text(isMain
-              ? 'Akademik & Pondok'
-              : _getPageTitle(controller.selectedIndex.value)),
-          centerTitle: true,
-          leading: isMain
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Get.back())
-              : IconButton(
-                  icon: const Icon(Icons.grid_view_rounded),
-                  onPressed: () => controller.selectedIndex.value = -1),
-          actions: [
-            if (!isMain)
-              IconButton(
-                icon: const Icon(Icons.filter_list_rounded,
-                    color: AppColors.primary),
-                onPressed: () => _showFilterBottomSheet(context),
-              ),
-          ],
+      return PopScope(
+        canPop: isMain, // Only allow system back if we're on main grid
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && !isMain) {
+            // If we're in a sub-feature, go back to grid instead of popping
+            controller.selectedIndex.value = -1;
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: Text(isMain
+                ? 'Akademik & Pondok'
+                : _getPageTitle(controller.selectedIndex.value)),
+            centerTitle: true,
+            leading: isMain
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Get.back())
+                : IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => controller.selectedIndex.value = -1),
+            actions: [
+              if (!isMain)
+                IconButton(
+                  icon: const Icon(Icons.filter_list_rounded,
+                      color: AppColors.primary),
+                  onPressed: () => _showFilterBottomSheet(context),
+                ),
+            ],
+          ),
+          body: isMain
+              ? _buildGridMenu()
+              : Obx(() => controller.isLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildPageContent(controller.selectedIndex.value)),
         ),
-        body: controller.isLoading.value
-            ? const Center(child: CircularProgressIndicator())
-            : isMain
-                ? _buildGridMenu()
-                : _buildPageContent(controller.selectedIndex.value),
       );
     });
   }
@@ -630,17 +639,19 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                     Text(item['description'] ?? '',
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                   ]),
-              trailing: ElevatedButton(
-                onPressed: () => _showSubmissionForm(context, item),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8)),
-                child: const Text('Kirim',
-                    style: TextStyle(fontSize: 12, color: Colors.white)),
-              ),
+              trailing: controller.userRole.value == 'pimpinan'
+                  ? null
+                  : ElevatedButton(
+                      onPressed: () => _showSubmissionForm(context, item),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8)),
+                      child: const Text('Kirim',
+                          style: TextStyle(fontSize: 12, color: Colors.white)),
+                    ),
             ),
           );
         },

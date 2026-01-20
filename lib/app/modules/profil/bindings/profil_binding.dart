@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/profil_controller.dart';
+import 'package:epesantren_mob/app/modules/profil/controllers/profil_controller.dart';
 
 class ProfilBinding extends Bindings {
   @override

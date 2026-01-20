@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
-import '../../../helpers/local_storage.dart';
-import '../../../routes/app_pages.dart';
+import 'package:epesantren_mob/app/helpers/local_storage.dart';
+import 'package:epesantren_mob/app/routes/app_pages.dart';
 
 class ProfilController extends GetxController {
   final ApiHelper _apiHelper = ApiHelper();
@@ -14,6 +14,7 @@ class ProfilController extends GetxController {
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
   final emailController = TextEditingController();
+  final settings = Rxn<Map<String, dynamic>>();
 
   // Password fields
   final oldPasswordController = TextEditingController();
@@ -32,6 +33,20 @@ class ProfilController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserData();
+    fetchSettings();
+  }
+
+  Future<void> fetchSettings() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'settings');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data['data'],
+      );
+      settings.value = response;
+    } catch (e) {
+      debugPrint('Error fetching settings: $e');
+    }
   }
 
   void loadUserData() {
@@ -51,6 +66,15 @@ class ProfilController extends GetxController {
   String get userRole => userData.value?['role']?['description'] ?? 'Pengguna';
   String get userEmail => userData.value?['email'] ?? '-';
   String get userPhone => userData.value?['details']?['phone'] ?? '-';
+  bool get isPimpinan {
+    final role = userData.value?['role'];
+    if (role == null) return false;
+    if (role is String) return role.toLowerCase() == 'pimpinan';
+    if (role is Map) {
+      return (role['role_name'] ?? '').toString().toLowerCase() == 'pimpinan';
+    }
+    return false;
+  }
 
   Future<void> updateProfile() async {
     if (fullNameController.text.isEmpty) {
@@ -77,10 +101,11 @@ class ProfilController extends GetxController {
         header: _getAuthHeader(),
       );
 
-      if (response['user'] != null) {
+      if (response['data'] != null && response['data']['user'] != null) {
+        final user = response['data']['user'];
         // Update local storage
-        LocalStorage.saveUser(response['user']);
-        userData.value = response['user'];
+        LocalStorage.saveUser(user);
+        userData.value = user;
 
         Get.back();
         Get.snackbar('Sukses', 'Profil berhasil diperbarui',

@@ -1,4 +1,5 @@
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../../helpers/local_storage.dart';
 
@@ -6,14 +7,24 @@ class ManajemenSdmController extends GetxController {
   final PimpinanRepository _repository;
   ManajemenSdmController(this._repository);
 
+  // Scroll Controller
+  final ScrollController scrollController = ScrollController();
+
   final isLoading = false.obs;
+  final isMoreLoading = false.obs; // For infinite scroll
   final users = <Map<String, dynamic>>[].obs;
   final filteredUsers = <Map<String, dynamic>>[].obs;
   final selectedRole = 'Semua'.obs;
   final currentUserRole = 'netizen'.obs;
 
+  // Pagination State
+  int currentPage = 1;
+  int lastPage = 1;
+  final int itemsPerPage = 5; // Reduced to prevent large response issues
+  String currentSearchQuery = '';
+
   final List<String> roles = [
-    'Semua',
+    // 'Semua', // Remove 'Semua' to simplify pagination logic (each tab has different endpoint)
     'Pimpinan',
     'Guru',
     'Staff',
@@ -26,8 +37,25 @@ class ManajemenSdmController extends GetxController {
   void onInit() {
     super.onInit();
     _loadUserRole();
-    filterByRole(
-        'Pimpinan'); // Default to Pimpinan instead of Semua to be lighter
+    filterByRole('Pimpinan');
+
+    // Infinite Scroll Listener
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 200) {
+        if (!isLoading.value &&
+            !isMoreLoading.value &&
+            currentPage < lastPage) {
+          loadNextPage();
+        }
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
   }
 
   void _loadUserRole() {
@@ -43,44 +71,78 @@ class ManajemenSdmController extends GetxController {
     }
   }
 
-  bool get canManage =>
-      currentUserRole.value == 'staff_pesantren' ||
-      currentUserRole.value == 'pimpinan';
+  // Pimpinan is View Only, Staff Pesantren might manage
+  bool get canManage => currentUserRole.value == 'staff_pesantren';
 
-  void fetchUsers(String role) async {
-    isLoading.value = true;
-    users.clear();
-    filteredUsers.clear(); // Clear immediately for feedback
+  Future<void> fetchUsers(String role, {bool refresh = false}) async {
+    if (refresh) {
+      isLoading.value = true;
+      currentPage = 1;
+      users.clear();
+      filteredUsers.clear();
+    } else {
+      isMoreLoading.value = true;
+    }
 
     try {
-      List<Map<String, dynamic>> results = [];
-
       if (role == 'Semua') {
-        // Fetch Key Roles only to avoid overload
-        final p = await _repository.getUsersByType('pimpinan');
-        final g = await _repository.getUsersByType('guru');
-        final s = await _repository.getUsersByType('staff');
-
-        results.addAll(_mapResponse(p, 'Pimpinan'));
-        results.addAll(_mapResponse(g, 'Guru'));
-        results.addAll(_mapResponse(s, 'Staff'));
-      } else {
-        // Map UI Label to API endpoint type
-        String type = role.toLowerCase().replaceAll(' ', '');
-        // Exceptions
-        if (role == 'Orang Tua') type = 'orangtua';
-
-        final response = await _repository.getUsersByType(type);
-        results.addAll(_mapResponse(response, role));
+        // 'Semua' mode is complex for infinite scroll, assuming separated tabs now
+        // If 'Semua' is kept, we might disable pagination or handle it differently
+        isLoading.value = false;
+        isMoreLoading.value = false;
+        return;
       }
 
-      users.assignAll(results);
+      String type = role.toLowerCase().replaceAll(' ', '');
+      if (role == 'Orang Tua') type = 'orangtua';
+
+      // Pass perPage and current search query
+      final response = await _repository.getUsersByType(type,
+          perPage: itemsPerPage,
+          search: currentSearchQuery,
+          page: refresh ? 1 : currentPage + 1 // Request next page or first page
+          );
+
+      // Handle Metadata for Pagination
+      if (response['meta'] != null) {
+        currentPage = response['meta']['current_page'];
+        lastPage = response['meta']['last_page'];
+      }
+
+      List<Map<String, dynamic>> newItems = _mapResponse(response, role);
+
+      if (refresh) {
+        users.assignAll(newItems);
+      } else {
+        users.addAll(newItems);
+      }
+
+      // Update filtered list (if no local search, they are same)
+      // Since we do server-side search, filteredUsers == users
       filteredUsers.assignAll(users);
     } catch (e) {
-      // Handle error silently
+      debugPrint('Error fetching $role: $e');
     } finally {
       isLoading.value = false;
+      isMoreLoading.value = false;
     }
+  }
+
+  void loadNextPage() {
+    if (!isMoreLoading.value && currentPage < lastPage) {
+      fetchUsers(selectedRole.value, refresh: false);
+    }
+  }
+
+  // RE-WRITE to include page param support via dynamic params or update API next.
+  // For now I will write the controller assuming API supports page or I will add page to params map if possible.
+  // Actually PimpinanApi.getUsersByType takes `search` and `perPage`. I need to add `page`.
+
+  // Let's implement fetch with page param support via a workaround or plan to update API.
+  // I will update PimpinanApi in NEXT step. Here I implement logic.
+
+  void fetchNextPage() {
+    loadNextPage();
   }
 
   List<Map<String, dynamic>> _mapResponse(dynamic response, String roleLabel) {
@@ -88,8 +150,7 @@ class ManajemenSdmController extends GetxController {
     if (response is Map && response['data'] != null) {
       if (response['data'] is List) list = response['data'];
     } else if (response is List) {
-      list =
-          response; // Santri might return list directly? No, controller says json structure.
+      list = response;
     }
 
     return list.map((item) {
@@ -98,27 +159,25 @@ class ManajemenSdmController extends GetxController {
       String status = 'Non-Aktif';
 
       if (item is Map) {
-        // Support for nested User (like in Siswa record)
-        Map? userObj = item;
+        Map userObj = item;
         if (item['user'] != null && item['user'] is Map) {
           userObj = item['user'] as Map;
         }
 
-        // Name
-        if (userObj['details'] != null &&
-            userObj['details'] is Map &&
-            userObj['details']['full_name'] != null) {
-          name = userObj['details']['full_name'];
+        // Safe string extraction
+        final details = userObj['details'];
+        if (details != null && details is Map && details['full_name'] != null) {
+          name = details['full_name'].toString();
         } else if (userObj['name'] != null) {
-          name = userObj['name'];
+          name = userObj['name'].toString();
         } else if (item['full_name'] != null) {
-          name = item['full_name'];
+          name = item['full_name'].toString();
         }
 
-        // Email
-        if (userObj['email'] != null) email = userObj['email'];
+        if (userObj['email'] != null) {
+          email = userObj['email'].toString();
+        }
 
-        // Status
         if (item['is_active'] == 1 ||
             item['is_active'] == true ||
             userObj['is_active'] == 1 ||
@@ -133,28 +192,20 @@ class ManajemenSdmController extends GetxController {
         'role': roleLabel,
         'email': email,
         'status': status,
-        'original': item // Keep original if needed
+        'original': item
       };
     }).toList();
   }
 
   void filterByRole(String role) {
     selectedRole.value = role;
-    fetchUsers(role);
+    currentSearchQuery = ''; // Reset search logic on tab change
+    fetchUsers(role, refresh: true);
   }
 
   void searchUser(String query) {
-    if (query.isEmpty) {
-      filteredUsers.assignAll(users);
-    } else {
-      filteredUsers.assignAll(users
-          .where((u) =>
-              u['name']
-                  .toString()
-                  .toLowerCase()
-                  .contains(query.toLowerCase()) ||
-              u['email'].toString().toLowerCase().contains(query.toLowerCase()))
-          .toList());
-    }
+    // Debounce search ideally
+    currentSearchQuery = query;
+    fetchUsers(selectedRole.value, refresh: true);
   }
 }

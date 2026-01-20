@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../routes/app_pages.dart';
-import '../controllers/profil_controller.dart';
+import 'package:epesantren_mob/app/core/theme/app_theme.dart';
+import 'package:epesantren_mob/app/routes/app_pages.dart';
+import 'package:epesantren_mob/app/modules/profil/controllers/profil_controller.dart';
+import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 
 class ProfilView extends GetView<ProfilController> {
   const ProfilView({super.key});
@@ -15,7 +16,7 @@ class ProfilView extends GetView<ProfilController> {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             _buildInfoSection(),
             _buildMenuSection(),
           ],
@@ -24,7 +25,7 @@ class ProfilView extends GetView<ProfilController> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
@@ -40,10 +41,13 @@ class ProfilView extends GetView<ProfilController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: () => Get.back(),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-              ),
+              if (Navigator.canPop(context))
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                )
+              else
+                const SizedBox(width: 48),
               const Text(
                 'Profil Saya',
                 style: TextStyle(
@@ -53,7 +57,7 @@ class ProfilView extends GetView<ProfilController> {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: _showEditProfileDialog,
                 icon: const Icon(Icons.edit_outlined, color: Colors.white),
               ),
             ],
@@ -66,11 +70,29 @@ class ProfilView extends GetView<ProfilController> {
               border: Border.all(
                   color: Colors.white.withValues(alpha: 0.5), width: 3),
             ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              child: const Icon(Icons.person, size: 56, color: Colors.white),
-            ),
+            child: Obx(() {
+              final photoUrl =
+                  controller.userData.value?['details']?['photo_url'];
+              return CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                backgroundImage: photoUrl != null
+                    ? NetworkImage(
+                        photoUrl.toString().startsWith('http')
+                            ? photoUrl.toString()
+                            : ApiHelper.buildUri(endpoint: '')
+                                    .toString()
+                                    .replaceAll('/v1/api/', '') +
+                                (photoUrl.toString().startsWith('/')
+                                    ? photoUrl.toString()
+                                    : '/$photoUrl'),
+                      )
+                    : null,
+                child: photoUrl == null
+                    ? const Icon(Icons.person, size: 56, color: Colors.white)
+                    : null,
+              );
+            }),
           ),
           const SizedBox(height: 16),
           Obx(() => Text(
@@ -157,65 +179,72 @@ class ProfilView extends GetView<ProfilController> {
   Widget _buildMenuSection() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-      child: Column(
-        children: [
-          _buildMenuItem(
-              Icons.person_outline, 'Edit Profil', _showEditProfileDialog),
-          _buildMenuItem(
-              Icons.lock_outline, 'Ubah Password', _showChangePasswordDialog),
-          _buildMenuItem(Icons.notifications_outlined, 'Notifikasi', () {}),
-          _buildMenuItem(Icons.rule, 'Catatan Pelanggaran',
-              () => Get.toNamed(Routes.pelanggaran)),
-          _buildMenuItem(Icons.help_outline, 'Bantuan', _showHelpDialog),
-          _buildMenuItem(
-              Icons.info_outline, 'Tentang Aplikasi', _showAboutDialog),
-          const SizedBox(height: 12),
-          _buildMenuItem(Icons.logout, 'Keluar', controller.logout,
-              isLogout: true),
-        ],
-      ),
+      child: Obx(() => Column(
+            children: [
+              _buildMenuItem(Icons.person_outline, 'Edit Profil',
+                  () => _showEditProfileDialog()),
+              _buildMenuItem(Icons.lock_outline, 'Ubah Password',
+                  () => _showChangePasswordDialog()),
+              if (!controller.isPimpinan)
+                _buildMenuItem(Icons.rule, 'Catatan Pelanggaran',
+                    () => Get.toNamed(Routes.pelanggaran)),
+              _buildMenuItem(
+                  Icons.help_outline, 'Bantuan', () => _showHelpDialog()),
+              _buildMenuItem(Icons.info_outline, 'Tentang Aplikasi',
+                  () => _showAboutDialog()),
+              const SizedBox(height: 12),
+              _buildMenuItem(Icons.logout, 'Keluar', () => controller.logout(),
+                  isLogout: true),
+            ],
+          )),
     );
   }
 
   Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap,
       {bool isLogout = false}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppShadows.cardShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: (isLogout ? AppColors.error : AppColors.primary)
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon,
-                  color: isLogout ? AppColors.error : AppColors.primary,
-                  size: 22),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: isLogout ? AppColors.error : AppColors.textPrimary,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (isLogout ? AppColors.error : AppColors.primary)
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon,
+                      color: isLogout ? AppColors.error : AppColors.primary,
+                      size: 22),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isLogout ? AppColors.error : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 16, color: AppColors.textLight),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios,
-                size: 16, color: AppColors.textLight),
-          ],
+          ),
         ),
       ),
     );
@@ -442,38 +471,50 @@ class ProfilView extends GetView<ProfilController> {
             Text('Bantuan'),
           ],
         ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Jika Anda membutuhkan bantuan, silakan hubungi:'),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(Icons.phone, size: 18, color: AppColors.textSecondary),
-                SizedBox(width: 8),
-                Text('(021) 123-4567'),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.email, size: 18, color: AppColors.textSecondary),
-                SizedBox(width: 8),
-                Expanded(child: Text('admin@pesantren.id')),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time,
-                    size: 18, color: AppColors.textSecondary),
-                SizedBox(width: 8),
-                Text('Senin - Jumat, 08:00 - 16:00'),
-              ],
-            ),
-          ],
-        ),
+        content: Obx(() {
+          final s = controller.settings.value;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(s?['contact_description'] ??
+                  'Jika Anda membutuhkan bantuan, silakan hubungi:'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.phone,
+                      size: 18, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(s?['contact_phone'] ?? '(021) 123-4567'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.email,
+                      size: 18, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(s?['contact_email'] ?? 'admin@pesantren.id')),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      s?['contact_address'] ?? 'Alamat Pesantren',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
@@ -494,35 +535,62 @@ class ProfilView extends GetView<ProfilController> {
             Text('Tentang Aplikasi'),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+        content: Obx(() {
+          final s = controller.settings.value;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: s?['logo'] != null
+                    ? Image.network(
+                        ApiHelper.buildUri(endpoint: '').toString() +
+                            s!['logo'].toString().replaceFirst('/', ''),
+                        height: 64,
+                        width: 64,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.business,
+                                size: 48, color: AppColors.primary),
+                      )
+                    : const Icon(Icons.business,
+                        size: 48, color: AppColors.primary),
               ),
-              child: Image.asset('assets/logos.png', height: 64, width: 64),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Sentral Nurulhuda',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Versi 1.0.0',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Aplikasi manajemen pesantren terintegrasi untuk memudahkan pengelolaan santri, absensi, keuangan, dan aktivitas pesantren.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
+              const SizedBox(height: 16),
+              Text(
+                s?['nama_website'] ?? 'e-Pesantren',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Versi 1.0.0',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                s?['deskripsi_singkat'] ??
+                    'Aplikasi manajemen pesantren terintegrasi untuk memudahkan pengelolaan santri, absensi, keuangan, dan aktivitas pesantren.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 13, color: AppColors.textSecondary),
+              ),
+              if (s?['coppyright_footer'] != null) ...[
+                const SizedBox(height: 24),
+                Text(
+                  s!['coppyright_footer'],
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.textLight),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
+          );
+        }),
         actions: [
           TextButton(
             onPressed: () => Get.back(),

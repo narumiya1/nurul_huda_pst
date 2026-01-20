@@ -22,6 +22,7 @@ abstract class Routes {
   static const manajemenSdmDetail = _Paths.manajemenSdmDetail;
   static const pelanggaran = _Paths.pelanggaran;
   static const teacherArea = _Paths.teacherArea;
+  static const beritaDetail = _Paths.beritaDetail;
 }
 
 abstract class _Paths {
@@ -38,6 +39,7 @@ abstract class _Paths {
   static const profil = '/profil';
   static const manajemenSdm = '/manajemen-sdm';
   static const manajemenSdmDetail = '/manajemen-sdm/detail';
+  static const beritaDetail = '/berita-detail';
   static const psb = '/psb';
   static const pondok = '/pondok';
   static const administrasi = '/administrasi';

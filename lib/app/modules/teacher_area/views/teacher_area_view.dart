@@ -54,7 +54,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                      value: controller.selectedKelas.value,
+                      initialValue: controller.selectedKelas.value,
                       decoration: InputDecoration(
                         hintText: 'Pilih kelas...',
                         border: OutlineInputBorder(
@@ -242,7 +242,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                value: controller.selectedSantri.value,
+                initialValue: controller.selectedSantri.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih santri...',
                   border: OutlineInputBorder(
@@ -267,7 +267,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<int>(
-                value: controller.selectedJuz.value,
+                initialValue: controller.selectedJuz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih juz...',
                   border: OutlineInputBorder(

@@ -94,9 +94,26 @@ class PimpinanRepository {
   }
 
   Future<Map<String, dynamic>> getUsersByType(String type,
-      {String? search}) async {
+      {String? search, int? perPage, int? page}) async {
     try {
-      return await _pimpinanApi.getUsersByType(type, search: search);
+      return await _pimpinanApi.getUsersByType(type,
+          search: search, perPage: perPage, page: page);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getPondokBlok() async {
+    try {
+      return await _pimpinanApi.getPondokBlok();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getPondokKamar({String? blokId}) async {
+    try {
+      return await _pimpinanApi.getPondokKamar(blokId: blokId);
     } catch (e) {
       rethrow;
     }

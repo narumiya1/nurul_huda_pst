@@ -161,264 +161,263 @@ class AkademikPondokController extends GetxController {
   Future<void> fetchAllData() async {
     try {
       isLoading.value = true;
-      await Future.delayed(const Duration(seconds: 1));
 
-      await fetchLaporanAbsensi();
-
-      // Tugas Sekolah (1.B)
-      try {
-        final data = await _santriRepository.getTugasSekolah();
-        tugasList
-            .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
-      } catch (e) {
-        // Fallback for demo if API fails
-        tugasList.assignAll([
-          {
-            'id': '1',
-            'judul': 'Latihan Fiqih Bab 1',
-            'mapel': {'nama_mapel': 'Fiqih'},
-            'deadline': '2025-01-20',
-            'description': 'Kerjakan halaman 10-12 di buku paket.'
-          }
-        ]);
-      }
-
-      // Try fetching real Kurikulum data
-      try {
-        final response = await _pimpinanRepository.getKurikulum();
-        if (response['data'] != null) {
-          final List kurikulumData = response['data'] ?? [];
-          dataKurikulum.assignAll(kurikulumData.map((item) {
-            return {
-              'mapel': item['name'] ?? 'Tanpa Nama',
-              'pengajar': '-', // Not provided in basic list
-              'kitab': '-',
-              'tingkat': item['tingkat']?.toString() ?? '-',
-              'type': item['category'] ?? 'Umum',
-            };
-          }).toList());
-        }
-      } catch (e) {
-        // Fallback or Initial Mock Data
-        dataKurikulum.assignAll([
-          {
-            'mapel': 'Fiqih Wadlih',
-            'pengajar': 'Ustadz Mansur',
-            'kitab': 'Al-Fiqh al-Manhaji',
-            'tingkat': 'VII',
-            'type': 'Diniyah'
-          },
-          {
-            'mapel': 'Nahwu Shorof',
-            'pengajar': 'Ustadzah Aminah',
-            'kitab': 'Al-Jurumiyah',
-            'tingkat': 'VIII',
-            'type': 'Diniyah'
-          },
-          {
-            'mapel': 'Bahasa Arab',
-            'pengajar': 'Ustadz Fauzi',
-            'kitab': 'Durusul Lughah',
-            'tingkat': 'IX',
-            'type': 'Umum'
-          },
-          {
-            'mapel': 'Matematika',
-            'pengajar': 'Ibu Ratna',
-            'kitab': 'Buku Paket Kemendikbud',
-            'tingkat': 'VII',
-            'type': 'Umum'
-          },
-        ]);
-      }
-
-      // 1. Rekap Nilai
-      try {
-        final rawNilai = await _pimpinanRepository.getRekapNilai();
-        if (rawNilai.isNotEmpty) {
-          // Group by Kelas -> Tingkat
-          final Map<String, List<double>> groupedScores = {};
-
-          for (var item in rawNilai) {
-            String kelasName = 'Umum';
-            double score = 0;
-            if (item is Map) {
-              if (item['kelas'] != null && item['kelas'] is Map) {
-                kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
-              }
-              if (item['nilai_akhir'] != null) {
-                score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
-              } else if (item['nilai'] != null) {
-                score = double.tryParse(item['nilai'].toString()) ?? 0;
-              }
-            }
-
-            if (!groupedScores.containsKey(kelasName)) {
-              groupedScores[kelasName] = [];
-            }
-            groupedScores[kelasName]!.add(score);
-          }
-
-          rekapNilai.assignAll(groupedScores.entries.map((entry) {
-            final scores = entry.value;
-            if (scores.isEmpty) {
-              return {
-                'tingkat': entry.key,
-                'rata_rata': 0.0,
-                'tertinggi': 0.0,
-                'terendah': 0.0
-              };
-            }
-            final avg = scores.reduce((a, b) => a + b) / scores.length;
-            final max = scores.reduce((a, b) => a > b ? a : b);
-            final min = scores.reduce((a, b) => a < b ? a : b);
-
-            return {
-              'tingkat': entry.key,
-              'rata_rata': double.parse(avg.toStringAsFixed(1)),
-              'tertinggi': max,
-              'terendah': min
-            };
-          }).toList());
-        }
-      } catch (e) {
-        rekapNilai.assignAll([
-          {
-            'tingkat': 'VII',
-            'rata_rata': 84.5,
-            'tertinggi': 98.0,
-            'terendah': 65.0
-          },
-          {
-            'tingkat': 'VIII',
-            'rata_rata': 82.2,
-            'tertinggi': 97.0,
-            'terendah': 60.0
-          },
-          {
-            'tingkat': 'IX',
-            'rata_rata': 86.8,
-            'tertinggi': 99.0,
-            'terendah': 70.0
-          },
-        ]);
-      }
-
-      // 2. Agenda Kegiatan
-      try {
-        final response = await _pimpinanRepository.getAgenda();
-        if (response['data'] != null) {
-          final List list = response['data'] is List ? response['data'] : [];
-          if (list.isNotEmpty) {
-            agendaKegiatan.assignAll(list.map((item) {
-              return {
-                'time': item['jam_mulai'] ?? '00:00',
-                'title': item['nama_aktivitas'] ?? 'Kegiatan',
-                'location': item['tempat'] ?? '-',
-                'category': item['tipe'] ?? 'Umum'
-              };
-            }).toList());
-          } else {}
-        }
-      } catch (e) {
-        agendaKegiatan.assignAll([
-          {
-            'time': '04:30',
-            'title': 'Shalat Subuh',
-            'location': 'Masjid',
-            'category': 'Ibadah'
-          },
-          {
-            'time': '08:00',
-            'title': 'KBM Sekolah',
-            'location': 'Gedung A',
-            'category': 'Sekolah'
-          },
-          {
-            'time': '20:00',
-            'title': 'Mudarasah',
-            'location': 'Kamar',
-            'category': 'Pondok'
-          },
-        ]);
-      }
-
-      // 3. Progress Tahfidz (Using latest 5 entries as progress log instead of group summary)
-      try {
-        final response = await _pimpinanRepository.getTahfidz();
-        List rawTahfidz = [];
-        if (response['data'] != null) {
-          if (response['data'] is List) {
-            rawTahfidz = response['data'];
-          } else if (response['data']['data'] is List) {
-            rawTahfidz = response['data']['data'];
-          }
-        }
-
-        if (rawTahfidz.isNotEmpty) {
-          progressTahfidz.assignAll(rawTahfidz.take(5).map((item) {
-            return {
-              'nama': item['santri']?['details']?['full_name'] ?? 'Santri',
-              'target': 30,
-              // Using Juz or Halaman as proxy for 'achieved' visualization
-              'achieved':
-                  double.tryParse(item['juz']?.toString() ?? '1') ?? 1.0,
-              'percent': 0.5, // Arbitrary for visualization
-              'type': 'Setoran Hafalan'
-            };
-          }).toList());
-        }
-      } catch (e) {
-        progressTahfidz.assignAll([
-          {
-            'nama': 'Kelompok Abu Bakar',
-            'target': 30,
-            'achieved': 12.5,
-            'percent': 0.42,
-            'type': 'Pemula'
-          },
-          {
-            'nama': 'Kelompok Umar',
-            'target': 30,
-            'achieved': 18.2,
-            'percent': 0.61,
-            'type': 'Menengah'
-          },
-        ]);
-      }
-
-      // 4. Laporan Absensi
-      try {
-        final response = await _pimpinanRepository.getLaporanAbsensi();
-        if (response['summary'] != null) {
-          final s = response['summary'];
-          laporanAbsensi.assignAll([
-            {
-              'label': 'Hadir',
-              'value': s['total_hadir'] ?? 0,
-              'color': 'green'
-            },
-            {'label': 'Izin', 'value': s['total_izin'] ?? 0, 'color': 'blue'},
-            {
-              'label': 'Sakit',
-              'value': s['total_sakit'] ?? 0,
-              'color': 'orange'
-            },
-            {'label': 'Alpa', 'value': s['total_alpha'] ?? 0, 'color': 'red'},
-          ]);
-        }
-      } catch (e) {
-        laporanAbsensi.assignAll([
-          {'label': 'Hadir', 'value': 280, 'color': 'green'},
-          {'label': 'Izin', 'value': 12, 'color': 'blue'},
-          {'label': 'Sakit', 'value': 5, 'color': 'orange'},
-          {'label': 'Alpa', 'value': 2, 'color': 'red'},
-        ]);
-      }
+      // Fetch all data in parallel for better performance
+      await Future.wait([
+        _fetchTugasSekolah(),
+        _fetchKurikulum(),
+        _fetchRekapNilai(),
+        _fetchAgenda(),
+        _fetchTahfidz(),
+        _fetchLaporanAbsensiData(),
+      ]);
 
       _applyInitialFilters();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _fetchTugasSekolah() async {
+    try {
+      final data = await _santriRepository.getTugasSekolah();
+      tugasList.assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      tugasList.assignAll([
+        {
+          'id': '1',
+          'judul': 'Latihan Fiqih Bab 1',
+          'mapel': {'nama_mapel': 'Fiqih'},
+          'deadline': '2025-01-20',
+          'description': 'Kerjakan halaman 10-12 di buku paket.'
+        }
+      ]);
+    }
+  }
+
+  Future<void> _fetchKurikulum() async {
+    try {
+      final response = await _pimpinanRepository.getKurikulum();
+      if (response['data'] != null) {
+        final List kurikulumData = response['data'] ?? [];
+        dataKurikulum.assignAll(kurikulumData.map((item) {
+          return {
+            'mapel': item['name'] ?? 'Tanpa Nama',
+            'pengajar': '-',
+            'kitab': '-',
+            'tingkat': item['tingkat']?.toString() ?? '-',
+            'type': item['category'] ?? 'Umum',
+          };
+        }).toList());
+      }
+    } catch (e) {
+      dataKurikulum.assignAll([
+        {
+          'mapel': 'Fiqih Wadlih',
+          'pengajar': 'Ustadz Mansur',
+          'kitab': 'Al-Fiqh al-Manhaji',
+          'tingkat': 'VII',
+          'type': 'Diniyah'
+        },
+        {
+          'mapel': 'Nahwu Shorof',
+          'pengajar': 'Ustadzah Aminah',
+          'kitab': 'Al-Jurumiyah',
+          'tingkat': 'VIII',
+          'type': 'Diniyah'
+        },
+        {
+          'mapel': 'Bahasa Arab',
+          'pengajar': 'Ustadz Fauzi',
+          'kitab': 'Durusul Lughah',
+          'tingkat': 'IX',
+          'type': 'Umum'
+        },
+        {
+          'mapel': 'Matematika',
+          'pengajar': 'Ibu Ratna',
+          'kitab': 'Buku Paket Kemendikbud',
+          'tingkat': 'VII',
+          'type': 'Umum'
+        },
+      ]);
+    }
+  }
+
+  Future<void> _fetchRekapNilai() async {
+    try {
+      final rawNilai = await _pimpinanRepository.getRekapNilai();
+      if (rawNilai.isNotEmpty) {
+        final Map<String, List<double>> groupedScores = {};
+        for (var item in rawNilai) {
+          String kelasName = 'Umum';
+          double score = 0;
+          if (item is Map) {
+            if (item['kelas'] != null && item['kelas'] is Map) {
+              kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
+            }
+            if (item['nilai_akhir'] != null) {
+              score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
+            } else if (item['nilai'] != null) {
+              score = double.tryParse(item['nilai'].toString()) ?? 0;
+            }
+          }
+          if (!groupedScores.containsKey(kelasName)) {
+            groupedScores[kelasName] = [];
+          }
+          groupedScores[kelasName]!.add(score);
+        }
+        rekapNilai.assignAll(groupedScores.entries.map((entry) {
+          final scores = entry.value;
+          if (scores.isEmpty) {
+            return {
+              'tingkat': entry.key,
+              'rata_rata': 0.0,
+              'tertinggi': 0.0,
+              'terendah': 0.0
+            };
+          }
+          final avg = scores.reduce((a, b) => a + b) / scores.length;
+          final max = scores.reduce((a, b) => a > b ? a : b);
+          final min = scores.reduce((a, b) => a < b ? a : b);
+          return {
+            'tingkat': entry.key,
+            'rata_rata': double.parse(avg.toStringAsFixed(1)),
+            'tertinggi': max,
+            'terendah': min
+          };
+        }).toList());
+      }
+    } catch (e) {
+      rekapNilai.assignAll([
+        {
+          'tingkat': 'VII',
+          'rata_rata': 84.5,
+          'tertinggi': 98.0,
+          'terendah': 65.0
+        },
+        {
+          'tingkat': 'VIII',
+          'rata_rata': 82.2,
+          'tertinggi': 97.0,
+          'terendah': 60.0
+        },
+        {
+          'tingkat': 'IX',
+          'rata_rata': 86.8,
+          'tertinggi': 99.0,
+          'terendah': 70.0
+        },
+      ]);
+    }
+  }
+
+  Future<void> _fetchAgenda() async {
+    try {
+      final response = await _pimpinanRepository.getAgenda();
+      if (response['data'] != null) {
+        final List list = response['data'] is List ? response['data'] : [];
+        if (list.isNotEmpty) {
+          agendaKegiatan.assignAll(list.map((item) {
+            String category = 'Umum';
+            final tipe = item['tipe']?.toString() ?? '';
+            if (tipe == 'harian' || tipe == 'mingguan') category = 'Pondok';
+            return {
+              'time': item['jam_mulai'] ?? '00:00',
+              'title': item['judul'] ?? 'Kegiatan',
+              'location': item['lokasi'] ?? '-',
+              'category': category,
+              'description': item['deskripsi'] ?? '',
+              'day': item['hari'] ?? '',
+            };
+          }).toList());
+        }
+      }
+    } catch (e) {
+      agendaKegiatan.assignAll([
+        {
+          'time': '04:30',
+          'title': 'Shalat Subuh',
+          'location': 'Masjid',
+          'category': 'Ibadah'
+        },
+        {
+          'time': '08:00',
+          'title': 'KBM Sekolah',
+          'location': 'Gedung A',
+          'category': 'Sekolah'
+        },
+        {
+          'time': '20:00',
+          'title': 'Mudarasah',
+          'location': 'Kamar',
+          'category': 'Pondok'
+        },
+      ]);
+    }
+  }
+
+  Future<void> _fetchTahfidz() async {
+    try {
+      final response = await _pimpinanRepository.getTahfidz();
+      List rawTahfidz = [];
+      if (response['data'] != null) {
+        if (response['data'] is List) {
+          rawTahfidz = response['data'];
+        } else if (response['data']['data'] is List) {
+          rawTahfidz = response['data']['data'];
+        }
+      }
+      if (rawTahfidz.isNotEmpty) {
+        progressTahfidz.assignAll(rawTahfidz.take(5).map((item) {
+          return {
+            'nama': item['santri']?['details']?['full_name'] ?? 'Santri',
+            'target': 30,
+            'achieved': double.tryParse(item['juz']?.toString() ?? '1') ?? 1.0,
+            'percent': 0.5,
+            'type': 'Setoran Hafalan'
+          };
+        }).toList());
+      }
+    } catch (e) {
+      progressTahfidz.assignAll([
+        {
+          'nama': 'Kelompok Abu Bakar',
+          'target': 30,
+          'achieved': 12.5,
+          'percent': 0.42,
+          'type': 'Pemula'
+        },
+        {
+          'nama': 'Kelompok Umar',
+          'target': 30,
+          'achieved': 18.2,
+          'percent': 0.61,
+          'type': 'Menengah'
+        },
+      ]);
+    }
+  }
+
+  Future<void> _fetchLaporanAbsensiData() async {
+    try {
+      final response = await _pimpinanRepository.getLaporanAbsensi();
+      if (response['summary'] != null) {
+        final s = response['summary'];
+        laporanAbsensi.assignAll([
+          {'label': 'Hadir', 'value': s['total_hadir'] ?? 0, 'color': 'green'},
+          {'label': 'Izin', 'value': s['total_izin'] ?? 0, 'color': 'blue'},
+          {'label': 'Sakit', 'value': s['total_sakit'] ?? 0, 'color': 'orange'},
+          {'label': 'Alpa', 'value': s['total_alpha'] ?? 0, 'color': 'red'},
+        ]);
+      }
+    } catch (e) {
+      laporanAbsensi.assignAll([
+        {'label': 'Hadir', 'value': 280, 'color': 'green'},
+        {'label': 'Izin', 'value': 12, 'color': 'blue'},
+        {'label': 'Sakit', 'value': 5, 'color': 'orange'},
+        {'label': 'Alpa', 'value': 2, 'color': 'red'},
+      ]);
     }
   }
 

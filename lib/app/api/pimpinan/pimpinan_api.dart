@@ -133,7 +133,7 @@ class PimpinanApi {
   /// Fetch Master Data Users (General Sdm)
   /// Types: santri, guru, staff, orangtua, pimpinan, rois, siswa
   Future<Map<String, dynamic>> getUsersByType(String type,
-      {String? search}) async {
+      {String? search, int? perPage, int? page}) async {
     String endpoint;
     if (type == 'siswa') {
       endpoint = 'siswa';
@@ -144,11 +144,43 @@ class PimpinanApi {
     final Map<String, String> params = {};
     if (search != null && search.isNotEmpty) params['search'] = search;
 
+    // Add per_page to reduce response size for ALL user types
+    // This is now supported by all backend endpoints (pimpinan, guru, staff, orangtua, rois, santri, siswa)
+    params['per_page'] = (perPage ?? 10).toString();
+
+    // Add page parameter for pagination
+    if (page != null) {
+      params['page'] = page.toString();
+    }
+
     final uri = ApiHelper.buildUri(
       endpoint: endpoint,
       params: params,
     );
 
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Fetch Pondok Blok (Dormitory Buildings)
+  Future<Map<String, dynamic>> getPondokBlok() async {
+    final uri = ApiHelper.buildUri(endpoint: 'pondok/blok');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Fetch Pondok Kamar (Dormitory Rooms)
+  Future<Map<String, dynamic>> getPondokKamar({String? blokId}) async {
+    final Map<String, String> params = {};
+    if (blokId != null) params['blok_id'] = blokId;
+
+    final uri = ApiHelper.buildUri(endpoint: 'pondok/kamar', params: params);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,

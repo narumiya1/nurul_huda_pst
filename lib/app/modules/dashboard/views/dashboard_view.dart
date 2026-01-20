@@ -1,11 +1,11 @@
 import 'package:epesantren_mob/app/widgets/custom_bottom.dart';
-import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/dashboard_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:epesantren_mob/app/modules/profil/views/profil_view.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -19,7 +19,7 @@ class DashboardView extends GetView<DashboardController> {
       case 2:
         return const NotifikasiPage();
       case 3:
-        return const ProfilPage();
+        return const ProfilView();
       default:
         return const HomePage();
     }
@@ -412,91 +412,107 @@ class HomePage extends GetView<DashboardController> {
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           itemCount: controller.beritaList.length,
           itemBuilder: (context, index) {
             final berita = controller.beritaList[index];
-            return Container(
-              width: 280,
-              margin: EdgeInsets.only(
-                  right: index < controller.beritaList.length - 1 ? 16 : 0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppShadows.cardShadow,
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(20)),
-                    child: berita.image != null
-                        ? Image.network(
-                            berita.image!,
-                            width: 100,
-                            height: 180,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            width: 100,
-                            height: 180,
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            child: const Icon(Icons.image,
-                                color: AppColors.primary, size: 40),
-                          ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              berita.category ?? "News",
-                              style: const TextStyle(
-                                color: AppColors.success,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+            return GestureDetector(
+              onTap: () => Get.toNamed(Routes.beritaDetail, arguments: berita),
+              child: Container(
+                width: 280,
+                margin: EdgeInsets.only(
+                    right: index < controller.beritaList.length - 1 ? 16 : 0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppShadows.cardShadow,
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(20)),
+                      child: berita.imageUrl != null
+                          ? Image.network(
+                              berita.imageUrl!,
+                              width: 100,
+                              height: 180,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                width: 100,
+                                height: 180,
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                child: const Icon(Icons.broken_image,
+                                    color: AppColors.primary, size: 30),
                               ),
+                            )
+                          : Container(
+                              width: 100,
+                              height: 180,
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              child: const Icon(Icons.image,
+                                  color: AppColors.primary, size: 40),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            berita.title ?? "",
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              height: 1.3,
-                            ),
-                          ),
-                          const Spacer(),
-                          const Row(
-                            children: [
-                              Icon(Icons.access_time,
-                                  size: 12, color: AppColors.textLight),
-                              SizedBox(width: 4),
-                              Text(
-                                "2 jam lalu",
-                                style: TextStyle(
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                berita.category ?? "News",
+                                style: const TextStyle(
+                                  color: AppColors.success,
                                   fontSize: 10,
-                                  color: AppColors.textLight,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              berita.title ?? "",
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                height: 1.3,
+                              ),
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                const Icon(Icons.access_time,
+                                    size: 12, color: AppColors.textLight),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    berita.publishedAt ?? "2 jam lalu",
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.textLight,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -775,197 +791,6 @@ class NotifikasiPage extends GetView<DashboardController> {
             const Text(
               "Tidak ada notifikasi baru",
               style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ProfilPage extends GetView<DashboardController> {
-  const ProfilPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // Header Profile
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.5), width: 3),
-                    ),
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      child: const Icon(Icons.person,
-                          size: 56, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Obx(() => Text(
-                        controller.userName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Obx(() => Text(
-                          controller.userRoleLabel,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        )),
-                  ),
-                ],
-              ),
-            ),
-
-            // Menu Items
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildProfileMenuItem(
-                    icon: Icons.person_outline,
-                    title: "Edit Profil",
-                    onTap: () {},
-                  ),
-                  _buildProfileMenuItem(
-                    icon: Icons.lock_outline,
-                    title: "Ubah Password",
-                    onTap: () {},
-                  ),
-                  _buildProfileMenuItem(
-                    icon: Icons.notifications_outlined,
-                    title: "Pengaturan Notifikasi",
-                    onTap: () {},
-                  ),
-                  _buildProfileMenuItem(
-                    icon: Icons.help_outline,
-                    title: "Bantuan",
-                    onTap: () {},
-                  ),
-                  _buildProfileMenuItem(
-                    icon: Icons.info_outline,
-                    title: "Tentang Aplikasi",
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 20),
-                  _buildProfileMenuItem(
-                    icon: Icons.logout,
-                    title: "Keluar",
-                    isLogout: true,
-                    onTap: () async {
-                      final confirm = await Get.dialog<bool>(
-                        AlertDialog(
-                          title: const Text('Keluar'),
-                          content:
-                              const Text('Apakah Anda yakin ingin keluar?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Get.back(result: false),
-                              child: const Text('Batal'),
-                            ),
-                            TextButton(
-                              onPressed: () => Get.back(result: true),
-                              child: const Text('Keluar',
-                                  style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        await LocalStorage.clearAll();
-                        Get.offAllNamed(Routes.welcome);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isLogout = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: AppShadows.cardShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isLogout
-                    ? AppColors.error.withValues(alpha: 0.1)
-                    : AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: isLogout ? AppColors.error : AppColors.primary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: isLogout ? AppColors.error : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.textLight,
             ),
           ],
         ),

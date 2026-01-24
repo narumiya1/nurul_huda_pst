@@ -308,4 +308,146 @@ class ManajemenSdmController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> addPimpinan(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createPimpinan(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Pimpinan berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Pimpinan
+      if (selectedRole.value == 'Pimpinan' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan pimpinan: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addGuru(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createGuru(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Guru berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Guru
+      if (selectedRole.value == 'Guru' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan guru: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addOrangtua(Map<String, dynamic> data) async {
+    try {
+      isLoading.value = true;
+      Get.back(); // Close bottom sheet if open
+
+      await _repository.createOrangtua(data);
+
+      Get.snackbar(
+        'Sukses',
+        'Data Orang Tua berhasil ditambahkan',
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+      );
+
+      // Refresh list if current tab is Orang Tua
+      if (selectedRole.value == 'Orang Tua' || selectedRole.value == 'Semua') {
+        fetchUsers(selectedRole.value, refresh: true);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Gagal menambahkan orang tua: $e',
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<List<dynamic>> fetchMapelList() async {
+    try {
+      return await _repository.getMapelList();
+    } catch (e) {
+      debugPrint('Failed to fetch mapel: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchTingkatSantriList() async {
+    try {
+      return await _repository.getTingkatSantriList();
+    } catch (e) {
+      debugPrint('Failed to fetch tingkat santri: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchKelasSantriList() async {
+    try {
+      return await _repository.getKelasSantriList();
+    } catch (e) {
+      debugPrint('Failed to fetch kelas santri: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchSantriList({String? search}) async {
+    try {
+      // Use direct santri endpoint which returns proper santri records with user.details
+      final response = await _repository.getSantriList(search: search);
+      return response;
+    } catch (e) {
+      debugPrint('Failed to fetch santri list: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> fetchOrangtuaList({String? search}) async {
+    try {
+      final response = await _repository.getUsersByType('orangtua',
+          search: search ?? '', perPage: 100, page: 1);
+      if (response['data'] != null && response['data'] is List) {
+        return response['data'];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Failed to fetch orangtua list: $e');
+      return [];
+    }
+  }
 }

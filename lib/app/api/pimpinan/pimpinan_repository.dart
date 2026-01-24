@@ -119,6 +119,14 @@ class PimpinanRepository {
     }
   }
 
+  Future<List<dynamic>> getSantriList({String? search}) async {
+    try {
+      return await _pimpinanApi.getSantriList(search: search);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<dynamic> createSantri(Map<String, dynamic> data) async {
     try {
       return await _pimpinanApi.createSantri(data);
@@ -170,6 +178,54 @@ class PimpinanRepository {
   Future<dynamic> assignSantriToKamar(Map<String, dynamic> data) async {
     try {
       return await _pimpinanApi.assignSantriToKamar(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createPimpinan(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createPimpinan(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createGuru(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createGuru(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<dynamic> createOrangtua(Map<String, dynamic> data) async {
+    try {
+      return await _pimpinanApi.createOrangtua(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getMapelList() async {
+    try {
+      return await _pimpinanApi.getMapelList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getTingkatSantriList() async {
+    try {
+      return await _pimpinanApi.getTingkatSantriList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getKelasSantriList() async {
+    try {
+      return await _pimpinanApi.getKelasSantriList();
     } catch (e) {
       rethrow;
     }

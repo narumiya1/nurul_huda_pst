@@ -188,6 +188,19 @@ class PimpinanApi {
     );
   }
 
+  /// Get Santri List for dropdown (direct from /santri endpoint)
+  Future<List<dynamic>> getSantriList({String? search}) async {
+    final Map<String, String> params = {};
+    if (search != null && search.isNotEmpty) params['search'] = search;
+
+    final uri = ApiHelper.buildUri(endpoint: 'santri', params: params);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data'] is List ? data['data'] : [],
+      header: _getAuthHeader(),
+    );
+  }
+
   /// Create New Santri (Add to Master Data)
   Future<dynamic> createSantri(Map<String, dynamic> data) async {
     final uri = ApiHelper.buildUri(endpoint: 'santri');
@@ -264,6 +277,69 @@ class PimpinanApi {
       uri: uri,
       jsonBody: data,
       builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Pimpinan
+  Future<dynamic> createPimpinan(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'users/pimpinan');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Guru
+  Future<dynamic> createGuru(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'users/guru');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create New Orangtua
+  Future<dynamic> createOrangtua(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'users/orangtua');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: data,
+      builder: (res) => res,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get Mapel List for dropdown
+  Future<List<dynamic>> getMapelList() async {
+    final uri = ApiHelper.buildUri(endpoint: 'mapel');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data'] is List ? data['data'] : [],
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get Tingkat Santri List for dropdown
+  Future<List<dynamic>> getTingkatSantriList() async {
+    final uri = ApiHelper.buildUri(endpoint: 'tingkat-santri');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data'] is List ? data['data'] : [],
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get Kelas Santri List for dropdown
+  Future<List<dynamic>> getKelasSantriList() async {
+    final uri = ApiHelper.buildUri(endpoint: 'kelas');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data'] is List ? data['data'] : [],
       header: _getAuthHeader(),
     );
   }

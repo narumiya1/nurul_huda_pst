@@ -392,7 +392,7 @@ class RegisterAlamatView extends GetView<RegisterController> {
                     ? const Text('Memuat desa / kelurahan...')
                     : const Text('Pilih Desa / Kelurahan'),
               )),
-
+          //
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
             child: TextField(

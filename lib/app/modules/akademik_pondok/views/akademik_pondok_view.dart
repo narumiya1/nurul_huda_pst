@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/akademik_pondok_controller.dart';
 
 class AkademikPondokView extends GetView<AkademikPondokController> {
@@ -23,7 +24,9 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           backgroundColor: AppColors.background,
           appBar: AppBar(
             title: Text(isMain
-                ? 'Akademik & Pondok'
+                ? (controller.userRole.value == 'pimpinan'
+                    ? 'Akademik & Pondok'
+                    : 'Area Akademik')
                 : _getPageTitle(controller.selectedIndex.value)),
             centerTitle: true,
             leading: isMain
@@ -67,9 +70,11 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             const Text('Filter Data',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            if (controller.selectedIndex.value == 0 ||
-                controller.selectedIndex.value == 3 ||
-                controller.selectedIndex.value == 4) ...[
+            if ((controller.selectedIndex.value == 0 ||
+                    controller.selectedIndex.value == 3 ||
+                    controller.selectedIndex.value == 4) &&
+                controller.userRole.value != 'santri' &&
+                controller.userRole.value != 'siswa') ...[
               const Text('Tingkat / Kelas',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
@@ -167,12 +172,37 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   )),
               const SizedBox(height: 20),
             ],
+            if (controller.selectedIndex.value == 5) ...[
+              const Text('Status Tugas',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Obx(() => Wrap(
+                    spacing: 8,
+                    children: ['Semua', 'Pending', 'Selesai']
+                        .map((s) => ChoiceChip(
+                              label: Text(s),
+                              selected:
+                                  controller.selectedTugasStatus.value == s,
+                              onSelected: (val) {
+                                controller.selectedTugasStatus.value = s;
+                                controller.applyFilters();
+                              },
+                            ))
+                        .toList(),
+                  )),
+              const SizedBox(height: 20),
+            ],
             const Text('Periode Semester',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Obx(() => DropdownButtonFormField<String>(
-                  initialValue: controller.selectedSemester.value,
-                  items: ['Ganjil 2025/2026', 'Genap 2024/2025']
+                  value: controller.selectedSemester.value,
+                  items: [
+                    'Ganjil 2025/2026',
+                    'Genap 2025/2026',
+                    'Ganjil 2024/2025',
+                    'Genap 2024/2025'
+                  ]
                       .map((s) => DropdownMenuItem(
                             value: s,
                             child: Text(s),
@@ -231,47 +261,85 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
       case 3:
         return 'Laporan Absensi';
       case 4:
-        return 'Data Kurikulum';
+        return controller.userRole.value == 'pimpinan'
+            ? 'Data Kurikulum'
+            : 'Materi Pelajaran';
       case 5:
         return 'Tugas Sekolah';
+      case 6:
+        return 'Jadwal Pelajaran';
+      case 7:
+        return 'Jadwal Aktivitas';
       default:
         return 'Detail';
     }
   }
 
   Widget _buildGridMenu() {
-    final menus = [
+    final allMenus = [
       {
+        'index': 0,
         'title': 'Rekap Nilai',
         'icon': Icons.grade_rounded,
-        'color': AppColors.primary
+        'color': AppColors.primary,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
       },
       {
+        'index': 1,
         'title': 'Agenda',
         'icon': Icons.event_note_rounded,
-        'color': AppColors.accentBlue
+        'color': AppColors.accentBlue,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
       },
       {
+        'index': 7,
+        'title': 'Aktivitas',
+        'icon': Icons.today_rounded,
+        'color': const Color(0xFF00B894),
+        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren']
+      },
+      {
+        'index': 2,
         'title': 'Tahfidz',
         'icon': Icons.menu_book_rounded,
-        'color': AppColors.success
+        'color': AppColors.success,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
       },
       {
+        'index': 3,
         'title': 'Absensi',
         'icon': Icons.assignment_turned_in_rounded,
-        'color': AppColors.accentOrange
+        'color': AppColors.accentOrange,
+        'roles': ['pimpinan', 'staff_pesantren']
       },
       {
-        'title': 'Kurikulum',
+        'index': 6,
+        'title': 'Jadwal',
+        'icon': Icons.calendar_today_rounded,
+        'color': const Color(0xFF6C5CE7),
+        'roles': ['santri', 'siswa', 'guru']
+      },
+      {
+        'index': 4,
+        'title':
+            (controller.userRole.value == 'pimpinan' ? 'Kurikulum' : 'Materi'),
         'icon': Icons.library_books_rounded,
-        'color': AppColors.accentPurple
+        'color': AppColors.accentPurple,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
       },
       {
-        'title': 'Tugas Sekolah',
-        'icon': Icons.assignment,
-        'color': Colors.blueGrey
+        'index': 5,
+        'title': 'Tugas',
+        'icon': Icons.assignment_rounded,
+        'color': Colors.blueGrey,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
       },
     ];
+
+    final menus = allMenus.where((menu) {
+      final roles = menu['roles'] as List<String>;
+      return roles.contains(controller.userRole.value);
+    }).toList();
 
     return GridView.builder(
       padding: const EdgeInsets.all(24),
@@ -285,7 +353,16 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
       itemBuilder: (context, index) {
         final menu = menus[index];
         return InkWell(
-          onTap: () => controller.selectedIndex.value = index,
+          onTap: () {
+            final targetIndex = menu['index'] as int;
+            if (targetIndex == 6) {
+              Get.toNamed(Routes.jadwalPelajaran);
+            } else if (targetIndex == 7) {
+              Get.toNamed(Routes.aktivitas);
+            } else {
+              controller.selectedIndex.value = targetIndex;
+            }
+          },
           borderRadius: BorderRadius.circular(24),
           child: Container(
             decoration: BoxDecoration(
@@ -340,41 +417,278 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
 
   // Reuse existing sub-features but wrapped in SingleChildScrollView if needed
   Widget _buildGradeRecap() {
-    return Obx(() => ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: controller.filteredRekapNilai.length,
-          itemBuilder: (context, index) {
-            final item = controller.filteredRekapNilai[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+    return Obx(() {
+      final isPimpinan = controller.userRole.value == 'pimpinan';
+
+      if (isPimpinan) {
+        if (controller.selectedSiswaForDetail.value != null) {
+          return _buildSiswaDetailNilai();
+        }
+
+        return Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                onChanged: (val) => controller.searchSiswaGrades(val),
+                decoration: InputDecoration(
+                  hintText: 'Cari siswa (Nama/NIS)...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: controller.isSearchingSiswa.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+
+            if (controller.searchSiswaResults.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: controller.searchSiswaResults.length,
+                  itemBuilder: (context, index) {
+                    final siswa = controller.searchSiswaResults[index];
+                    final name = siswa['user']?['details']?['full_name'] ??
+                        siswa['nama'] ??
+                        'Siswa';
+                    final nis = siswa['nis'] ?? '-';
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: AppColors.primary,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        title: Text(name),
+                        subtitle: Text('NIS: $nis'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          controller.selectedSiswaForDetail.value = siswa;
+                          controller.fetchSiswaDetailNilai(siswa['id']);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              )
+            else if (controller.searchSiswaQuery.value.isNotEmpty)
+              const Expanded(
+                child: Center(child: Text('Siswa tidak ditemukan')),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: controller.filteredRekapNilai.length,
+                  itemBuilder: (context, index) {
+                    final item = controller.filteredRekapNilai[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Tingkat ${item['tingkat']}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16)),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildStatCol('Rata-rata',
+                                    '${item['rata_rata']}', AppColors.primary),
+                                _buildStatCol('Tertinggi',
+                                    '${item['tertinggi']}', AppColors.success),
+                                _buildStatCol('Terendah', '${item['terendah']}',
+                                    AppColors.error),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        );
+      }
+
+      // Personal view for students - Grouped by Subject
+      final groupedData = controller.groupedRekapNilai;
+      if (groupedData.isEmpty) {
+        return const Center(child: Text('Tidak ada data nilai'));
+      }
+
+      final subjects = groupedData.keys.toList();
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: subjects.length,
+        itemBuilder: (context, index) {
+          final subject = subjects[index];
+          final grades = groupedData[subject]!;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppShadows.cardShadow,
+            ),
+            child: Theme(
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                title: Text(subject,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.textPrimary)),
+                subtitle: Text('${grades.length} Penilaian',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.menu_book_rounded,
+                      color: AppColors.primary, size: 24),
+                ),
+                children: [
+                  const Divider(height: 1),
+                  ...grades.map((grade) => ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 4),
+                        title: Text(grade['jenis'] ?? '-',
+                            style: const TextStyle(fontSize: 14)),
+                        subtitle: Text('${grade['semester']} ${grade['tahun']}',
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${grade['nilai']}',
+                            style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16),
+                          ),
+                        ),
+                      )),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildSiswaDetailNilai() {
+    final siswa = controller.selectedSiswaForDetail.value!;
+    final name =
+        siswa['user']?['details']?['full_name'] ?? siswa['nama'] ?? 'Siswa';
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => controller.selectedSiswaForDetail.value = null,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tingkat ${item['tingkat']}',
+                    Text(name,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildStatCol('Rata-rata', '${item['rata_rata']}',
-                            AppColors.primary),
-                        _buildStatCol('Tertinggi', '${item['tertinggi']}',
-                            AppColors.success),
-                        _buildStatCol(
-                            'Terendah', '${item['terendah']}', AppColors.error),
-                      ],
-                    ),
+                    Text('Detail Nilai Siswa',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
               ),
-            );
-          },
-        ));
+            ],
+          ),
+        ),
+        Expanded(
+          child: controller.isLoading.value
+              ? const Center(child: CircularProgressIndicator())
+              : controller.siswaNilaiDetail.isEmpty
+                  ? const Center(child: Text('Tidak ada data nilai'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: controller.siswaNilaiDetail.length,
+                      itemBuilder: (context, index) {
+                        final item = controller.siswaNilaiDetail[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: AppShadows.cardShadow,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item['mapel'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                        '${item['jenis']} • ${item['semester']}',
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${item['nilai']}',
+                                style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ],
+    );
   }
 
   Widget _buildStatCol(String label, String value, Color color) {
@@ -613,6 +927,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         itemCount: controller.filteredTugas.length,
         itemBuilder: (context, index) {
           final item = controller.filteredTugas[index];
+          final isDone = item['status'] == 'Selesai';
+
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
@@ -622,35 +938,67 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             ),
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
-              title: Text(item['judul'] ?? 'Tugas',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(item['judul'] ?? 'Tugas',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color:
+                          (isDone ? AppColors.success : AppColors.accentOrange)
+                              .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      item['status'] ?? 'Pending',
+                      style: TextStyle(
+                        color:
+                            isDone ? AppColors.success : AppColors.accentOrange,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
                     Text(item['mapel'] is Map
-                        ? item['mapel']['nama_mapel'] ?? '-'
+                        ? item['mapel']['nama_mapel'] ??
+                            item['mapel']['nama'] ??
+                            '-'
                         : 'Mapel Lain'),
                     const SizedBox(height: 4),
                     Text('Deadline: ${item['deadline'] ?? '-'}',
                         style: const TextStyle(
                             color: AppColors.error, fontSize: 12)),
                     const SizedBox(height: 8),
-                    Text(item['description'] ?? '',
+                    Text(item['description'] ?? item['deskripsi'] ?? '',
                         maxLines: 2, overflow: TextOverflow.ellipsis),
                   ]),
               trailing: controller.userRole.value == 'pimpinan'
                   ? null
                   : ElevatedButton(
-                      onPressed: () => _showSubmissionForm(context, item),
+                      onPressed: isDone
+                          ? null
+                          : () => _showSubmissionForm(context, item),
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor:
+                              isDone ? Colors.grey : AppColors.primary,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8)),
-                      child: const Text('Kirim',
-                          style: TextStyle(fontSize: 12, color: Colors.white)),
+                      child: Text(isDone ? 'Sudah Kirim' : 'Kirim',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: isDone ? Colors.white70 : Colors.white)),
                     ),
             ),
           );

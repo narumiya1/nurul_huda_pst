@@ -230,4 +230,12 @@ class PimpinanRepository {
       rethrow;
     }
   }
+
+  Future<List<dynamic>> findSiswa(String search) async {
+    try {
+      return await _pimpinanApi.findSiswa(search);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -19,7 +19,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -38,6 +38,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             tabs: [
               Tab(icon: Icon(Icons.fact_check_outlined), text: 'Absensi'),
               Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tahfidz'),
+              Tab(icon: Icon(Icons.grade_outlined), text: 'Nilai'),
               Tab(icon: Icon(Icons.calendar_today_outlined), text: 'Jadwal'),
             ],
           ),
@@ -46,6 +47,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
           children: [
             _buildAbsensiTab(),
             _buildTahfidzTab(),
+            _buildNilaiTab(),
             _buildJadwalTab(),
           ],
         ),
@@ -832,6 +834,223 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
         ],
       ),
     );
+  }
+
+  Widget _buildNilaiTab() {
+    return Obx(() {
+      return Column(
+        children: [
+          // Grade Filters
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<Map<String, dynamic>>(
+                        value: controller.selectedKelas.value,
+                        decoration: InputDecoration(
+                          hintText: 'Kelas...',
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        items: controller.kelasList.map((kelas) {
+                          return DropdownMenuItem(
+                            value: kelas,
+                            child: Text(kelas['nama_kelas'] ?? 'Kelas',
+                                style: const TextStyle(fontSize: 12)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          controller.selectedKelas.value = val;
+                          if (val != null) {
+                            controller.fetchSiswaForNilai(val['id']);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<Map<String, dynamic>>(
+                        value: controller.selectedMapel.value,
+                        decoration: InputDecoration(
+                          hintText: 'Mapel...',
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        items: controller.mapelList.map((mapel) {
+                          return DropdownMenuItem(
+                            value: mapel,
+                            child: Text(mapel['name'] ?? 'Mapel',
+                                style: const TextStyle(fontSize: 12)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          controller.selectedMapel.value = val;
+                          controller.onNilaiFilterChanged();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: controller.selectedSemesterNilai.value,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        items: ['ganjil', 'genap'].map((s) {
+                          return DropdownMenuItem(
+                            value: s,
+                            child: Text(s.capitalizeFirst!,
+                                style: const TextStyle(fontSize: 12)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          controller.selectedSemesterNilai.value = val!;
+                          controller.onNilaiFilterChanged();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: controller.selectedJenisPenilaian.value,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        items: ['Tugas', 'UTS', 'UAS', 'Harian'].map((s) {
+                          return DropdownMenuItem(
+                            value: s,
+                            child:
+                                Text(s, style: const TextStyle(fontSize: 12)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          controller.selectedJenisPenilaian.value = val!;
+                          controller.onNilaiFilterChanged();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Student List for Nilai
+          Expanded(
+            child: controller.isLoadingNilai.value
+                ? const Center(child: CircularProgressIndicator())
+                : controller.siswaNilaiList.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.edit_note,
+                                size: 64, color: Colors.grey[300]),
+                            const SizedBox(height: 16),
+                            const Text('Pilih kelas untuk menginput nilai',
+                                style:
+                                    TextStyle(color: AppColors.textSecondary)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: controller.siswaNilaiList.length,
+                        itemBuilder: (context, index) {
+                          final siswa = controller.siswaNilaiList[index];
+                          final name = siswa['details']?['full_name'] ??
+                              siswa['username'] ??
+                              'Siswa';
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: AppShadows.cardShadow,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500)),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 1,
+                                  child: TextField(
+                                    controller:
+                                        controller.nilaiData[siswa['id']],
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      hintText: '0',
+                                      isDense: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 8, horizontal: 8),
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+          ),
+
+          // Submit Button
+          if (controller.siswaNilaiList.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : controller.submitNilaiBulk,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: controller.isLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Simpan Nilai',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   Widget _buildJadwalTab() {

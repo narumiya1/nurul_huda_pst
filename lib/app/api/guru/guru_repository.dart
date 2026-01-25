@@ -99,4 +99,24 @@ class GuruRepository {
 
     return await getJadwalPelajaran(params: {'hari': hari});
   }
+
+  Future<bool> createNilaiBulk(Map<String, dynamic> data) async {
+    try {
+      final response = await _guruApi.createNilaiBulk(data);
+      return response['message'] == 'Bulk update success' ||
+          response['status'] == true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getNilai({int? kelasId, int? mapelId}) async {
+    try {
+      final response =
+          await _guruApi.getNilai(kelasId: kelasId, mapelId: mapelId);
+      return response is List ? response : [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

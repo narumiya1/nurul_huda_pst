@@ -343,4 +343,16 @@ class PimpinanApi {
       header: _getAuthHeader(),
     );
   }
+
+  Future<List<dynamic>> findSiswa(String search) async {
+    final uri =
+        ApiHelper.buildUri(endpoint: 'siswa', params: {'search': search});
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data['data']['data'] is List
+          ? data['data']['data']
+          : (data['data'] is List ? data['data'] : []),
+      header: _getAuthHeader(),
+    );
+  }
 }

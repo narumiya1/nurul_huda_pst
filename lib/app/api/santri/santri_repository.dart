@@ -212,4 +212,35 @@ class SantriRepository {
       return [];
     }
   }
+
+  Future<List<dynamic>> getNilaiSekolah({
+    String? semester,
+    String? tahun,
+    int? siswaId,
+    String? tahunAjaran,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (semester != null) queryParams['semester'] = semester.toLowerCase();
+      if (tahun != null) queryParams['tahun_ajaran'] = tahun;
+      if (siswaId != null) queryParams['siswa_id'] = siswaId.toString();
+      if (tahunAjaran != null) queryParams['tahun_ajaran'] = tahunAjaran;
+
+      final uri =
+          ApiHelper.buildUri(endpoint: 'sekolah/nilai', params: queryParams);
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) {
+          if (data is Map && data['data'] is List) {
+            return data['data'];
+          }
+          return data is List ? data : [];
+        },
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      return [];
+    }
+  }
 }

@@ -75,4 +75,27 @@ class GuruApi {
       header: _getAuthHeader(),
     );
   }
+
+  Future<dynamic> createNilaiBulk(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'sekolah/nilai/bulk');
+    return await _apiHelper.postData(
+      uri: uri,
+      builder: (data) => data,
+      jsonBody: data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<dynamic> getNilai({int? kelasId, int? mapelId}) async {
+    final params = <String, String>{};
+    if (kelasId != null) params['sekolah_kelas_id'] = kelasId.toString();
+    if (mapelId != null) params['mapel_id'] = mapelId.toString();
+
+    final uri = ApiHelper.buildUri(endpoint: 'sekolah/nilai', params: params);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
 }

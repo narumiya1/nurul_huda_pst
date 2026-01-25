@@ -24,6 +24,7 @@ class AkademikPondokController extends GetxController {
 
   // Filtered Data
   final filteredRekapNilai = <Map<String, dynamic>>[].obs;
+  final groupedRekapNilai = <String, List<Map<String, dynamic>>>{}.obs;
   final filteredAgenda = <Map<String, dynamic>>[].obs;
   final filteredTahfidz = <Map<String, dynamic>>[].obs;
   final filteredLaporanAbsensi = <Map<String, dynamic>>[].obs;
@@ -38,8 +39,14 @@ class AkademikPondokController extends GetxController {
   final selectedCurriculumType = 'Semua'.obs;
   final selectedAbsensiTingkat = 'Semua'.obs;
   final selectedAbsensiPeriod = 'Hari Ini'.obs;
+  final selectedTugasStatus = 'Semua'.obs;
 
   final selectedIndex = (-1).obs; // -1 for main grid menu
+  final searchSiswaQuery = ''.obs;
+  final searchSiswaResults = <Map<String, dynamic>>[].obs;
+  final isSearchingSiswa = false.obs;
+  final selectedSiswaForDetail = Rxn<Map<String, dynamic>>();
+  final siswaNilaiDetail = <Map<String, dynamic>>[].obs;
 
   // Assignment Logic
   final selectedAssignmentFile = Rxn<File>();
@@ -181,7 +188,15 @@ class AkademikPondokController extends GetxController {
   Future<void> _fetchTugasSekolah() async {
     try {
       final data = await _santriRepository.getTugasSekolah();
-      tugasList.assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+      tugasList.assignAll(data.map((e) {
+        final map = e as Map<String, dynamic>;
+        // Map backend is_submitted to frontend status
+        final isSubmitted = map['is_submitted'] ?? false;
+        return {
+          ...map,
+          'status': isSubmitted ? 'Selesai' : 'Pending',
+        };
+      }).toList());
     } catch (e) {
       tugasList.assignAll([
         {
@@ -189,7 +204,16 @@ class AkademikPondokController extends GetxController {
           'judul': 'Latihan Fiqih Bab 1',
           'mapel': {'nama_mapel': 'Fiqih'},
           'deadline': '2025-01-20',
+          'status': 'Pending',
           'description': 'Kerjakan halaman 10-12 di buku paket.'
+        },
+        {
+          'id': '2',
+          'judul': 'Hafalan Juz 30',
+          'mapel': {'nama_mapel': 'Tahfidz'},
+          'deadline': '2025-01-22',
+          'status': 'Selesai',
+          'description': 'Setorkan An-Naba sampai Al-Muthaffifin.'
         }
       ]);
     }
@@ -246,69 +270,216 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchRekapNilai() async {
     try {
-      final rawNilai = await _pimpinanRepository.getRekapNilai();
-      if (rawNilai.isNotEmpty) {
-        final Map<String, List<double>> groupedScores = {};
-        for (var item in rawNilai) {
-          String kelasName = 'Umum';
-          double score = 0;
-          if (item is Map) {
-            if (item['kelas'] != null && item['kelas'] is Map) {
-              kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
-            }
-            if (item['nilai_akhir'] != null) {
-              score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
-            } else if (item['nilai'] != null) {
-              score = double.tryParse(item['nilai'].toString()) ?? 0;
-            }
+      final semesterParts = selectedSemester.value.split(' ');
+      final semester = semesterParts.isNotEmpty ? semesterParts[0] : null;
+      final tahun = semesterParts.length > 1 ? semesterParts[1] : null;
+
+      final role = userRole.value.toLowerCase().trim();
+      debugPrint('Role processed: $role, Selected: ${selectedSemester.value}');
+
+      if (role == 'santri' || role == 'siswa') {
+        final rawNilai = await _santriRepository.getNilaiSekolah(
+            semester: semester, tahun: tahun);
+        debugPrint('Fetched Nilai count for student: ${rawNilai.length}');
+        if (rawNilai.isNotEmpty) {
+          _processMappedNilai(rawNilai);
+        } else {
+          debugPrint('Filtered nilia empty, trying fetch without filters...');
+          final allNilai = await _santriRepository.getNilaiSekolah();
+          if (allNilai.isNotEmpty) {
+            _processMappedNilai(allNilai);
+          } else {
+            rekapNilai.clear();
+            groupedRekapNilai.clear();
           }
-          if (!groupedScores.containsKey(kelasName)) {
-            groupedScores[kelasName] = [];
-          }
-          groupedScores[kelasName]!.add(score);
         }
-        rekapNilai.assignAll(groupedScores.entries.map((entry) {
-          final scores = entry.value;
-          if (scores.isEmpty) {
+      } else {
+        // ... rest of pimpinan logic remains same
+        final rawNilai = await _pimpinanRepository.getRekapNilai();
+        if (rawNilai.isNotEmpty) {
+          final Map<String, List<double>> groupedScores = {};
+          for (var item in rawNilai) {
+            String kelasName = 'Umum';
+            double score = 0;
+            if (item is Map) {
+              if (item['kelas'] != null && item['kelas'] is Map) {
+                kelasName = item['kelas']['nama_kelas'] ?? 'Umum';
+              }
+              if (item['nilai_akhir'] != null) {
+                score = double.tryParse(item['nilai_akhir'].toString()) ?? 0;
+              } else if (item['nilai'] != null) {
+                score = double.tryParse(item['nilai'].toString()) ?? 0;
+              }
+            }
+            if (!groupedScores.containsKey(kelasName)) {
+              groupedScores[kelasName] = [];
+            }
+            groupedScores[kelasName]!.add(score);
+          }
+          rekapNilai.assignAll(groupedScores.entries.map((entry) {
+            final scores = entry.value;
+            if (scores.isEmpty) {
+              return {
+                'tingkat': entry.key,
+                'rata_rata': 0.0,
+                'tertinggi': 0.0,
+                'terendah': 0.0
+              };
+            }
+            final avg = scores.reduce((a, b) => a + b) / scores.length;
+            final max = scores.reduce((a, b) => a > b ? a : b);
+            final min = scores.reduce((a, b) => a < b ? a : b);
             return {
               'tingkat': entry.key,
-              'rata_rata': 0.0,
-              'tertinggi': 0.0,
-              'terendah': 0.0
+              'rata_rata': double.parse(avg.toStringAsFixed(1)),
+              'tertinggi': max,
+              'terendah': min
             };
-          }
-          final avg = scores.reduce((a, b) => a + b) / scores.length;
-          final max = scores.reduce((a, b) => a > b ? a : b);
-          final min = scores.reduce((a, b) => a < b ? a : b);
-          return {
-            'tingkat': entry.key,
-            'rata_rata': double.parse(avg.toStringAsFixed(1)),
-            'tertinggi': max,
-            'terendah': min
-          };
-        }).toList());
+          }).toList());
+        }
       }
+      filteredRekapNilai.assignAll(rekapNilai);
     } catch (e) {
-      rekapNilai.assignAll([
-        {
-          'tingkat': 'VII',
-          'rata_rata': 84.5,
-          'tertinggi': 98.0,
-          'terendah': 65.0
-        },
-        {
-          'tingkat': 'VIII',
-          'rata_rata': 82.2,
-          'tertinggi': 97.0,
-          'terendah': 60.0
-        },
-        {
-          'tingkat': 'IX',
-          'rata_rata': 86.8,
-          'tertinggi': 99.0,
-          'terendah': 70.0
-        },
-      ]);
+      debugPrint('Error fetching rekap nilai: $e');
+      if (userRole.value == 'santri' || userRole.value == 'siswa') {
+        final dummy = [
+          {
+            'is_personal': true,
+            'mapel': 'Fiqih',
+            'nilai': 85,
+            'tingkat': 'VII',
+            'semester': 'Ganjil',
+            'tahun': '2025/2026',
+            'jenis': 'UTS',
+          },
+          {
+            'is_personal': true,
+            'mapel': 'Bahasa Arab',
+            'nilai': 90,
+            'tingkat': 'VII',
+            'semester': 'Ganjil',
+            'tahun': '2025/2026',
+            'jenis': 'UAS',
+          }
+        ];
+        rekapNilai.assignAll(dummy);
+        final Map<String, List<Map<String, dynamic>>> grouped = {};
+        for (var item in dummy) {
+          final mapel = item['mapel'] as String;
+          if (!grouped.containsKey(mapel)) {
+            grouped[mapel] = [];
+          }
+          grouped[mapel]!.add(item);
+        }
+        groupedRekapNilai.assignAll(grouped);
+      } else {
+        rekapNilai.assignAll([
+          {
+            'tingkat': 'VII',
+            'rata_rata': 84.5,
+            'tertinggi': 98.0,
+            'terendah': 65.0
+          },
+          {
+            'tingkat': 'VIII',
+            'rata_rata': 82.2,
+            'tertinggi': 97.0,
+            'terendah': 60.0
+          },
+          {
+            'tingkat': 'IX',
+            'rata_rata': 86.8,
+            'tertinggi': 99.0,
+            'terendah': 70.0
+          },
+        ]);
+        groupedRekapNilai.clear();
+      }
+      filteredRekapNilai.assignAll(rekapNilai);
+    }
+  }
+
+  void _processMappedNilai(List<dynamic> rawNilai) {
+    final List<Map<String, dynamic>> mapped = rawNilai.map((item) {
+      String mapelName = '-';
+      if (item['mapel'] != null) {
+        mapelName = item['mapel']['nama'] ?? '-';
+      }
+      return {
+        'is_personal': true,
+        'mapel': mapelName,
+        'nilai': item['nilai'] ?? '0',
+        'tingkat': item['kelas'] != null
+            ? (item['kelas']['nama_kelas'] ?? '-')
+            : (item['sekolah_kelas_id']?.toString() ?? '-'),
+        'semester': (item['semester']?.toString() ?? '-').capitalizeFirst,
+        'tahun': item['tahun_ajaran'] ?? '-',
+        'jenis': item['jenis_penilaian'] ?? '-',
+      };
+    }).toList();
+    rekapNilai.assignAll(mapped);
+
+    // Grouping by mapel
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+    for (var item in mapped) {
+      final mapel = item['mapel'] as String;
+      if (!grouped.containsKey(mapel)) {
+        grouped[mapel] = [];
+      }
+      grouped[mapel]!.add(item);
+    }
+    groupedRekapNilai.assignAll(grouped);
+  }
+
+  Future<void> searchSiswaGrades(String query) async {
+    if (query.length < 3) {
+      searchSiswaResults.clear();
+      return;
+    }
+
+    try {
+      isSearchingSiswa.value = true;
+      // Search for student first
+      final students = await _pimpinanRepository.findSiswa(query);
+      searchSiswaResults
+          .assignAll(students.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      debugPrint('Error searching siswa: $e');
+    } finally {
+      isSearchingSiswa.value = false;
+    }
+  }
+
+  Future<void> fetchSiswaDetailNilai(int siswaId) async {
+    try {
+      isLoading.value = true;
+      final semesterParts = selectedSemester.value.split(' ');
+      final semester = semesterParts.isNotEmpty ? semesterParts[0] : null;
+      final tahun = semesterParts.length > 1 ? semesterParts[1] : null;
+
+      final response = await _santriRepository.getNilaiSekolah(
+        siswaId: siswaId,
+        semester: semester?.toLowerCase(),
+        tahunAjaran: tahun,
+      );
+
+      siswaNilaiDetail.assignAll(response.map((item) {
+        String mapelName = '-';
+        if (item['mapel'] != null) {
+          mapelName = item['mapel']['nama'] ?? '-';
+        }
+        return {
+          'mapel': mapelName,
+          'nilai': item['nilai'],
+          'jenis': item['jenis_penilaian'] ?? '-',
+          'semester': item['semester'] ?? '-',
+          'tahun': item['tahun_ajaran'] ?? '-',
+        };
+      }).toList());
+    } catch (e) {
+      debugPrint('Error fetching siswa detail nilai: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -430,19 +601,39 @@ class AkademikPondokController extends GetxController {
     filteredTugas.assignAll(tugasList);
   }
 
-  void applyFilters() {
+  Future<void> applyFilters() async {
     // Reload Absensi if filters relevant to it change (Index 3)
     if (selectedIndex.value == 3) {
-      fetchLaporanAbsensi();
+      await fetchLaporanAbsensi();
+    }
+
+    // Reload Rekap Nilai if filters relevant to it change (Index 0)
+    if (selectedIndex.value == 0) {
+      await _fetchRekapNilai();
     }
 
     // Filter Rekap Nilai
-    if (selectedTingkat.value == 'Semua') {
+    if (userRole.value == 'santri' || userRole.value == 'siswa') {
+      // For personal view, we usually only care about semester/year (handled in fetch)
+      // but let's re-group if we ever add local search
+      final Map<String, List<Map<String, dynamic>>> grouped = {};
+      for (var item in rekapNilai) {
+        final mapel = item['mapel'] as String;
+        if (!grouped.containsKey(mapel)) {
+          grouped[mapel] = [];
+        }
+        grouped[mapel]!.add(item);
+      }
+      groupedRekapNilai.assignAll(grouped);
       filteredRekapNilai.assignAll(rekapNilai);
     } else {
-      filteredRekapNilai.assignAll(rekapNilai
-          .where((item) => item['tingkat'] == selectedTingkat.value)
-          .toList());
+      if (selectedTingkat.value == 'Semua') {
+        filteredRekapNilai.assignAll(rekapNilai);
+      } else {
+        filteredRekapNilai.assignAll(rekapNilai
+            .where((item) => item['tingkat'] == selectedTingkat.value)
+            .toList());
+      }
     }
 
     // Filter Agenda
@@ -480,13 +671,20 @@ class AkademikPondokController extends GetxController {
 
     filteredKurikulum.assignAll(tempKurikulum);
 
-    // Filter Tugas (Currently no filter impl, just copy)
-    filteredTugas.assignAll(tugasList);
+    // Filter Tugas
+    if (selectedTugasStatus.value == 'Semua') {
+      filteredTugas.assignAll(tugasList);
+    } else {
+      filteredTugas.assignAll(tugasList
+          .where((item) => item['status'] == selectedTugasStatus.value)
+          .toList());
+    }
   }
 
   void resetFilters() {
     selectedTingkat.value = 'Semua';
     selectedSemester.value = 'Ganjil 2025/2026';
+    selectedTugasStatus.value = 'Semua';
     applyFilters();
   }
 }

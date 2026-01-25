@@ -632,16 +632,10 @@ class HomePage extends GetView<DashboardController> {
         'roles': ['pimpinan', 'staff_pesantren']
       },
       {
-        'title': 'Akademik & Pondok',
-        'icon': Icons.menu_book_outlined,
-        'color': const Color(0xFF6C5CE7),
-        'roles': ['pimpinan']
-      },
-      {
         'title': 'Akademik',
         'icon': Icons.school_outlined,
         'color': AppColors.accentBlue,
-        'roles': ['staff_pesantren', 'guru', 'santri', 'siswa']
+        'roles': ['pimpinan', 'staff_pesantren', 'guru', 'santri', 'siswa']
       },
       {
         'title': 'Pondok',
@@ -723,7 +717,7 @@ class HomePage extends GetView<DashboardController> {
                   case 'PSB':
                     Get.toNamed(Routes.psb);
                     break;
-                  case 'Akademik & Pondok':
+                  case 'Akademik':
                     Get.toNamed(Routes.akademikPondok);
                     break;
                   case 'Pondok':
@@ -734,9 +728,6 @@ class HomePage extends GetView<DashboardController> {
                     break;
                   case 'Administrasi':
                     Get.toNamed(Routes.administrasi);
-                    break;
-                  case 'Akademik':
-                    Get.toNamed(Routes.aktivitas);
                     break;
                   case 'Kedisiplinan':
                     Get.toNamed(Routes.pelanggaran);

@@ -21,6 +21,17 @@ class TeacherAreaController extends GetxController {
   final jadwalHariIni = <Map<String, dynamic>>[].obs; // Today's schedule
   final userDetails = Rxn<Map<String, dynamic>>(); // User profile for welcome
 
+  // Input Nilai
+  final mapelList = <Map<String, dynamic>>[].obs;
+  final selectedMapel = Rxn<Map<String, dynamic>>();
+  final selectedSemesterNilai = 'ganjil'.obs;
+  final selectedTahunAjaran = '2025/2026'.obs;
+  final selectedJenisPenilaian = 'Tugas'.obs;
+  final nilaiData =
+      <int, TextEditingController>{}.obs; // siswa_id -> controller
+  final isLoadingNilai = false.obs;
+  final siswaNilaiList = <Map<String, dynamic>>[].obs;
+
   // Tahfidz
   final santriList = <dynamic>[].obs;
   final selectedSantriId = Rxn<int>();
@@ -57,6 +68,7 @@ class TeacherAreaController extends GetxController {
   void onInit() {
     super.onInit();
     loadDashboard();
+    fetchMapelList();
   }
 
   Future<void> loadDashboard() async {
@@ -517,5 +529,134 @@ class TeacherAreaController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // ========== NILAI SEKOLAH ==========
+  Future<void> fetchMapelList() async {
+    try {
+      final data = await _guruRepository.getMyMapel();
+      mapelList.assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      debugPrint('Error fetching mapel list: $e');
+    }
+  }
+
+  Future<void> fetchSiswaForNilai(int kelasId) async {
+    try {
+      isLoadingNilai.value = true;
+      siswaNilaiList.clear();
+      nilaiData.clear();
+
+      final uri = ApiHelper.buildUri(
+        endpoint: 'siswa',
+        params: {
+          'kelas_id': kelasId.toString(),
+          'per_page': '100', // Load all for grading convenience
+        },
+      );
+
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response != null && response['data'] != null) {
+        final List rawList = response['data'] is List
+            ? response['data']
+            : (response['data']['data'] ?? []);
+
+        siswaNilaiList.assignAll(rawList.map((e) {
+          final s = e as Map<String, dynamic>;
+          nilaiData[s['id']] = TextEditingController();
+          return s;
+        }).toList());
+
+        // Also fetch existing grades if mapel is selected
+        if (selectedMapel.value != null) {
+          await _fetchExistingGrades();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching siswa for nilai: $e');
+    } finally {
+      isLoadingNilai.value = false;
+    }
+  }
+
+  Future<void> _fetchExistingGrades() async {
+    if (selectedKelas.value == null || selectedMapel.value == null) return;
+
+    try {
+      final grades = await _guruRepository.getNilai(
+        kelasId: selectedKelas.value!['id'],
+        mapelId: selectedMapel.value!['id'],
+      );
+
+      for (var grade in grades) {
+        final siswaId = grade['siswa_id'];
+        if (nilaiData.containsKey(siswaId)) {
+          // Find if this grade matches current semester/year/type filter
+          if (grade['semester'] == selectedSemesterNilai.value &&
+              grade['tahun_ajaran'] == selectedTahunAjaran.value &&
+              grade['jenis_penilaian'] == selectedJenisPenilaian.value) {
+            nilaiData[siswaId]!.text = grade['nilai'].toString();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching existing grades: $e');
+    }
+  }
+
+  Future<void> submitNilaiBulk() async {
+    if (selectedKelas.value == null || selectedMapel.value == null) {
+      Get.snackbar('Peringatan', 'Pilih kelas dan mata pelajaran',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      final dataList = <Map<String, dynamic>>[];
+      nilaiData.forEach((siswaId, controller) {
+        if (controller.text.isNotEmpty) {
+          dataList.add({
+            'siswa_id': siswaId,
+            'mapel_id': selectedMapel.value!['id'],
+            'sekolah_kelas_id': selectedKelas.value!['id'],
+            'semester': selectedSemesterNilai.value,
+            'tahun_ajaran': selectedTahunAjaran.value,
+            'jenis_penilaian': selectedJenisPenilaian.value,
+            'nilai': double.tryParse(controller.text) ?? 0.0,
+          });
+        }
+      });
+
+      if (dataList.isEmpty) {
+        Get.snackbar('Peringatan', 'Tidak ada nilai yang diinputkan');
+        return;
+      }
+
+      final success =
+          await _guruRepository.createNilaiBulk({'nilai_data': dataList});
+
+      if (success) {
+        Get.snackbar('Sukses', 'Nilai berhasil disimpan!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        Get.snackbar('Gagal', 'Gagal menyimpan nilai',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void onNilaiFilterChanged() {
+    _fetchExistingGrades();
   }
 }

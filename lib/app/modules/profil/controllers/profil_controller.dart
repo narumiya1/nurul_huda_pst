@@ -33,6 +33,7 @@ class ProfilController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserData();
+    fetchUserProfile(); // Refresh data to get latest updates like kode_claim
     fetchSettings();
   }
 
@@ -46,6 +47,26 @@ class ProfilController extends GetxController {
       settings.value = response;
     } catch (e) {
       debugPrint('Error fetching settings: $e');
+    }
+  }
+
+  Future<void> fetchUserProfile() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'user/my-profile');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      if (response['status'] == true ||
+          (response['data'] != null && response['data']['user'] != null)) {
+        final user = response['data']['user'];
+        LocalStorage.saveUser(user);
+        userData.value = user;
+      }
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
     }
   }
 
@@ -66,6 +87,13 @@ class ProfilController extends GetxController {
   String get userRole => userData.value?['role']?['description'] ?? 'Pengguna';
   String get userEmail => userData.value?['email'] ?? '-';
   String get userPhone => userData.value?['details']?['phone'] ?? '-';
+
+  String get claimCode {
+    final santri = userData.value?['santri'];
+    final siswa = userData.value?['siswa'];
+    return santri?['kode_claim'] ?? siswa?['kode_claim'] ?? '-';
+  }
+
   bool get isPimpinan {
     final role = userData.value?['role'];
     if (role == null) return false;

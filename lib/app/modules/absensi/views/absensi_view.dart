@@ -12,36 +12,34 @@ class AbsensiView extends GetView<AbsensiController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Kehadiran & Izin'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        title: const Text('Kehadiran & Izin',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
         bottom: TabBar(
           controller: controller.tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: AppColors.primary,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
-            Tab(text: 'Riwayat Absensi'),
+            Tab(text: 'Absensi'),
             Tab(text: 'Perizinan'),
           ],
         ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary));
-        }
-        return TabBarView(
-          controller: controller.tabController,
-          children: [
-            _buildAbsensiTab(),
-            _buildPerizinanTab(context),
-          ],
-        );
-      }),
+      body: TabBarView(
+        controller: controller.tabController,
+        children: [
+          _buildAbsensiTab(),
+          _buildPerizinanTab(context),
+        ],
+      ),
       floatingActionButton: Obx(() {
-        if (controller.tabController.index == 1) {
+        if (controller.currentTabIndex.value == 1) {
           return FloatingActionButton.extended(
             onPressed: () => _showPermissionForm(context),
             backgroundColor: AppColors.primary,
@@ -55,105 +53,179 @@ class AbsensiView extends GetView<AbsensiController> {
   }
 
   Widget _buildAbsensiTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSummaryCards(),
-          const SizedBox(height: 24),
-          const Text(
-            'Riwayat Kehadiran Bulan Ini',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary),
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: () async => controller.fetchAbsensi(),
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (controller.userRole == 'orangtua') ...[
+                _buildChildSelectorContent(),
+                const SizedBox(height: 20),
+              ],
+              _buildSummaryCardsContent(),
+              const SizedBox(height: 24),
+              const Text(
+                'Riwayat Kehadiran Lengkap',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 16),
+              _buildAbsensiListContent(),
+            ],
           ),
-          const SizedBox(height: 16),
-          _buildAbsensiList(),
-        ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildChildSelectorContent() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppShadows.softShadow,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: controller.selectedChildKey.value,
+          isExpanded: true,
+          hint: const Text("Pilih Anak"),
+          items: controller.children.map((child) {
+            final key = '${child['tipe']}_${child['id']}';
+            final tipe = child['tipe'] ?? '';
+            return DropdownMenuItem<String>(
+              value: key,
+              child: Text('${child['nama'] ?? 'Tanpa Nama'} ($tipe)'),
+            );
+          }).toList(),
+          onChanged: controller.onChildKeyChanged,
+        ),
       ),
     );
   }
 
   Widget _buildPerizinanTab(BuildContext context) {
-    if (controller.perizinanList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assignment_turned_in_outlined,
-                size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            const Text('Belum ada riwayat perizinan',
-                style: TextStyle(color: Colors.grey)),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: controller.perizinanList.length,
-      itemBuilder: (context, index) {
-        final item = controller.perizinanList[index];
-        final status = item['status'] ?? 'diajukan';
-        final color = _getPermissionStatusColor(status);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.cardShadow,
-            border: Border(left: BorderSide(color: color, width: 4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Obx(() {
+      return RefreshIndicator(
+        onRefresh: () async => controller.fetchPerizinan(),
+        color: AppColors.primary,
+        child: controller.perizinanList.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Text(
-                    item['jenis_izin'] ?? 'Izin',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.assignment_turned_in_outlined,
+                              size: 64, color: Colors.grey[300]),
+                          const SizedBox(height: 16),
+                          const Text('Belum ada riwayat perizinan',
+                              style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      status.toString().toUpperCase(),
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  )
                 ],
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: controller.perizinanList.length,
+                itemBuilder: (context, index) {
+                  final item = controller.perizinanList[index];
+                  final status = item['status'] ?? 'diajukan';
+                  final color = _getPermissionStatusColor(status);
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: AppShadows.cardShadow,
+                      border: Border(left: BorderSide(color: color, width: 4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item['jenis_izin'] ?? 'Izin',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                status.toString().toUpperCase(),
+                                style: TextStyle(
+                                    color: color,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${item['tanggal_keluar']} s/d ${item['tanggal_kembali']}', // Adjust fields based on API
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                        if (item['penjemput'] != null &&
+                            item['penjemput'].toString().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_outline,
+                                  size: 14, color: AppColors.textSecondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Penjemput: ${item['penjemput']}',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(
+                          '"${item['alasan'] ?? ''}"',
+                          style: const TextStyle(
+                              fontSize: 13, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${item['tanggal_keluar']} s/d ${item['tanggal_kembali']}', // Adjust fields based on API
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '"${item['alasan'] ?? ''}"',
-                style:
-                    const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+      );
+    });
   }
 
   void _showPermissionForm(BuildContext context) {
@@ -173,8 +245,17 @@ class AbsensiView extends GetView<AbsensiController> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
 
+              if (controller.userRole == 'orangtua') ...[
+                const Text('Pilih Anak',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                _buildChildSelectorContent(),
+                const SizedBox(height: 16),
+              ],
+
               // Jenis Izin
-              const Text('Jenis Izin'),
+              const Text('Jenis Izin',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Obx(() => Wrap(
                     spacing: 8,
@@ -194,6 +275,20 @@ class AbsensiView extends GetView<AbsensiController> {
                   )),
 
               const SizedBox(height: 16),
+
+              if (controller.selectedJenisIzin.value == 'Pulang') ...[
+                TextField(
+                  controller: controller.penjemputController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Penjemput',
+                    hintText: 'Siapa yang menjemput?',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.person_outline),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               TextField(
                 controller: controller.tanggalKeluarController,
@@ -280,113 +375,138 @@ class AbsensiView extends GetView<AbsensiController> {
     );
   }
 
-  Widget _buildSummaryCards() {
-    return Obx(() => Row(
-          children: [
-            _buildSummaryCard(
-                'Hadir', controller.totalHadir, AppColors.success),
-            const SizedBox(width: 12),
-            _buildSummaryCard(
-                'Izin', controller.totalIzin, AppColors.accentBlue),
-            const SizedBox(width: 12),
-            _buildSummaryCard(
-                'Sakit', controller.totalSakit, AppColors.accentOrange),
-            const SizedBox(width: 12),
-            _buildSummaryCard('Alpha', controller.totalAlpha, AppColors.error),
-          ],
-        ));
-  }
-
-  Widget _buildSummaryCard(String label, int count, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Text('$count',
-                style: TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 4),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 12, color: color, fontWeight: FontWeight.w600)),
-          ],
-        ),
+  Widget _buildSummaryCardsContent() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSummaryItem('Hadir', controller.totalHadir,
+                  AppColors.success, Icons.check_circle),
+              _buildSummaryItem('Izin', controller.totalIzin, AppColors.primary,
+                  Icons.info_outline),
+              _buildSummaryItem('Sakit', controller.totalSakit,
+                  AppColors.warning, Icons.medical_services_outlined),
+              _buildSummaryItem('Alpha', controller.totalAlpha, AppColors.error,
+                  Icons.cancel_outlined),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAbsensiList() {
-    return Obx(() => ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: controller.absensiList.length,
-          itemBuilder: (context, index) {
-            final item = controller.absensiList[index];
-            final status = (item['status'] ?? 'hadir') as String;
-            final date = (item['date'] ?? '-') as String;
-            final keterangan = (item['keterangan'] ?? '-') as String;
-            final color = _getStatusColor(status);
+  Widget _buildSummaryItem(
+      String label, int count, Color color, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.cardShadow,
+  Widget _buildAbsensiListContent() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: controller.absensiList.length,
+      itemBuilder: (context, index) {
+        final item = controller.absensiList[index];
+        final status = (item['status'] ?? 'hadir') as String;
+        final date = (item['date'] ?? '-') as String;
+        final keterangan = (item['keterangan'] ?? '-') as String;
+        final detail = (item['detail'] ?? '-') as String;
+        final tipe = (item['tipe'] ?? '-') as String;
+        final color = _getStatusColor(status.toLowerCase());
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: AppShadows.cardShadow,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(_getStatusIcon(status.toLowerCase()), color: color),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(_getStatusIcon(status), color: color),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(date,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                        if (keterangan != '-')
-                          Text(keterangan,
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      status.toUpperCase(),
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(date,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text("$detail ($tipe)",
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500)),
+                    if (keterangan != '-' && keterangan.isNotEmpty)
+                      Text("Ket: $keterangan",
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
               ),
-            );
-          },
-        ));
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: TextStyle(
+                      color: color, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Color _getStatusColor(String status) {

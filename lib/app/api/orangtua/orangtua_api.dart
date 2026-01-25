@@ -18,9 +18,13 @@ class OrangtuaApi {
     );
   }
 
-  Future<dynamic> getChildSummary(int santriId) async {
-    final uri =
-        ApiHelper.buildUri(endpoint: 'orangtua/child-summary/$santriId');
+  Future<dynamic> getChildSummary(int santriId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-summary/$santriId',
+        params: params.isNotEmpty ? params : null);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
@@ -28,9 +32,13 @@ class OrangtuaApi {
     );
   }
 
-  Future<dynamic> getChildProfile(int santriId) async {
-    final uri =
-        ApiHelper.buildUri(endpoint: 'orangtua/child-profile/$santriId');
+  Future<dynamic> getChildProfile(int santriId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-profile/$santriId',
+        params: params.isNotEmpty ? params : null);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
@@ -38,9 +46,13 @@ class OrangtuaApi {
     );
   }
 
-  Future<dynamic> getChildSchedule(int santriId) async {
-    final uri =
-        ApiHelper.buildUri(endpoint: 'orangtua/child-schedule/$santriId');
+  Future<dynamic> getChildSchedule(int santriId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-schedule/$santriId',
+        params: params.isNotEmpty ? params : null);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
@@ -48,8 +60,13 @@ class OrangtuaApi {
     );
   }
 
-  Future<dynamic> getChildScores(int santriId) async {
-    final uri = ApiHelper.buildUri(endpoint: 'orangtua/child-scores/$santriId');
+  Future<dynamic> getChildScores(int santriId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-scores/$santriId',
+        params: params.isNotEmpty ? params : null);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
@@ -57,8 +74,63 @@ class OrangtuaApi {
     );
   }
 
-  Future<dynamic> getChildBills(int santriId) async {
-    final uri = ApiHelper.buildUri(endpoint: 'orangtua/child-bills/$santriId');
+  Future<dynamic> getChildBills(int santriId, {String? tipe}) async {
+    // Current implementation of childBills in backend doesn't support type yet,
+    // but we can pass it for future compatibility
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-bills/$santriId',
+        params: params.isNotEmpty ? params : null);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<dynamic> getChildAbsensi(int childId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-absensi/$childId',
+        params: params.isNotEmpty ? params : null);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<dynamic> getChildPerizinan(int santriId, {String? tipe}) async {
+    final Map<String, String> params = {};
+    if (tipe != null) params['type'] = tipe;
+
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-perizinan/$santriId',
+        params: params.isNotEmpty ? params : null);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<dynamic> claimChild(
+      {required String code, required String hubungan}) async {
+    final uri = ApiHelper.buildUri(endpoint: 'orangtua/claim-child');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: {'code': code, 'hubungan': hubungan},
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<dynamic> getMyLinks() async {
+    final uri = ApiHelper.buildUri(endpoint: 'orangtua/my-links');
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,

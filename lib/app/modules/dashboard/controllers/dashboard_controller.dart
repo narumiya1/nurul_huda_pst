@@ -34,6 +34,9 @@ class DashboardController extends GetxController {
   final userData = Rxn<Map<String, dynamic>>();
   final quickStats = <String, dynamic>{}.obs;
   final jadwalGuru = <Map<String, dynamic>>[].obs; // Add this
+  final attendanceHistory = <Map<String, dynamic>>[].obs; // Add this
+  final childrenList = <Map<String, dynamic>>[].obs; // Add this
+  final nis = ''.obs; // Add this
 
   @override
   void onInit() {
@@ -41,7 +44,7 @@ class DashboardController extends GetxController {
     loadUserData();
     fetchBerita();
     loadQuickStats();
-    fetchJadwalGuru(); // Add this
+    fetchJadwalGuru();
   }
 
   Future<void> fetchJadwalGuru() async {
@@ -128,31 +131,84 @@ class DashboardController extends GetxController {
     } else if (role == 'santri' || role == 'siswa') {
       try {
         final profile = await _santriRepository.getMyProfile();
-        final bills = await _santriRepository.getMyBills();
+        final tugas = await _santriRepository.getTugasSekolah();
+        final tahfidz = await _santriRepository.getMyTahfidz();
+
+        String kelasName = '-';
+
+        if (profile != null) {
+          // Extract NIS
+          if (profile['santri'] != null && profile['santri']['nis'] != null) {
+            nis.value = profile['santri']['nis'].toString();
+          } else if (profile['siswa'] != null &&
+              profile['siswa']['nis'] != null) {
+            nis.value = profile['siswa']['nis'].toString();
+          } else if (profile['details'] != null &&
+              profile['details']['identifier_number'] != null) {
+            nis.value = profile['details']['identifier_number'].toString();
+          }
+
+          // Try to find class name in relations
+          if (profile['santri'] != null) {
+            final s = profile['santri'];
+            // Check various potential keys for class relation
+            final kObj = s['kelas_obj'] ?? s['kelasObj'] ?? s['kelas'];
+            if (kObj is Map && kObj['nama_kelas'] != null) {
+              kelasName = kObj['nama_kelas'];
+            } else if (s['kelas'] is String) {
+              kelasName = s['kelas']; // Fallback if just string
+            }
+          }
+
+          if (kelasName == '-' &&
+              profile['siswa'] != null &&
+              profile['siswa']['kelas'] != null) {
+            final k = profile['siswa']['kelas'];
+            if (k is Map && k['nama_kelas'] != null) {
+              kelasName = k['nama_kelas'];
+            }
+          }
+        }
+
+        // Count pending tasks
+        int pendingTasks = 0;
+        if (tugas.isNotEmpty) {
+          pendingTasks = tugas.where((t) {
+            final isSubmitted =
+                t['my_submission'] != null || (t['is_submitted'] == true);
+            return !isSubmitted;
+          }).length;
+        }
+
+        // Tahfidz info
+        String hafalanInfo = '0 Juz';
+        if (tahfidz.isNotEmpty) {
+          hafalanInfo = '${tahfidz['total_juz'] ?? 0} Juz';
+        }
+
         quickStats.value = {
-          'stat1': {
-            'label': 'Tingkat',
-            'value': profile?['tingkat']?['nama_tingkat'] ?? '-',
-            'icon': 'trending_up'
-          },
+          'stat1': {'label': 'Kelas', 'value': kelasName, 'icon': 'room'},
           'stat2': {
-            'label': 'Tagihan',
-            'value': bills.length.toString(),
-            'icon': 'account_balance_wallet'
+            'label': 'Tugas Pending',
+            'value': pendingTasks.toString(),
+            'icon': 'assignment'
           },
           'stat3': {
             'label': 'Hafalan',
-            'value': 'Aktif',
+            'value': hafalanInfo,
             'icon': 'auto_stories'
           },
         };
         return;
       } catch (e) {
         // Handle error
+        print('Error loading stats: $e');
       }
     } else if (role == 'orangtua') {
       try {
         final children = await _orangtuaRepository.getMyChildren();
+        childrenList
+            .assignAll(children.map((e) => e as Map<String, dynamic>).toList());
         quickStats.value = {
           'stat1': {
             'label': 'Anak',
@@ -256,5 +312,33 @@ class DashboardController extends GetxController {
 
   void changeBerita(int index) {
     selectedBeritaIndex.value = index;
+  }
+
+  Future<void> fetchAttendanceHistory() async {
+    final role = userRole;
+    if (role == 'santri' || role == 'siswa') {
+      try {
+        final data = await _santriRepository.getMyAbsensi();
+        attendanceHistory
+            .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+      } catch (e) {
+        debugPrint('Error fetching attendance history: $e');
+      }
+    } else if (role == 'orangtua') {
+      try {
+        final children = await _orangtuaRepository.getMyChildren();
+        if (children.isNotEmpty) {
+          // By default show first child's attendance on dashboard
+          final firstChildId = children[0]['id'];
+          final firstChildTipe = children[0]['tipe'];
+          final data = await _orangtuaRepository.getChildAbsensi(firstChildId,
+              tipe: firstChildTipe);
+          attendanceHistory
+              .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+        }
+      } catch (e) {
+        debugPrint('Error fetching child attendance history: $e');
+      }
+    }
   }
 }

@@ -137,6 +137,11 @@ class ProfilView extends GetView<ProfilController> {
                 const Divider(height: 32),
                 _buildInfoRow(
                     Icons.phone_outlined, 'Telepon', controller.userPhone),
+                if (controller.claimCode != '-') ...[
+                  const Divider(height: 32),
+                  _buildInfoRow(
+                      Icons.qr_code, 'Kode Claim', controller.claimCode),
+                ],
               ],
             ),
           )),

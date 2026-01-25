@@ -70,7 +70,11 @@ class PimpinanApi {
 
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -96,7 +100,11 @@ class PimpinanApi {
     final uri = ApiHelper.buildUri(endpoint: 'activity/$filter');
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -106,7 +114,11 @@ class PimpinanApi {
     final uri = ApiHelper.buildUri(endpoint: 'tahfidz/hafalan');
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -130,7 +142,11 @@ class PimpinanApi {
     );
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': {}};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -165,7 +181,11 @@ class PimpinanApi {
 
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -175,7 +195,11 @@ class PimpinanApi {
     final uri = ApiHelper.buildUri(endpoint: 'pondok/blok');
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }
@@ -188,7 +212,11 @@ class PimpinanApi {
     final uri = ApiHelper.buildUri(endpoint: 'pondok/kamar', params: params);
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data,
+      builder: (data) {
+        if (data is Map<String, dynamic>) return data;
+        if (data is List) return {'data': data};
+        return {'data': []};
+      },
       header: _getAuthHeader(),
     );
   }

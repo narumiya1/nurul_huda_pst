@@ -196,7 +196,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedSemester.value,
+                  initialValue: controller.selectedSemester.value,
                   items: [
                     'Ganjil 2025/2026',
                     'Genap 2025/2026',
@@ -325,7 +325,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             (controller.userRole.value == 'pimpinan' ? 'Kurikulum' : 'Materi'),
         'icon': Icons.library_books_rounded,
         'color': AppColors.accentPurple,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
+        'roles': ['pimpinan', 'guru', 'staff_pesantren']
       },
       {
         'index': 5,
@@ -553,7 +553,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   'DEBUG: Role: ${controller.userRole.value} | Raw: ${controller.rekapNilai.length} | Grouped: ${controller.groupedRekapNilai.length}',
                   style: const TextStyle(fontSize: 10, color: Colors.grey)),
               const SizedBox(height: 8),
-              Text('Tidak ada data nilai'),
+              const Text('Tidak ada data nilai'),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => controller.fetchAllData(),
@@ -1012,6 +1012,31 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                     const SizedBox(height: 8),
                     Text(item['description'] ?? item['deskripsi'] ?? '',
                         maxLines: 2, overflow: TextOverflow.ellipsis),
+                    if (item['file_path'] != null) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () {
+                          // TODO: Implement actual download/open file
+                          // For now just show snackbar
+                          Get.snackbar('Info',
+                              'Membuka file tugas: ${item['file_path'].split('/').last}',
+                              snackPosition: SnackPosition.BOTTOM);
+                        },
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.description,
+                                size: 16, color: Colors.blue),
+                            SizedBox(width: 4),
+                            Text('Unduh Soal (PDF/Word)',
+                                style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12)),
+                          ],
+                        ),
+                      )
+                    ]
                   ]),
               trailing: controller.userRole.value == 'pimpinan'
                   ? null
@@ -1039,7 +1064,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
   }
 
   void _showSubmissionForm(BuildContext context, Map<String, dynamic> task) {
-    controller.clearAssignmentFile();
+    controller.clearAssignmentFiles();
     final textController = TextEditingController();
 
     Get.bottomSheet(
@@ -1071,38 +1096,42 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 ),
                 const SizedBox(height: 16),
                 Obx(() {
-                  final file = controller.selectedAssignmentFile.value;
+                  final files = controller.selectedAssignmentFiles;
                   return Column(
                     children: [
-                      if (file != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8)),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.description,
-                                  color: AppColors.primary),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                  child: Text(file.path.split('/').last,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis)),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.close, color: Colors.red),
-                                onPressed: controller.clearAssignmentFile,
-                              )
-                            ],
-                          ),
-                        ),
+                      if (files.isNotEmpty)
+                        ...files.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final file = entry.value;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.description,
+                                    color: AppColors.primary),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Text(file.path.split('/').last,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis)),
+                                IconButton(
+                                  icon: const Icon(Icons.close,
+                                      color: Colors.red),
+                                  onPressed: () =>
+                                      controller.removeAssignmentFile(index),
+                                )
+                              ],
+                            ),
+                          );
+                        }),
                       OutlinedButton.icon(
                         onPressed: controller.pickAssignmentFile,
                         icon: const Icon(Icons.upload_file),
-                        label: Text(
-                            file == null ? 'Upload Foto Tugas' : 'Ganti Foto'),
+                        label: const Text('Tambah File (maks 5)'),
                         style: OutlinedButton.styleFrom(
                             minimumSize: const Size(double.infinity, 48),
                             shape: RoundedRectangleBorder(

@@ -340,7 +340,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             children: [
               Expanded(
                 child: Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                      value: controller.selectedKelasRiwayat.value,
+                      initialValue: controller.selectedKelasRiwayat.value,
                       decoration: InputDecoration(
                         hintText: 'Semua Kelas',
                         prefixIcon: const Icon(Icons.filter_list, size: 20),
@@ -574,7 +574,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                value: controller.selectedKelasTahfidz.value,
+                initialValue: controller.selectedKelasTahfidz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih kelas...',
                   border: OutlineInputBorder(
@@ -728,7 +728,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<int>(
-                value: controller.selectedJuz.value,
+                initialValue: controller.selectedJuz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih juz...',
                   border: OutlineInputBorder(
@@ -850,7 +850,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<Map<String, dynamic>>(
-                        value: controller.selectedKelas.value,
+                        initialValue: controller.selectedKelas.value,
                         decoration: InputDecoration(
                           hintText: 'Kelas...',
                           isDense: true,
@@ -875,7 +875,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<Map<String, dynamic>>(
-                        value: controller.selectedMapel.value,
+                        initialValue: controller.selectedMapel.value,
                         decoration: InputDecoration(
                           hintText: 'Mapel...',
                           isDense: true,
@@ -902,7 +902,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: controller.selectedSemesterNilai.value,
+                        initialValue: controller.selectedSemesterNilai.value,
                         decoration: InputDecoration(
                           isDense: true,
                           border: OutlineInputBorder(
@@ -924,7 +924,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: controller.selectedJenisPenilaian.value,
+                        initialValue: controller.selectedJenisPenilaian.value,
                         decoration: InputDecoration(
                           isDense: true,
                           border: OutlineInputBorder(

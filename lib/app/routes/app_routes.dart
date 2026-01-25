@@ -24,6 +24,7 @@ abstract class Routes {
   static const teacherArea = _Paths.teacherArea;
   static const beritaDetail = _Paths.beritaDetail;
   static const jadwalPelajaran = _Paths.jadwalPelajaran;
+  static const claimChild = _Paths.claimChild;
 }
 
 abstract class _Paths {
@@ -49,4 +50,5 @@ abstract class _Paths {
   static const pelanggaran = '/pelanggaran';
   static const teacherArea = '/teacher-area';
   static const jadwalPelajaran = '/jadwal-pelajaran';
+  static const claimChild = '/claim-child';
 }

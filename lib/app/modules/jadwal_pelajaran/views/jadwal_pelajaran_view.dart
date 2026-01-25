@@ -24,119 +24,125 @@ class JadwalPelajaranView extends GetView<JadwalPelajaranController> {
               child: CircularProgressIndicator(color: AppColors.primary));
         }
 
-        return DefaultTabController(
-          length: controller.days.length,
-          child: Column(
-            children: [
-              Container(
-                color: Colors.white,
-                child: TabBar(
-                  isScrollable: true,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  indicatorColor: AppColors.primary,
-                  tabs: controller.days.map((day) => Tab(text: day)).toList(),
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: controller.days.map((day) {
-                    final items = controller.groupedJadwal[day] ?? [];
-                    if (items.isEmpty) {
-                      return const Center(
-                        child: Text("Tidak ada jadwal",
-                            style: TextStyle(color: Colors.grey)),
-                      );
-                    }
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: items.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        final mapel = item['mapel'];
-                        final kelas = item['kelas'];
-                        final mapelName =
-                            (mapel is Map ? mapel['nama'] : mapel) ?? '-';
-                        final kelasName =
-                            (kelas is Map ? kelas['nama_kelas'] : kelas) ?? '-';
-                        final ruang = item['ruang'] ?? '-';
-                        final jamMulai = item['jam_mulai'] != null
-                            ? item['jam_mulai'].toString().substring(0, 5)
-                            : '-';
-                        final jamSelesai = item['jam_selesai'] != null
-                            ? item['jam_selesai'].toString().substring(0, 5)
-                            : '-';
-
-                        return Container(
+        return RefreshIndicator(
+            onRefresh: controller.fetchJadwal,
+            child: DefaultTabController(
+              length: controller.days.length,
+              child: Column(
+                children: [
+                  Container(
+                    color: Colors.white,
+                    child: TabBar(
+                      isScrollable: true,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: AppColors.primary,
+                      tabs:
+                          controller.days.map((day) => Tab(text: day)).toList(),
+                    ),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: controller.days.map((day) {
+                        final items = controller.groupedJadwal[day] ?? [];
+                        if (items.isEmpty) {
+                          return const Center(
+                            child: Text("Tidak ada jadwal",
+                                style: TextStyle(color: Colors.grey)),
+                          );
+                        }
+                        return ListView.separated(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: AppShadows.cardShadow,
-                            border: const Border(
-                                left: BorderSide(
-                                    color: AppColors.primary, width: 4)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "$jamMulai - $jamSelesai",
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
+                          itemCount: items.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            final mapel = item['mapel'];
+                            final kelas = item['kelas'];
+                            final mapelName =
+                                (mapel is Map ? mapel['nama'] : mapel) ?? '-';
+                            final kelasName =
+                                (kelas is Map ? kelas['nama_kelas'] : kelas) ??
+                                    '-';
+                            final ruang = item['ruang'] ?? '-';
+                            final jamMulai = item['jam_mulai'] != null
+                                ? item['jam_mulai'].toString().substring(0, 5)
+                                : '-';
+                            final jamSelesai = item['jam_selesai'] != null
+                                ? item['jam_selesai'].toString().substring(0, 5)
+                                : '-';
+
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: AppShadows.cardShadow,
+                                border: const Border(
+                                    left: BorderSide(
+                                        color: AppColors.primary, width: 4)),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      mapelName,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      "$jamMulai - $jamSelesai",
                                       style: const TextStyle(
+                                        color: AppColors.primary,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 12,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Row(
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        const Icon(Icons.room,
-                                            size: 14, color: Colors.grey),
-                                        const SizedBox(width: 4),
                                         Text(
-                                          "$kelasName • $ruang",
+                                          mapelName,
                                           style: const TextStyle(
-                                              color: Colors.grey, fontSize: 13),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.room,
+                                                size: 14, color: Colors.grey),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "$kelasName • $ruang",
+                                              style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 13),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
-                      },
-                    );
-                  }).toList(),
-                ),
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
+            ));
       }),
     );
   }

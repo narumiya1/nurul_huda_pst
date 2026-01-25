@@ -17,9 +17,9 @@ class OrangtuaRepository {
     }
   }
 
-  Future<dynamic> getChildSummary(int santriId) async {
+  Future<dynamic> getChildSummary(int santriId, {String? tipe}) async {
     try {
-      final response = await _orangtuaApi.getChildSummary(santriId);
+      final response = await _orangtuaApi.getChildSummary(santriId, tipe: tipe);
       if (response['status'] == true) {
         return response['data'];
       }
@@ -29,9 +29,9 @@ class OrangtuaRepository {
     }
   }
 
-  Future<dynamic> getChildProfile(int santriId) async {
+  Future<dynamic> getChildProfile(int santriId, {String? tipe}) async {
     try {
-      final response = await _orangtuaApi.getChildProfile(santriId);
+      final response = await _orangtuaApi.getChildProfile(santriId, tipe: tipe);
       if (response['status'] == true) {
         return response['data'];
       }
@@ -41,9 +41,10 @@ class OrangtuaRepository {
     }
   }
 
-  Future<dynamic> getChildSchedule(int santriId) async {
+  Future<dynamic> getChildSchedule(int santriId, {String? tipe}) async {
     try {
-      final response = await _orangtuaApi.getChildSchedule(santriId);
+      final response =
+          await _orangtuaApi.getChildSchedule(santriId, tipe: tipe);
       if (response['status'] == true) {
         return response['data'];
       }
@@ -53,9 +54,9 @@ class OrangtuaRepository {
     }
   }
 
-  Future<dynamic> getChildScores(int santriId) async {
+  Future<dynamic> getChildScores(int santriId, {String? tipe}) async {
     try {
-      final response = await _orangtuaApi.getChildScores(santriId);
+      final response = await _orangtuaApi.getChildScores(santriId, tipe: tipe);
       if (response['status'] == true) {
         return response['data'];
       }
@@ -65,13 +66,38 @@ class OrangtuaRepository {
     }
   }
 
-  Future<dynamic> getChildBills(int santriId) async {
+  Future<dynamic> getChildBills(int santriId, {String? tipe}) async {
     try {
-      final response = await _orangtuaApi.getChildBills(santriId);
+      final response = await _orangtuaApi.getChildBills(santriId, tipe: tipe);
       if (response['status'] == true) {
         return response['data'];
       }
       return null;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getChildAbsensi(int childId, {String? tipe}) async {
+    try {
+      final response = await _orangtuaApi.getChildAbsensi(childId, tipe: tipe);
+      if (response['status'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getChildPerizinan(int santriId, {String? tipe}) async {
+    try {
+      final response =
+          await _orangtuaApi.getChildPerizinan(santriId, tipe: tipe);
+      if (response['status'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
     } catch (e) {
       rethrow;
     }

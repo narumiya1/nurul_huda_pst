@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:get/get.dart';
@@ -49,8 +49,7 @@ class AkademikPondokController extends GetxController {
   final siswaNilaiDetail = <Map<String, dynamic>>[].obs;
 
   // Assignment Logic
-  final selectedAssignmentFile = Rxn<File>();
-  final ImagePicker _picker = ImagePicker();
+  final selectedAssignmentFiles = <File>[].obs;
 
   @override
   void onInit() {
@@ -74,22 +73,37 @@ class AkademikPondokController extends GetxController {
 
   Future<void> pickAssignmentFile() async {
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        selectedAssignmentFile.value = File(image.path);
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png', 'jpeg'],
+        allowMultiple: true,
+      );
+
+      if (result != null) {
+        final newFiles = result.paths
+            .where((path) => path != null)
+            .map((path) => File(path!))
+            .toList();
+        selectedAssignmentFiles.addAll(newFiles);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil gambar: $e');
+      Get.snackbar('Error', 'Gagal mengambil file: $e');
     }
   }
 
-  void clearAssignmentFile() {
-    selectedAssignmentFile.value = null;
+  void clearAssignmentFiles() {
+    selectedAssignmentFiles.clear();
+  }
+
+  void removeAssignmentFile(int index) {
+    if (index >= 0 && index < selectedAssignmentFiles.length) {
+      selectedAssignmentFiles.removeAt(index);
+    }
   }
 
   Future<void> submitTugas(String tugasId, String jawaban) async {
     try {
-      if (jawaban.isEmpty && selectedAssignmentFile.value == null) {
+      if (jawaban.isEmpty && selectedAssignmentFiles.isEmpty) {
         Get.snackbar('Peringatan', 'Mohon isi jawaban atau upload file.',
             backgroundColor: Get.theme.colorScheme.error,
             colorText: Get.theme.colorScheme.onError);
@@ -106,13 +120,27 @@ class AkademikPondokController extends GetxController {
         'text_submission': jawaban,
       };
 
+      // Handle multiple files if repository supports it, or zip them, or send first one for now if repo not updated
+      // Assuming we update repo to support 'files' list
       final success = await _santriRepository.submitTugas(fields,
-          file: selectedAssignmentFile.value);
+          files: selectedAssignmentFiles); // Updated argument name
 
       if (success) {
         Get.snackbar('Sukses', 'Tugas berhasil dikirim!',
             backgroundColor: Colors.green, colorText: Colors.white);
-        clearAssignmentFile();
+        clearAssignmentFiles();
+
+        // Update local state to reflect submission
+        final index = tugasList.indexWhere((t) => t['id'] == tugasId);
+        if (index != -1) {
+          final updatedTask = Map<String, dynamic>.from(tugasList[index]);
+          updatedTask['status'] = 'Selesai';
+          updatedTask['is_submitted'] = true;
+          tugasList[index] = updatedTask;
+
+          // Also update filtered list if necessary, but filtered is usually bound or re-filtered
+          applyFilters();
+        }
       } else {
         Get.snackbar('Gagal', 'Gagal mengirim tugas',
             backgroundColor: Colors.red, colorText: Colors.white);
@@ -187,33 +215,49 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchTugasSekolah() async {
     try {
-      final data = await _santriRepository.getTugasSekolah();
-      tugasList.assignAll(data.map((e) {
-        final map = e as Map<String, dynamic>;
-        // Map backend is_submitted to frontend status
-        final isSubmitted = map['is_submitted'] ?? false;
-        return {
-          ...map,
-          'status': isSubmitted ? 'Selesai' : 'Pending',
-        };
-      }).toList());
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'santri' || role == 'siswa') {
+        final data = await _santriRepository.getTugasSekolah();
+        tugasList.assignAll(data.map((e) {
+          final map = e as Map<String, dynamic>;
+
+          String mapelName = 'Mapel Lain';
+          if (map['mapel'] != null && map['mapel'] is Map) {
+            mapelName = map['mapel']['nama'] ??
+                map['mapel']['nama_mapel'] ??
+                'Mapel Lain';
+          }
+
+          final isSubmitted =
+              map['my_submission'] != null || (map['is_submitted'] == true);
+
+          return {
+            'id': map['id']?.toString(),
+            'judul': map['judul'] ?? 'Tugas',
+            'mapel': {'nama_mapel': mapelName},
+            'deadline': map['deadline']?.toString().split(' ')[0] ?? '-',
+            'status': isSubmitted ? 'Selesai' : 'Pending',
+            'description': map['deskripsi'] ?? map['description'] ?? '',
+            'is_submitted': isSubmitted,
+            'submission_id': map['my_submission']?['id'],
+            'file_path': map['file_path'] // Add this line
+          };
+        }).toList());
+      } else {
+        // Fallback or empty for other roles for now, or implement pimpinan view
+        tugasList.clear();
+      }
     } catch (e) {
+      print('Error fetching tugas sekolah: $e');
+      // Keep fallback just in case
       tugasList.assignAll([
         {
           'id': '1',
-          'judul': 'Latihan Fiqih Bab 1',
-          'mapel': {'nama_mapel': 'Fiqih'},
-          'deadline': '2025-01-20',
+          'judul': 'Contoh Tugas (Offline)',
+          'mapel': {'nama_mapel': 'Bahasa Indonesia'},
+          'deadline': '2026-01-30',
           'status': 'Pending',
-          'description': 'Kerjakan halaman 10-12 di buku paket.'
-        },
-        {
-          'id': '2',
-          'judul': 'Hafalan Juz 30',
-          'mapel': {'nama_mapel': 'Tahfidz'},
-          'deadline': '2025-01-22',
-          'status': 'Selesai',
-          'description': 'Setorkan An-Naba sampai Al-Muthaffifin.'
+          'description': 'Silakan hubungkan internet.'
         }
       ]);
     }
@@ -235,36 +279,19 @@ class AkademikPondokController extends GetxController {
         }).toList());
       }
     } catch (e) {
-      dataKurikulum.assignAll([
-        {
-          'mapel': 'Fiqih Wadlih',
-          'pengajar': 'Ustadz Mansur',
-          'kitab': 'Al-Fiqh al-Manhaji',
-          'tingkat': 'VII',
-          'type': 'Diniyah'
-        },
-        {
-          'mapel': 'Nahwu Shorof',
-          'pengajar': 'Ustadzah Aminah',
-          'kitab': 'Al-Jurumiyah',
-          'tingkat': 'VIII',
-          'type': 'Diniyah'
-        },
-        {
-          'mapel': 'Bahasa Arab',
-          'pengajar': 'Ustadz Fauzi',
-          'kitab': 'Durusul Lughah',
-          'tingkat': 'IX',
-          'type': 'Umum'
-        },
-        {
-          'mapel': 'Matematika',
-          'pengajar': 'Ibu Ratna',
-          'kitab': 'Buku Paket Kemendikbud',
-          'tingkat': 'VII',
-          'type': 'Umum'
-        },
-      ]);
+      // Fallback only if error (keep existing fallback logic or clear)
+      print('Error fetching kurikulum: $e');
+      if (dataKurikulum.isEmpty) {
+        dataKurikulum.assignAll([
+          {
+            'mapel': 'Contoh Materi',
+            'pengajar': '-',
+            'kitab': 'Silakan muat ulang',
+            'tingkat': '-',
+            'type': 'Info'
+          }
+        ]);
+      }
     }
   }
 

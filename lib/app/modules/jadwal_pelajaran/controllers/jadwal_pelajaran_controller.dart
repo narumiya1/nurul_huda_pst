@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/guru/guru_api.dart';
 import 'package:epesantren_mob/app/api/guru/guru_repository.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
+import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
 class JadwalPelajaranController extends GetxController {
   final GuruRepository _guruRepository = GuruRepository(GuruApi());
@@ -31,7 +33,27 @@ class JadwalPelajaranController extends GetxController {
   Future<void> fetchJadwal() async {
     try {
       isLoading.value = true;
-      final data = await _guruRepository.getJadwalPelajaran();
+      final user = LocalStorage.getUser();
+      String role = '';
+      if (user != null) {
+        if (user['role'] is String) {
+          role = user['role'].toLowerCase();
+        } else if (user['role'] is Map) {
+          role = (user['role']['role_name'] ?? '').toString().toLowerCase();
+        }
+      }
+      print('JadwalController: Detected role: $role');
+
+      List<dynamic> data = [];
+      if (role == 'santri' || role == 'siswa') {
+        // Use Santri repository (lazy load or just new instance here since not injected yet)
+        final santriRepo = SantriRepository();
+        data = await santriRepo.getJadwalPelajaran();
+      } else {
+        // Default (Guru/Admin)
+        data = await _guruRepository.getJadwalPelajaran();
+      }
+
       jadwalList.assignAll(data);
       _groupJadwal();
     } catch (e) {

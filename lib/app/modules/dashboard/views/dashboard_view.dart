@@ -1,3 +1,4 @@
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:epesantren_mob/app/widgets/custom_bottom.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,6 +71,7 @@ class HomePage extends GetView<DashboardController> {
                   _buildJadwalGuru(),
                   const SizedBox(height: 24),
                   _buildQuickStats(),
+                  _buildChildrenList(),
                   const SizedBox(height: 28),
                   _buildSectionTitle("Berita Terbaru", onSeeAll: () {}),
                   const SizedBox(height: 16),
@@ -86,6 +88,103 @@ class HomePage extends GetView<DashboardController> {
         ],
       ),
     );
+  }
+
+  Widget _buildChildrenList() {
+    return Obx(() {
+      if (controller.userRole != 'orangtua' ||
+          controller.childrenList.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          const Text("Anak Saya",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary)),
+          const SizedBox(height: 12),
+          SizedBox(
+              height: 100,
+              child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: controller.childrenList.length,
+                  itemBuilder: (context, index) {
+                    final child = controller.childrenList[index];
+                    return Container(
+                        width: 280,
+                        margin: const EdgeInsets.only(right: 16, bottom: 4),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: AppShadows.cardShadow),
+                        child: Row(children: [
+                          CircleAvatar(
+                              radius: 30,
+                              backgroundColor:
+                                  AppColors.primary.withValues(alpha: 0.1),
+                              backgroundImage: child['foto'] != null
+                                  ? NetworkImage(child['foto'])
+                                  : null,
+                              child: child['foto'] == null
+                                  ? const Icon(Icons.person,
+                                      color: AppColors.primary)
+                                  : null),
+                          const SizedBox(width: 16),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                Text(child['nama'] ?? '-',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: (child['tipe'] == 'Santri'
+                                                ? AppColors.primary
+                                                : Colors.blue)
+                                            .withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        child['tipe'] ?? '-',
+                                        style: TextStyle(
+                                          color: (child['tipe'] == 'Santri'
+                                              ? AppColors.primary
+                                              : Colors.blue),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(child['kelas'] ?? '-',
+                                          style: const TextStyle(
+                                              color: AppColors.textLight,
+                                              fontSize: 11),
+                                          overflow: TextOverflow.ellipsis),
+                                    ),
+                                  ],
+                                ),
+                              ]))
+                        ]));
+                  }))
+        ],
+      );
+    });
   }
 
   Widget _buildAppBar() {
@@ -234,20 +333,250 @@ class HomePage extends GetView<DashboardController> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.qr_code_scanner_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
+          Obx(() {
+            if (controller.userRole == 'santri' ||
+                controller.userRole == 'siswa') {
+              return GestureDetector(
+                onTap: () => _showIdCard(controller),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
         ],
       ),
+    );
+  }
+
+  void _showIdCard(DashboardController controller) {
+    final isSiswa = controller.userRole == 'siswa';
+    final title = isSiswa ? 'KARTU TANDA SISWA' : 'KARTU TANDA SANTRI';
+    final schoolName =
+        isSiswa ? 'SEKOLAH NURUL HUDA' : 'PONDOK PESANTREN NURUL HUDA';
+    final gradientColors = isSiswa
+        ? [const Color(0xFF1565C0), const Color(0xFF42A5F5)] // Blue for Siswa
+        : [
+            const Color(0xFF1B5E20),
+            const Color(0xFF4CAF50)
+          ]; // Green for Santri
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 400),
+              height: 240,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ],
+                image: const DecorationImage(
+                  image: AssetImage('assets/logos.png'),
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerRight,
+                  opacity: 0.1,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Decorative Circles
+                  Positioned(
+                    top: -50,
+                    left: -50,
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // Header
+                        Row(
+                          children: [
+                            Image.asset('assets/logos.png',
+                                height: 30, width: 30),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                Text(
+                                  schoolName,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                        const Divider(color: Colors.white30, height: 24),
+                        // Content
+                        Expanded(
+                          child: Row(
+                            children: [
+                              // Photo
+                              Container(
+                                width: 80,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: Colors.white, width: 2),
+                                    image: const DecorationImage(
+                                        image: AssetImage(
+                                            'assets/logos.png'), // Placeholder or User Photo if available
+                                        fit: BoxFit.cover,
+                                        opacity: 0.5 // Placeholder opacity
+                                        )),
+                                child: const Center(
+                                    child: Icon(Icons.person,
+                                        color: Colors.grey, size: 40)),
+                              ),
+                              const SizedBox(width: 16),
+                              // Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Obx(() => Text(
+                                          controller.userName.toUpperCase(),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        )),
+                                    const SizedBox(height: 4),
+                                    Obx(() => Text(
+                                          "ID: ${controller.userData.value?['username'] ?? '-'}",
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontFamily: 'Monospace'),
+                                        )),
+                                    const SizedBox(height: 2),
+                                    Obx(() {
+                                      // Try to get class from quickStats
+                                      final kelas = controller
+                                              .quickStats['stat1']?['value']
+                                              ?.toString() ??
+                                          '-';
+                                      return Text(
+                                        "Kelas: $kelas",
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      );
+                                    }),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(4)),
+                                      child: Obx(() => Text(
+                                            controller.userRoleLabel
+                                                .toUpperCase(),
+                                            style: TextStyle(
+                                                color: isSiswa
+                                                    ? Colors.blue
+                                                    : AppColors.primary,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 10),
+                                          )),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              // QR Code
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8)),
+                                    child: QrImageView(
+                                      data: controller
+                                              .userData.value?['username'] ??
+                                          controller.userName,
+                                      version: QrVersions.auto,
+                                      size: 50.0,
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton(
+              mini: true,
+              backgroundColor: Colors.white,
+              child: const Icon(Icons.close, color: Colors.black),
+              onPressed: () => Get.back(),
+            )
+          ],
+        ),
+      ),
+      barrierColor: Colors.black87,
     );
   }
 
@@ -661,9 +990,16 @@ class HomePage extends GetView<DashboardController> {
         'color': AppColors.error,
         'roles': ['guru', 'rois']
       },
+      // Monitoring removed as per requirement
       {
-        'title': 'Monitoring',
-        'icon': Icons.analytics_outlined,
+        'title': 'Absensi',
+        'icon': Icons.how_to_reg_outlined,
+        'color': AppColors.primary,
+        'roles': ['santri', 'siswa', 'orangtua']
+      },
+      {
+        'title': 'Tambah Anak',
+        'icon': Icons.person_add_outlined,
         'color': AppColors.accentOrange,
         'roles': ['orangtua']
       },
@@ -746,6 +1082,9 @@ class HomePage extends GetView<DashboardController> {
                     break;
                   case 'Profil':
                     Get.toNamed(Routes.profil);
+                    break;
+                  case 'Tambah Anak':
+                    Get.toNamed(Routes.claimChild);
                     break;
                   default:
                     Get.toNamed(Routes.featurePlaceholder, arguments: title);

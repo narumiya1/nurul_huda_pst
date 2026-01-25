@@ -41,6 +41,7 @@ import '../modules/teacher_area/views/teacher_area_view.dart';
 import '../modules/dashboard/views/berita_detail_view.dart';
 import '../modules/jadwal_pelajaran/bindings/jadwal_pelajaran_binding.dart';
 import '../modules/jadwal_pelajaran/views/jadwal_pelajaran_view.dart';
+import '../modules/claim_child/claim_child_view.dart';
 
 part 'app_routes.dart';
 
@@ -151,6 +152,11 @@ class AppPages {
       name: _Paths.jadwalPelajaran,
       page: () => const JadwalPelajaranView(),
       binding: JadwalPelajaranBinding(),
+    ),
+    GetPage(
+      name: _Paths.claimChild,
+      page: () => const ClaimChildView(),
+      binding: ClaimChildBinding(),
     ),
   ];
 }

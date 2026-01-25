@@ -109,53 +109,157 @@ class SantriRepository {
       final response = await _apiHelper.getData(
         uri: uri,
         builder: (data) {
-          if (data is Map &&
-              data['data'] != null &&
-              data['data']['data'] is List) {
-            return data['data']['data'];
+          // Response structure: { meta: {...}, data: { current_page: 1, data: [...] } }
+          if (data is Map && data['data'] != null) {
+            final innerData = data['data'];
+            if (innerData is Map && innerData['data'] is List) {
+              return innerData['data'];
+            }
+            if (innerData is List) return innerData;
           }
           return [];
         },
         header: _getAuthHeader(),
       );
+      print('Tugas fetched: ${response.length} items');
       return response;
     } catch (e) {
+      print('Error fetching tugas: $e');
       return [];
     }
   }
 
-  Future<bool> submitTugas(Map<String, String> fields, {File? file}) async {
+  Future<bool> submitTugas(Map<String, String> fields,
+      {List<File>? files}) async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'sekolah/tugas/submit');
-      if (file != null) {
+      final submitUri = ApiHelper.buildUri(endpoint: 'sekolah/tugas/submit');
+      final chunkUri =
+          ApiHelper.buildUri(endpoint: 'sekolah/tugas/upload-chunk');
+
+      List<String> existingFiles = [];
+      Map<String, File> smallFiles = {};
+
+      if (files != null && files.isNotEmpty) {
+        for (int i = 0; i < files.length; i++) {
+          final file = files[i];
+          final length = await file.length();
+
+          if (length > 2 * 1024 * 1024) {
+            // > 2MB, use chunk
+            final path = await _uploadFileChunked(file, chunkUri);
+            if (path != null) {
+              existingFiles.add(path);
+            } else {
+              return false; // Fail if chunk upload fails
+            }
+          } else {
+            smallFiles['files[$i]'] = file;
+          }
+        }
+      }
+
+      // Add existing_files to fields need to send as array.
+      // Since standard postImageData might strictly treat fields as string map,
+      // we might need to handle array fields.
+      // If ApiHelper checks headers:
+      // A trick for standard multipart: send keys 'existing_files[0]', 'existing_files[1]'
+      Map<String, String> finalFields = Map.from(fields);
+      for (int i = 0; i < existingFiles.length; i++) {
+        finalFields['existing_files[$i]'] = existingFiles[i];
+      }
+
+      if (smallFiles.isNotEmpty) {
         final response = await _apiHelper.postImageData(
-          uri: uri,
-          fields: fields,
-          files: {'file': file},
+          uri: submitUri,
+          fields: finalFields,
+          files: smallFiles,
           builder: (data) => data,
           header: _getAuthHeader(),
         );
         return response['success'] == true;
       } else {
         final response = await _apiHelper.postData(
-          uri: uri,
-          jsonBody: fields,
+          uri: submitUri,
+          jsonBody:
+              finalFields, // This might need ensuring jsonBody handles map correctly or FormData
+          // If postData sends JSON, existing_files[0] keys might be awkward but Laravel handles it usually?
+          // Actually for JSON body, we can just send list.
+          // But postData expects Map<String, dynamic> usually.
+          // Let's assume postData takes Map<String, dynamic>.
           builder: (data) => data,
           header: _getAuthHeader(),
         );
         return response['success'] == true;
       }
     } catch (e) {
+      print('Error submitting tugas: $e');
       return false;
+    }
+  }
+
+  Future<String?> _uploadFileChunked(File file, Uri uri) async {
+    try {
+      const int chunkSize = 1 * 1024 * 1024; // 1 MB chunks
+      final int totalSize = await file.length();
+      final int totalChunks = (totalSize / chunkSize).ceil();
+      final String uploadId = DateTime.now().millisecondsSinceEpoch.toString();
+      final String filename = file.path.split('/').last;
+
+      for (int i = 0; i < totalChunks; i++) {
+        final int start = i * chunkSize;
+        final int end =
+            (start + chunkSize < totalSize) ? start + chunkSize : totalSize;
+        final Stream<List<int>> stream = file.openRead(start, end);
+
+        // We need to read stream to bytes to send as file part
+        final List<int> chunkBytes = await stream.expand((x) => x).toList();
+
+        // Create a temp file for the chunk to use generic postImageData if needed
+        // Or better constructing multipart request manually?
+        // Relying on _apiHelper.postImageData allows 'files' param to be Bytes?
+        // Usually postImageData expects File.
+        // We can create temp file.
+        final tempChunk = File('${file.parent.path}/temp_chunk_$uploadId');
+        await tempChunk.writeAsBytes(chunkBytes);
+
+        final response = await _apiHelper.postImageData(
+          uri: uri,
+          fields: {
+            'upload_id': uploadId,
+            'chunk_index': i.toString(),
+            'total_chunks': totalChunks.toString(),
+            'client_filename': filename,
+          },
+          files: {'file': tempChunk},
+          builder: (data) => data,
+          header: _getAuthHeader(),
+        );
+
+        await tempChunk.delete();
+
+        if (response['data'] != null && response['data']['is_done'] == true) {
+          return response['data']['file_path'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Chunk upload failed: $e');
+      return null;
     }
   }
 
   Future<Map<String, dynamic>?> getMyProfile() async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'me');
+      final uri = ApiHelper.buildUri(endpoint: 'user/my-profile');
       final response = await _apiHelper.getData(
         uri: uri,
-        builder: (data) => data is Map ? data['data'] : null,
+        builder: (data) {
+          if (data is Map && data['data'] is Map) {
+            if (data['data']['user'] != null) return data['data']['user'];
+            return data['data'];
+          }
+          return null;
+        },
         header: _getAuthHeader(),
       );
       return response as Map<String, dynamic>?;
@@ -165,7 +269,87 @@ class SantriRepository {
   }
 
   Future<List<dynamic>> getMyBills() async {
-    return [];
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-bills');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) {
+          if (data is Map && data['data'] != null) {
+            final raw = data['data'];
+            if (raw is List) return raw;
+            if (raw is Map && raw['data'] is List) return raw['data'];
+          }
+          return data is List ? data : [];
+        },
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      print('Error fetching my-bills: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getMyPayments() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-payments');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) {
+          if (data is Map && data['data'] is List) return data['data'];
+          return data is List ? data : [];
+        },
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      print('Error fetching my-payments: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getMyAbsensi() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-absensi');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data['data'] is List ? data['data'] : [],
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      print('Error fetching my-absensi: $e');
+      return [];
+    }
+  }
+
+  Future<bool> payBill(int billId,
+      {File? proof, String? notes, String method = 'Transfer'}) async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-bills/$billId/pay');
+
+      final fields = {
+        'metode_pembayaran': method,
+      };
+      if (notes != null) fields['catatan'] = notes;
+
+      final Map<String, File?> files = {
+        if (proof != null) 'bukti_pembayaran': proof,
+      };
+
+      final response = await _apiHelper.postImageData(
+        uri: uri,
+        fields: fields,
+        files: files,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+
+      return response['meta']?['code'] == 200 || response['success'] == true;
+    } catch (e) {
+      print('Error paying bill: $e');
+      return false;
+    }
   }
 
   Future<List<dynamic>> getKelasList() async {
@@ -257,6 +441,22 @@ class SantriRepository {
     } catch (e) {
       print('Error fetching my-tahfidz: $e');
       return {};
+    }
+  }
+
+  Future<List<dynamic>> getJadwalPelajaran() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-schedule');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data['data'] is List ? data['data'] : [],
+        header: _getAuthHeader(),
+      );
+      print('Jadwal fetched: ${response.length} items');
+      return response;
+    } catch (e) {
+      print('Error fetching my-schedule: $e');
+      return [];
     }
   }
 }

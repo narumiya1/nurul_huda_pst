@@ -1,20 +1,27 @@
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart'; // Add import
+import 'dart:io';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../helpers/local_storage.dart';
 
 class KeuanganController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
+  final SantriRepository _santriRepository;
+  final OrangtuaRepository _orangtuaRepository;
   final ApiHelper _apiHelper = ApiHelper();
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
 
   final searchController = TextEditingController();
 
-  KeuanganController(this._pimpinanRepository);
+  KeuanganController(this._pimpinanRepository, this._santriRepository,
+      this._orangtuaRepository);
 
   // For Staff/Pimpinan
   final cashStats = <String, dynamic>{}.obs;
@@ -22,6 +29,7 @@ class KeuanganController extends GetxController {
 
   // For Santri/Siswa/OrangTua
   final bills = <Map<String, dynamic>>[].obs;
+  final paymentHistory = <Map<String, dynamic>>[].obs;
 
   // Payment Methods (Bank Accounts)
   final paymentMethods = <Map<String, dynamic>>[].obs;
@@ -43,6 +51,7 @@ class KeuanganController extends GetxController {
     _loadUserRole();
     fetchKeuanganData();
     fetchPaymentMethods();
+    fetchPaymentHistory();
   }
 
   @override
@@ -203,51 +212,95 @@ class KeuanganController extends GetxController {
 
         transactions.assignAll(filtered);
       } else {
-        var rawBills = [
-          {
-            'title': 'SPP Januari 2026',
-            'amount': 500000,
-            'status': 'Unpaid',
-            'date': '2026-01-05',
-            'period': 'Januari 2026'
-          },
-          {
-            'title': 'Uang Makan Januari 2026',
-            'amount': 300000,
-            'status': 'Paid',
-            'date': '2026-01-04',
-            'period': 'Januari 2026'
-          },
-          {
-            'title': 'Pendaftaran Lomba',
-            'amount': 50000,
-            'status': 'Paid',
-            'date': '2026-01-10',
-            'period': 'Januari 2026'
-          },
-          {
-            'title': 'Iuran Ekstrakurikuler',
-            'amount': 100000,
-            'status': 'Unpaid',
-            'date': '2026-01-12',
-            'period': 'Januari 2026'
-          },
-        ];
+        // SANTRI, SISWA, OR ORANGTUA
+        try {
+          List<Map<String, dynamic>> rawBills = [];
 
-        // Apply local filtering for mock demo
-        var filtered = rawBills.where((item) {
-          String statusMap = item['status'] == 'Paid' ? 'Lunas' : 'Belum Lunas';
-          bool matchStatus = selectedStatus.value == 'Semua' ||
-              statusMap == selectedStatus.value;
-          bool matchSearch = searchQuery.value.isEmpty ||
-              item['title']
-                  .toString()
-                  .toLowerCase()
-                  .contains(searchQuery.value.toLowerCase());
-          return matchStatus && matchSearch;
-        }).toList();
+          if (userRole.value == 'orangtua') {
+            final children = await _orangtuaRepository.getMyChildren();
+            for (var child in children) {
+              final childId = child['id'];
+              final childTipe = child['tipe'];
+              final childName = child['nama'];
 
-        bills.assignAll(filtered);
+              final childBills = await _orangtuaRepository
+                  .getChildBills(childId, tipe: childTipe);
+              if (childBills != null && childBills is List) {
+                rawBills.addAll(childBills
+                    .map((map) {
+                      String status = map['status'] ?? 'Unpaid';
+                      if (status.toLowerCase() == 'pending') status = 'Unpaid';
+
+                      return {
+                        'id': map['id'],
+                        'title':
+                            "${map['judul'] ?? map['nama_tagihan'] ?? 'Tagihan'} ($childName)",
+                        'amount': int.tryParse(
+                                (map['total_tagihan'] ?? map['jumlah'] ?? 0)
+                                    .toString()) ??
+                            0,
+                        'status': status.capitalizeFirst,
+                        'date': map['created_at']?.split(' ')[0] ?? '',
+                        'period': map['bulan'] ?? '-',
+                        'description': map['catatan'] ?? '',
+                        'transaction_id': map['transaksi_id'],
+                      };
+                    })
+                    .toList()
+                    .cast<Map<String, dynamic>>());
+              }
+            }
+          } else {
+            // Santri / Siswa (Self)
+            final response = await _santriRepository.getMyBills();
+            if (response.isNotEmpty) {
+              rawBills = response.map((map) {
+                // Cast to Map first if needed, dynamic list item usually dynamic
+                final item = map as Map<String, dynamic>;
+                String status = item['status'] ?? 'Unpaid';
+                if (status.toLowerCase() == 'pending') status = 'Unpaid';
+
+                return {
+                  'id': item['id'],
+                  'title': item['judul'] ?? item['nama_tagihan'] ?? 'Tagihan',
+                  'amount': int.tryParse(
+                          (item['total_tagihan'] ?? item['jumlah'] ?? 0)
+                              .toString()) ??
+                      0,
+                  'status': status.capitalizeFirst,
+                  'date': item['created_at']?.split(' ')[0] ?? '',
+                  'period': item['bulan'] ?? '-',
+                  'description': item['catatan'] ?? '',
+                  'transaction_id': item['transaction_id'],
+                };
+              }).toList();
+            }
+          }
+
+          bills.assignAll(rawBills);
+        } catch (e) {
+          debugPrint('Error fetching bills: $e');
+          bills.clear();
+        }
+
+        // Apply local filtering on fetched data
+        if (bills.isNotEmpty) {
+          var filtered = bills.where((item) {
+            String statusMap =
+                item['status'] == 'Paid' || item['status'] == 'Lunas'
+                    ? 'Lunas'
+                    : 'Belum Lunas';
+            bool matchStatus = selectedStatus.value == 'Semua' ||
+                statusMap == selectedStatus.value;
+            bool matchSearch = searchQuery.value.isEmpty ||
+                item['title']
+                    .toString()
+                    .toLowerCase()
+                    .contains(searchQuery.value.toLowerCase());
+            return matchStatus && matchSearch;
+          }).toList();
+          bills.assignAll(filtered);
+        }
       }
     } finally {
       isLoading.value = false;
@@ -305,5 +358,49 @@ class KeuanganController extends GetxController {
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 2),
     );
+  }
+
+  Future<void> fetchPaymentHistory() async {
+    if (isStaffOrPimpinan) return;
+
+    try {
+      final response = await _santriRepository.getMyPayments();
+      paymentHistory
+          .assignAll(response.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      debugPrint('Error fetching payment history: $e');
+    }
+  }
+
+  Future<void> submitPayment(int billId, XFile? proof, String? notes) async {
+    try {
+      if (proof == null) {
+        Get.snackbar('Error', 'Bukti pembayaran wajib diunggah',
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+
+      isLoading.value = true;
+      final success = await _santriRepository.payBill(
+        billId,
+        proof: File(proof.path),
+        notes: notes,
+      );
+
+      if (success) {
+        Get.back(); // Close dialog/sheet
+        Get.snackbar('Sukses', 'Bukti pembayaran berhasil dikirim',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        fetchKeuanganData();
+      } else {
+        Get.snackbar('Gagal', 'Gagal mengirim bukti pembayaran',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

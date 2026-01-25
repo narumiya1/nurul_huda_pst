@@ -841,7 +841,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               ),
               const SizedBox(height: 12),
               Obx(() => DropdownButtonFormField<String>(
-                    value: gender.value,
+                    initialValue: gender.value,
                     decoration: const InputDecoration(
                       labelText: 'Jenis Kelamin',
                       prefixIcon: Icon(Icons.wc_outlined),
@@ -877,7 +877,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               Obx(() => isLoadingTingkat.value
                   ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<int>(
-                      value: selectedTingkat.value,
+                      initialValue: selectedTingkat.value,
                       decoration: const InputDecoration(
                         labelText: 'Tingkat Santri',
                         prefixIcon: Icon(Icons.stairs_outlined),
@@ -899,7 +899,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               Obx(() => isLoadingKelas.value
                   ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<int>(
-                      value: selectedKelas.value,
+                      initialValue: selectedKelas.value,
                       decoration: const InputDecoration(
                         labelText: 'Kelas Santri',
                         prefixIcon: Icon(Icons.class_outlined),
@@ -1016,7 +1016,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                           )
                         else
                           DropdownButtonFormField<int>(
-                            value: selectedOrangtua.value,
+                            initialValue: selectedOrangtua.value,
                             decoration: const InputDecoration(
                               labelText: 'Pilih Orang Tua',
                               prefixIcon: Icon(Icons.family_restroom_outlined),
@@ -1051,7 +1051,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         if (selectedOrangtua.value != null) ...[
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            value: hubungan.value,
+                            initialValue: hubungan.value,
                             decoration: const InputDecoration(
                               labelText: 'Hubungan',
                               prefixIcon: Icon(Icons.connect_without_contact),
@@ -1483,7 +1483,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                           )
                         else
                           DropdownButtonFormField<int>(
-                            value: selectedOrangtua.value,
+                            initialValue: selectedOrangtua.value,
                             decoration: const InputDecoration(
                               labelText: 'Pilih Orang Tua',
                               prefixIcon: Icon(Icons.family_restroom_outlined),
@@ -1518,7 +1518,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         if (selectedOrangtua.value != null) ...[
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            value: hubungan.value,
+                            initialValue: hubungan.value,
                             decoration: const InputDecoration(
                               labelText: 'Hubungan',
                               prefixIcon: Icon(Icons.connect_without_contact),
@@ -1860,7 +1860,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               Obx(() => isLoadingSekolah.value
                   ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<int>(
-                      value: selectedSekolah.value,
+                      initialValue: selectedSekolah.value,
                       decoration: const InputDecoration(
                         labelText: 'Sekolah (Opsional)',
                         prefixIcon: Icon(Icons.school_outlined),
@@ -2064,7 +2064,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               ),
               const SizedBox(height: 12),
               Obx(() => DropdownButtonFormField<String>(
-                    value: gender.value,
+                    initialValue: gender.value,
                     decoration: const InputDecoration(
                       labelText: 'Jenis Kelamin',
                       prefixIcon: Icon(Icons.wc_outlined),
@@ -2203,7 +2203,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                           )
                         else
                           DropdownButtonFormField<int>(
-                            value: selectedSantriId.value,
+                            initialValue: selectedSantriId.value,
                             decoration: const InputDecoration(
                               labelText: 'Pilih Santri',
                               prefixIcon: Icon(Icons.face_outlined),
@@ -2243,7 +2243,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                       children: [
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: hubungan.value,
+                          initialValue: hubungan.value,
                           decoration: const InputDecoration(
                             labelText: 'Hubungan dengan Santri',
                             prefixIcon: Icon(Icons.connect_without_contact),

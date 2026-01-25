@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/keuangan_controller.dart';
 
@@ -64,7 +66,7 @@ class KeuanganView extends GetView<KeuanganController> {
                     ),
                     if (!controller.isStaffOrPimpinan)
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () => _showHistoryBottomSheet(context),
                         child: const Text('Riwayat',
                             style: TextStyle(color: AppColors.primary)),
                       ),
@@ -729,78 +731,326 @@ class KeuanganView extends GetView<KeuanganController> {
         final bill = controller.bills[index];
         final isPaid = bill['status'] == 'Paid';
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.cardShadow,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (isPaid ? AppColors.success : AppColors.warning)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+        return InkWell(
+          onTap: isPaid ? null : () => _showPaymentDialog(context, bill),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppShadows.cardShadow,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (isPaid ? AppColors.success : AppColors.warning)
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isPaid
+                        ? Icons.check_circle_outline
+                        : Icons.pending_outlined,
+                    color: isPaid ? AppColors.success : AppColors.warning,
+                  ),
                 ),
-                child: Icon(
-                  isPaid ? Icons.check_circle_outline : Icons.pending_outlined,
-                  color: isPaid ? AppColors.success : AppColors.warning,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bill['title'],
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      Text(
+                        'Jatuh Tempo: ${bill['date']}',
+                        style: const TextStyle(
+                            color: AppColors.textLight, fontSize: 11),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      bill['title'],
+                      currencyFormat.format(bill['amount']),
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 14),
                     ),
-                    Text(
-                      'Jatuh Tempo: ${bill['date']}',
-                      style: const TextStyle(
-                          color: AppColors.textLight, fontSize: 11),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (isPaid ? AppColors.success : AppColors.warning)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isPaid ? 'LUNAS' : 'BELUM BAYAR',
+                        style: TextStyle(
+                          color: isPaid ? AppColors.success : AppColors.warning,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    currencyFormat.format(bill['amount']),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (isPaid ? AppColors.success : AppColors.warning)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      isPaid ? 'LUNAS' : 'BELUM BAYAR',
-                      style: TextStyle(
-                        color: isPaid ? AppColors.success : AppColors.warning,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  void _showPaymentDialog(BuildContext context, Map<String, dynamic> bill) {
+    final picker = ImagePicker();
+    final proof = Rxn<XFile>();
+    final notesController = TextEditingController();
+    final currencyFormat =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Konfirmasi Bayar',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(bill['title'],
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(currencyFormat.format(bill['amount']),
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary)),
+              const Divider(height: 32),
+              const Text('Upload Bukti Transfer',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 12),
+              Obx(() => InkWell(
+                    onTap: () async {
+                      final XFile? image = await picker.pickImage(
+                          source: ImageSource.gallery, imageQuality: 80);
+                      if (image != null) proof.value = image;
+                    },
+                    child: Container(
+                      height: 150,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: proof.value == null
+                          ? const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.cloud_upload_outlined,
+                                    size: 40, color: AppColors.textLight),
+                                SizedBox(height: 8),
+                                Text('Tap untuk pilih file',
+                                    style: TextStyle(
+                                        color: AppColors.textLight,
+                                        fontSize: 12)),
+                              ],
+                            )
+                          : Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.file(File(proof.value!.path),
+                                      width: double.infinity,
+                                      height: 150,
+                                      fit: BoxFit.cover),
+                                ),
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    radius: 15,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.close,
+                                          size: 15, color: Colors.white),
+                                      onPressed: () => proof.value = null,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  )),
+              const SizedBox(height: 16),
+              TextField(
+                controller: notesController,
+                decoration: InputDecoration(
+                  hintText: 'Tambahkan catatan (opsional)',
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => controller.submitPayment(
+                      bill['id'], proof.value, notesController.text),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Kirim Konfirmasi',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHistoryBottomSheet(BuildContext context) {
+    final currencyFormat =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.history, color: AppColors.primary),
+                SizedBox(width: 12),
+                Text('Riwayat Pembayaran',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Obx(() {
+              if (controller.paymentHistory.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Text('Belum ada riwayat pembayaran'),
+                  ),
+                );
+              }
+              return Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: controller.paymentHistory.length,
+                  itemBuilder: (context, index) {
+                    final item = controller.paymentHistory[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.check,
+                                color: AppColors.success, size: 16),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item['keterangan'] ?? 'Pembayaran',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                ),
+                                Text(
+                                  '${item['tanggal']} • ${item['metode_pembayaran']}',
+                                  style: const TextStyle(
+                                      color: AppColors.textLight, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            currencyFormat.format(item['jumlah'] ?? 0),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.success),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            }),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Get.back(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Tutup',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 }

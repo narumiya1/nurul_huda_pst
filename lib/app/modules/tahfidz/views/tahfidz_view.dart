@@ -23,24 +23,42 @@ class TahfidzView extends GetView<TahfidzController> {
               child: CircularProgressIndicator(color: AppColors.primary));
         }
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProgressCard(),
-              const SizedBox(height: 24),
-              const Text(
-                'Riwayat Setoran',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+        return RefreshIndicator(
+          onRefresh: controller.fetchHafalan,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProgressCard(),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Riwayat Setoran',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text('Total: ${controller.hafalanList.length}',
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildHafalanList(),
-            ],
+                const SizedBox(height: 16),
+                if (controller.hafalanList.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32.0),
+                    child: Center(child: Text('Belum ada data setoran')),
+                  )
+                else
+                  _buildHafalanList(),
+              ],
+            ),
           ),
         );
       }),

@@ -361,6 +361,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
               Get.toNamed(Routes.aktivitas);
             } else {
               controller.selectedIndex.value = targetIndex;
+              controller.applyFilters();
             }
           },
           borderRadius: BorderRadius.circular(24),
@@ -418,9 +419,16 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
   // Reuse existing sub-features but wrapped in SingleChildScrollView if needed
   Widget _buildGradeRecap() {
     return Obx(() {
-      final isPimpinan = controller.userRole.value == 'pimpinan';
+      final role = controller.userRole.value.toLowerCase().trim();
+      final isStaff = [
+        'pimpinan',
+        'superadmin',
+        'admin',
+        'guru',
+        'staff_pesantren'
+      ].contains(role);
 
-      if (isPimpinan) {
+      if (isStaff) {
         if (controller.selectedSiswaForDetail.value != null) {
           return _buildSiswaDetailNilai();
         }
@@ -530,8 +538,31 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
 
       // Personal view for students - Grouped by Subject
       final groupedData = controller.groupedRekapNilai;
-      if (groupedData.isEmpty) {
-        return const Center(child: Text('Tidak ada data nilai'));
+      final totalItems = controller.rekapNilai.length;
+
+      debugPrint(
+          'UI: Grouped Data size: ${groupedData.length}, Total raw items: $totalItems');
+      if (groupedData.isEmpty && !controller.isLoading.value) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                  'DEBUG: Role: ${controller.userRole.value} | Raw: ${controller.rekapNilai.length} | Grouped: ${controller.groupedRekapNilai.length}',
+                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Text('Tidak ada data nilai'),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => controller.fetchAllData(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Muat Ulang Data'),
+              ),
+            ],
+          ),
+        );
       }
 
       final subjects = groupedData.keys.toList();

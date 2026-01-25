@@ -341,7 +341,8 @@ class AkademikPondokController extends GetxController {
       filteredRekapNilai.assignAll(rekapNilai);
     } catch (e) {
       debugPrint('Error fetching rekap nilai: $e');
-      if (userRole.value == 'santri' || userRole.value == 'siswa') {
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'santri' || role == 'siswa') {
         final dummy = [
           {
             'is_personal': true,
@@ -362,16 +363,7 @@ class AkademikPondokController extends GetxController {
             'jenis': 'UAS',
           }
         ];
-        rekapNilai.assignAll(dummy);
-        final Map<String, List<Map<String, dynamic>>> grouped = {};
-        for (var item in dummy) {
-          final mapel = item['mapel'] as String;
-          if (!grouped.containsKey(mapel)) {
-            grouped[mapel] = [];
-          }
-          grouped[mapel]!.add(item);
-        }
-        groupedRekapNilai.assignAll(grouped);
+        _processMappedNilai(dummy);
       } else {
         rekapNilai.assignAll([
           {
@@ -530,6 +522,44 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchTahfidz() async {
     try {
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'santri' || role == 'siswa') {
+        final progress = await _santriRepository.getMyTahfidz();
+        if (progress.isNotEmpty) {
+          final List<Map<String, dynamic>> items = [];
+
+          // Add overall progress item
+          items.add({
+            'nama': 'Total Hafalan',
+            'target': 30,
+            'achieved':
+                double.tryParse(progress['total_juz']?.toString() ?? '0') ??
+                    0.0,
+            'percent':
+                (double.tryParse(progress['pencapaian']?.toString() ?? '0') ??
+                        0.0) /
+                    100,
+            'type': 'Progress Keseluruhan'
+          });
+
+          // Add some recent history as items
+          final riwayat = progress['riwayat'] as List?;
+          if (riwayat != null && riwayat.isNotEmpty) {
+            for (var item in riwayat.take(4)) {
+              items.add({
+                'nama': 'Surah ${item['surah']}',
+                'target': 1,
+                'achieved': 1,
+                'percent': 1.0,
+                'type': 'Setoran Baru: ${item['tanggal']}'
+              });
+            }
+          }
+          progressTahfidz.assignAll(items);
+          return;
+        }
+      }
+
       final response = await _pimpinanRepository.getTahfidz();
       List rawTahfidz = [];
       if (response['data'] != null) {
@@ -613,18 +643,8 @@ class AkademikPondokController extends GetxController {
     }
 
     // Filter Rekap Nilai
-    if (userRole.value == 'santri' || userRole.value == 'siswa') {
-      // For personal view, we usually only care about semester/year (handled in fetch)
-      // but let's re-group if we ever add local search
-      final Map<String, List<Map<String, dynamic>>> grouped = {};
-      for (var item in rekapNilai) {
-        final mapel = item['mapel'] as String;
-        if (!grouped.containsKey(mapel)) {
-          grouped[mapel] = [];
-        }
-        grouped[mapel]!.add(item);
-      }
-      groupedRekapNilai.assignAll(grouped);
+    final role = userRole.value.toLowerCase().trim();
+    if (role == 'santri' || role == 'siswa') {
       filteredRekapNilai.assignAll(rekapNilai);
     } else {
       if (selectedTingkat.value == 'Semua') {

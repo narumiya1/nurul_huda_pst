@@ -12,7 +12,7 @@ class SantriRepository {
 
   Future<List<dynamic>> getPerizinan() async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'my-perizinan');
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-perizinan');
       final response = await _apiHelper.getData(
         uri: uri,
         builder: (data) =>
@@ -27,7 +27,7 @@ class SantriRepository {
 
   Future<bool> submitPerizinan(Map<String, dynamic> data) async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'my-perizinan');
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-perizinan');
       final response = await _apiHelper.postData(
         uri: uri,
         jsonBody: data,
@@ -241,6 +241,22 @@ class SantriRepository {
       return response;
     } catch (e) {
       return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> getMyTahfidz() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'santri/my-tahfidz');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) =>
+            data is Map && data['data'] is Map ? data['data'] : {},
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      print('Error fetching my-tahfidz: $e');
+      return {};
     }
   }
 }

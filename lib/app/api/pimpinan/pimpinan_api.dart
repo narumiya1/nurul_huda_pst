@@ -81,7 +81,12 @@ class PimpinanApi {
     // We expect a list here based on controller analysis
     return await _apiHelper.getData(
       uri: uri,
-      builder: (data) => data is List ? data : [],
+      builder: (data) {
+        if (data is Map && data['data'] is List) {
+          return data['data'];
+        }
+        return data is List ? data : [];
+      },
       header: _getAuthHeader(),
     );
   }

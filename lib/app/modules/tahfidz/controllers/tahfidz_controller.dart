@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 
 class TahfidzController extends GetxController {
+  final SantriRepository _repository = SantriRepository();
   final isLoading = false.obs;
   final hafalanList = <Map<String, dynamic>>[].obs;
   final targetJuz = 30.obs;
-  final currentJuz = 5.obs;
+  final currentJuz = 0.obs;
 
   @override
   void onInit() {
@@ -15,49 +17,44 @@ class TahfidzController extends GetxController {
   Future<void> fetchHafalan() async {
     try {
       isLoading.value = true;
-      await Future.delayed(const Duration(milliseconds: 800));
+      final response = await _repository.getMyTahfidz();
 
-      hafalanList.assignAll([
-        {
-          'date': '2026-01-18',
-          'surah': 'Al-Baqarah',
-          'ayat': '1-10',
-          'nilai': 'A',
-          'keterangan': 'Sangat Baik'
-        },
-        {
-          'date': '2026-01-17',
-          'surah': 'Al-Fatihah',
-          'ayat': '1-7',
-          'nilai': 'A',
-          'keterangan': 'Sempurna'
-        },
-        {
-          'date': '2026-01-16',
-          'surah': 'An-Nas',
-          'ayat': '1-6',
-          'nilai': 'B+',
-          'keterangan': 'Baik'
-        },
-        {
-          'date': '2026-01-15',
-          'surah': 'Al-Falaq',
-          'ayat': '1-5',
-          'nilai': 'A',
-          'keterangan': 'Sangat Baik'
-        },
-        {
-          'date': '2026-01-14',
-          'surah': 'Al-Ikhlas',
-          'ayat': '1-4',
-          'nilai': 'A',
-          'keterangan': 'Sempurna'
-        },
-      ]);
+      if (response.isNotEmpty) {
+        currentJuz.value =
+            int.tryParse(response['total_juz']?.toString() ?? '0') ?? 0;
+
+        final progressPerc =
+            double.tryParse(response['pencapaian']?.toString() ?? '0') ?? 0.0;
+        // targetJuz is calculated based on progress if not provided,
+        // but here we can estimate target if total_juz > 0 and pencapaian > 0
+        if (currentJuz.value > 0 && progressPerc > 0) {
+          targetJuz.value = (currentJuz.value * 100 / progressPerc).round();
+        } else {
+          targetJuz.value = 30; // fallback
+        }
+
+        final riwayat = response['riwayat'] as List?;
+        if (riwayat != null) {
+          hafalanList.assignAll(riwayat
+              .map((e) => {
+                    'date': e['tanggal'] ?? '-',
+                    'surah': e['surah'] ?? '-',
+                    'ayat': '${e['ayat_awal'] ?? 1}-${e['ayat_akhir'] ?? 1}',
+                    'nilai': e['nilai']?.toString() ?? '-',
+                    'keterangan': e['status'] ?? '-'
+                  })
+              .toList());
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal memuat data tahfidz: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  double get progressPercentage => (currentJuz.value / targetJuz.value) * 100;
+  double get progressPercentage {
+    if (targetJuz.value == 0) return 0;
+    return (currentJuz.value / targetJuz.value) * 100;
+  }
 }

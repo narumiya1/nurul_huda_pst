@@ -248,7 +248,7 @@ class AkademikPondokController extends GetxController {
         tugasList.clear();
       }
     } catch (e) {
-      print('Error fetching tugas sekolah: $e');
+      debugPrint('Error fetching tugas sekolah: $e');
       // Keep fallback just in case
       tugasList.assignAll([
         {
@@ -280,7 +280,7 @@ class AkademikPondokController extends GetxController {
       }
     } catch (e) {
       // Fallback only if error (keep existing fallback logic or clear)
-      print('Error fetching kurikulum: $e');
+      debugPrint('Error fetching kurikulum: $e');
       if (dataKurikulum.isEmpty) {
         dataKurikulum.assignAll([
           {

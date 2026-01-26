@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
@@ -121,10 +122,10 @@ class SantriRepository {
         },
         header: _getAuthHeader(),
       );
-      print('Tugas fetched: ${response.length} items');
+      debugPrint('Tugas fetched: ${response.length} items');
       return response;
     } catch (e) {
-      print('Error fetching tugas: $e');
+      debugPrint('Error fetching tugas: $e');
       return [];
     }
   }
@@ -192,7 +193,7 @@ class SantriRepository {
         return response['success'] == true;
       }
     } catch (e) {
-      print('Error submitting tugas: $e');
+      debugPrint('Error submitting tugas: $e');
       return false;
     }
   }
@@ -243,7 +244,7 @@ class SantriRepository {
       }
       return null;
     } catch (e) {
-      print('Chunk upload failed: $e');
+      debugPrint('Chunk upload failed: $e');
       return null;
     }
   }
@@ -285,7 +286,7 @@ class SantriRepository {
       );
       return response;
     } catch (e) {
-      print('Error fetching my-bills: $e');
+      debugPrint('Error fetching my-bills: $e');
       return [];
     }
   }
@@ -303,7 +304,7 @@ class SantriRepository {
       );
       return response;
     } catch (e) {
-      print('Error fetching my-payments: $e');
+      debugPrint('Error fetching my-payments: $e');
       return [];
     }
   }
@@ -318,7 +319,7 @@ class SantriRepository {
       );
       return response;
     } catch (e) {
-      print('Error fetching my-absensi: $e');
+      debugPrint('Error fetching my-absensi: $e');
       return [];
     }
   }
@@ -347,7 +348,7 @@ class SantriRepository {
 
       return response['meta']?['code'] == 200 || response['success'] == true;
     } catch (e) {
-      print('Error paying bill: $e');
+      debugPrint('Error paying bill: $e');
       return false;
     }
   }
@@ -439,7 +440,7 @@ class SantriRepository {
       );
       return response;
     } catch (e) {
-      print('Error fetching my-tahfidz: $e');
+      debugPrint('Error fetching my-tahfidz: $e');
       return {};
     }
   }
@@ -452,10 +453,10 @@ class SantriRepository {
         builder: (data) => data['data'] is List ? data['data'] : [],
         header: _getAuthHeader(),
       );
-      print('Jadwal fetched: ${response.length} items');
+      debugPrint('Jadwal fetched: ${response.length} items');
       return response;
     } catch (e) {
-      print('Error fetching my-schedule: $e');
+      debugPrint('Error fetching my-schedule: $e');
       return [];
     }
   }

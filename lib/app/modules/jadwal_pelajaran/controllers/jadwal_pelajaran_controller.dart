@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/guru/guru_api.dart';
 import 'package:epesantren_mob/app/api/guru/guru_repository.dart';
@@ -42,7 +43,7 @@ class JadwalPelajaranController extends GetxController {
           role = (user['role']['role_name'] ?? '').toString().toLowerCase();
         }
       }
-      print('JadwalController: Detected role: $role');
+      debugPrint('JadwalController: Detected role: $role');
 
       List<dynamic> data = [];
       if (role == 'santri' || role == 'siswa') {

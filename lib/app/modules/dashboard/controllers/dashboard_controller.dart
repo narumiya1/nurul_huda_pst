@@ -202,7 +202,7 @@ class DashboardController extends GetxController {
         return;
       } catch (e) {
         // Handle error
-        print('Error loading stats: $e');
+        debugPrint('Error loading stats: $e');
       }
     } else if (role == 'orangtua') {
       try {

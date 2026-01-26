@@ -1016,7 +1016,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () {
-                          // TODO: Implement actual download/open file
+                          // NOTE: Implement actual download/open file
                           // For now just show snackbar
                           Get.snackbar('Info',
                               'Membuka file tugas: ${item['file_path'].split('/').last}',

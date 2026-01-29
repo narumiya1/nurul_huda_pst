@@ -40,4 +40,12 @@ class LocalStorage {
   static Future<void> clearAll() async {
     await _box.erase();
   }
+
+  static dynamic read(String key) {
+    return _box.read(key);
+  }
+
+  static Future<void> write(String key, dynamic value) async {
+    await _box.write(key, value);
+  }
 }

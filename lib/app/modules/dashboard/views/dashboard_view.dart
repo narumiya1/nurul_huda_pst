@@ -982,7 +982,7 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Administrasi',
         'icon': Icons.assignment_outlined,
         'color': const Color(0xFFE17055),
-        'roles': ['pimpinan', 'staff_pesantren']
+        'roles': ['pimpinan', 'staff_pesantren', 'staff_keuangan']
       },
       {
         'title': 'Kedisiplinan',

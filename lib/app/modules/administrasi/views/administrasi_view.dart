@@ -230,7 +230,14 @@ class AdministrasiView extends GetView<AdministrasiController> {
             const SizedBox(height: 12),
             Obx(() => Wrap(
                   spacing: 8,
-                  children: ['Semua', 'Arsip', 'Proses', 'Selesai'].map((s) {
+                  children: [
+                    'Semua',
+                    'Arsip',
+                    'Draft',
+                    'Pending',
+                    'Approved',
+                    'Rejected'
+                  ].map((s) {
                     final isSelected = controller.selectedStatus.value == s;
                     return ChoiceChip(
                       label: Text(s),
@@ -305,6 +312,15 @@ class AdministrasiView extends GetView<AdministrasiController> {
               _buildDetailInfo('Tanggal', item['date']),
               _buildDetailInfo('Pengirim', item['sender'] ?? '-'),
               _buildDetailInfo('Penerima', item['recipient'] ?? '-'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('Status: ',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13)),
+                  _buildBadge(item['status'], _getStatusColor(item['status'])),
+                ],
+              ),
               const SizedBox(height: 16),
               const Text('Isi Singkat / Perihal:',
                   style: TextStyle(
@@ -315,34 +331,58 @@ class AdministrasiView extends GetView<AdministrasiController> {
               Text(item['content'] ?? 'Tidak ada deskripsi berkas.',
                   style: const TextStyle(height: 1.5)),
               const SizedBox(height: 24),
-              if (item['attachment'] != null)
-                InkWell(
-                  onTap: () => controller.downloadFile(item['attachment']),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.textLight.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.picture_as_pdf,
-                            color: AppColors.error),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(item['attachment'],
-                              style: const TextStyle(fontSize: 12)),
-                        ),
-                        const Icon(Icons.download,
-                            size: 20, color: AppColors.primary),
-                      ],
-                    ),
-                  ),
+              // Action Buttons
+              if (item['status'].toString().toLowerCase() == 'draft' &&
+                  controller.canManage)
+                _buildActionButton(
+                  'Ajukan Persetujuan',
+                  Icons.send,
+                  AppColors.primary,
+                  () {
+                    Get.back();
+                    controller.submitSurat(item['id']);
+                  },
                 ),
-              const SizedBox(height: 24),
+              if (item['status'].toString().toLowerCase() == 'pending' &&
+                  controller.canApprove)
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionButton(
+                        'Tolak',
+                        Icons.close,
+                        AppColors.error,
+                        () {
+                          Get.back();
+                          controller.rejectSurat(item['id']);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildActionButton(
+                        'Setujui',
+                        Icons.check,
+                        AppColors.success,
+                        () {
+                          Get.back();
+                          controller.approveSurat(item['id']);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 12),
+              if (item['status'].toString().toLowerCase() == 'approved' &&
+                  item['attachment'] != null)
+                _buildActionButton(
+                  'Unduh PDF',
+                  Icons.download,
+                  AppColors.primary,
+                  () => controller.downloadFile(item['attachment']),
+                  isOutlined: true,
+                ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -357,6 +397,59 @@ class AdministrasiView extends GetView<AdministrasiController> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return AppColors.success;
+      case 'rejected':
+        return AppColors.error;
+      case 'pending':
+        return AppColors.accentOrange;
+      case 'draft':
+        return Colors.grey;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onPressed,
+      {bool isOutlined = false}) {
+    if (isOutlined) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: color,
+            side: BorderSide(color: color),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18, color: Colors.white),
+        label: Text(label,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

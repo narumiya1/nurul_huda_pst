@@ -130,6 +130,28 @@ class SantriRepository {
     }
   }
 
+  Future<List<dynamic>> getMateriList() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'kurikulum-mapel');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) {
+          if (data is Map && data['data'] != null) {
+            // Ensure we get the list correctly
+            if (data['data'] is List) return data['data'];
+            if (data['data']['data'] is List) return data['data']['data'];
+          }
+          return [];
+        },
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      debugPrint('Error fetching materi: $e');
+      return [];
+    }
+  }
+
   Future<bool> submitTugas(Map<String, String> fields,
       {List<File>? files}) async {
     try {
@@ -164,12 +186,13 @@ class SantriRepository {
       // we might need to handle array fields.
       // If ApiHelper checks headers:
       // A trick for standard multipart: send keys 'existing_files[0]', 'existing_files[1]'
-      Map<String, String> finalFields = Map.from(fields);
-      for (int i = 0; i < existingFiles.length; i++) {
-        finalFields['existing_files[$i]'] = existingFiles[i];
-      }
-
       if (smallFiles.isNotEmpty) {
+        // Multipart request: keys with [index] work for Laravel array fields
+        Map<String, String> finalFields = Map.from(fields);
+        for (int i = 0; i < existingFiles.length; i++) {
+          finalFields['existing_files[$i]'] = existingFiles[i];
+        }
+
         final response = await _apiHelper.postImageData(
           uri: submitUri,
           fields: finalFields,
@@ -179,14 +202,15 @@ class SantriRepository {
         );
         return response['success'] == true;
       } else {
+        // JSON request: just send as List
+        final Map<String, dynamic> jsonBody = Map<String, dynamic>.from(fields);
+        if (existingFiles.isNotEmpty) {
+          jsonBody['existing_files'] = existingFiles;
+        }
+
         final response = await _apiHelper.postData(
           uri: submitUri,
-          jsonBody:
-              finalFields, // This might need ensuring jsonBody handles map correctly or FormData
-          // If postData sends JSON, existing_files[0] keys might be awkward but Laravel handles it usually?
-          // Actually for JSON body, we can just send list.
-          // But postData expects Map<String, dynamic> usually.
-          // Let's assume postData takes Map<String, dynamic>.
+          jsonBody: jsonBody,
           builder: (data) => data,
           header: _getAuthHeader(),
         );
@@ -458,6 +482,44 @@ class SantriRepository {
     } catch (e) {
       debugPrint('Error fetching my-schedule: $e');
       return [];
+    }
+  }
+
+  Future<List<dynamic>> getTugasSubmissions(String tugasId) async {
+    try {
+      final uri = ApiHelper.buildUri(
+          endpoint: 'sekolah/tugas/submissions',
+          params: {'tugas_sekolah_id': tugasId});
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data['data'] is List ? data['data'] : [],
+        header: _getAuthHeader(),
+      );
+      return response;
+    } catch (e) {
+      debugPrint('Error fetching submissions: $e');
+      return [];
+    }
+  }
+
+  Future<bool> gradeTugasSubmission(
+      String submissionId, double grade, String? notes) async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'sekolah/tugas/grade');
+      final response = await _apiHelper.postData(
+        uri: uri,
+        jsonBody: {
+          'submission_id': submissionId,
+          'nilai': grade,
+          'catatan_guru': notes,
+        },
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+      return response['success'] == true;
+    } catch (e) {
+      debugPrint('Error grading submission: $e');
+      return false;
     }
   }
 }

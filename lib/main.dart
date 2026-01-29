@@ -1,12 +1,29 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app/routes/app_pages.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
+import 'package:epesantren_mob/app/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'firebase_options.dart'; // File ini di-generate oleh FlutterFire CLI
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase dengan FlutterFire
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await NotificationService.initialize();
+    FirebaseMessaging.onBackgroundMessage(
+        NotificationService.onBackgroundMessage);
+  } catch (e) {
+    debugPrint("Firebase failed to initialize: $e");
+    debugPrint("Pastikan sudah menjalankan 'flutterfire configure'");
+  }
 
   // Set status bar style
   SystemChrome.setSystemUIOverlayStyle(

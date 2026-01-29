@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:get/get.dart';
+import '../../../helpers/file_helper.dart';
 import '../../../helpers/local_storage.dart';
 
 class AkademikPondokController extends GetxController {
@@ -50,6 +51,8 @@ class AkademikPondokController extends GetxController {
 
   // Assignment Logic
   final selectedAssignmentFiles = <File>[].obs;
+  final submissionsList = <Map<String, dynamic>>[].obs;
+  final selectedTugasId = ''.obs;
 
   @override
   void onInit() {
@@ -103,6 +106,8 @@ class AkademikPondokController extends GetxController {
 
   Future<void> submitTugas(String tugasId, String jawaban) async {
     try {
+      if (tugasId.isEmpty) return;
+
       if (jawaban.isEmpty && selectedAssignmentFiles.isEmpty) {
         Get.snackbar('Peringatan', 'Mohon isi jawaban atau upload file.',
             backgroundColor: Get.theme.colorScheme.error,
@@ -111,42 +116,33 @@ class AkademikPondokController extends GetxController {
       }
 
       isLoading.value = true;
-      Get.back();
-      Get.snackbar('Info', 'Sedang mengirim tugas...',
-          showProgressIndicator: true);
 
       final fields = {
         'tugas_sekolah_id': tugasId,
         'text_submission': jawaban,
       };
 
-      // Handle multiple files if repository supports it, or zip them, or send first one for now if repo not updated
-      // Assuming we update repo to support 'files' list
-      final success = await _santriRepository.submitTugas(fields,
-          files: selectedAssignmentFiles); // Updated argument name
+      final success = await _santriRepository.submitTugas(
+        fields,
+        files: selectedAssignmentFiles,
+      );
 
       if (success) {
-        Get.snackbar('Sukses', 'Tugas berhasil dikirim!',
-            backgroundColor: Colors.green, colorText: Colors.white);
-        clearAssignmentFiles();
-
-        // Update local state to reflect submission
-        final index = tugasList.indexWhere((t) => t['id'] == tugasId);
-        if (index != -1) {
-          final updatedTask = Map<String, dynamic>.from(tugasList[index]);
-          updatedTask['status'] = 'Selesai';
-          updatedTask['is_submitted'] = true;
-          tugasList[index] = updatedTask;
-
-          // Also update filtered list if necessary, but filtered is usually bound or re-filtered
-          applyFilters();
-        }
+        Get.back(); // close bottomsheet
+        Get.snackbar(
+          'Sukses',
+          'Tugas berhasil dikirim.',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // Refresh tugas list
+        await _fetchTugasSekolah();
       } else {
         Get.snackbar('Gagal', 'Gagal mengirim tugas',
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan: $e');
+      Get.snackbar('Error', 'Gagal mengirim tugas: $e');
     } finally {
       isLoading.value = false;
     }
@@ -240,16 +236,14 @@ class AkademikPondokController extends GetxController {
             'description': map['deskripsi'] ?? map['description'] ?? '',
             'is_submitted': isSubmitted,
             'submission_id': map['my_submission']?['id'],
-            'file_path': map['file_path'] // Add this line
+            'file_path': map['file_path']
           };
         }).toList());
       } else {
-        // Fallback or empty for other roles for now, or implement pimpinan view
         tugasList.clear();
       }
     } catch (e) {
       debugPrint('Error fetching tugas sekolah: $e');
-      // Keep fallback just in case
       tugasList.assignAll([
         {
           'id': '1',
@@ -265,6 +259,26 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchKurikulum() async {
     try {
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'santri' || role == 'siswa') {
+        final data = await _santriRepository.getMateriList();
+        dataKurikulum.assignAll(data.map((item) {
+          final mapel = item['mapel'] ?? {};
+          final kurikulum = item['kurikulum'] ?? {};
+
+          return {
+            'mapel': mapel['nama'] ?? 'Tanpa Nama',
+            'pengajar':
+                mapel['guru'] != null ? (mapel['guru']['nama'] ?? '-') : '-',
+            'kitab': kurikulum['name'] ?? '-',
+            'tingkat': kurikulum['tingkat']?.toString() ?? '-',
+            'type': kurikulum['category'] ?? 'Umum',
+            'files': item['files'] ?? []
+          };
+        }).toList());
+        return;
+      }
+
       final response = await _pimpinanRepository.getKurikulum();
       if (response['data'] != null) {
         final List kurikulumData = response['data'] ?? [];
@@ -279,7 +293,6 @@ class AkademikPondokController extends GetxController {
         }).toList());
       }
     } catch (e) {
-      // Fallback only if error (keep existing fallback logic or clear)
       debugPrint('Error fetching kurikulum: $e');
       if (dataKurikulum.isEmpty) {
         dataKurikulum.assignAll([
@@ -302,16 +315,12 @@ class AkademikPondokController extends GetxController {
       final tahun = semesterParts.length > 1 ? semesterParts[1] : null;
 
       final role = userRole.value.toLowerCase().trim();
-      debugPrint('Role processed: $role, Selected: ${selectedSemester.value}');
-
       if (role == 'santri' || role == 'siswa') {
         final rawNilai = await _santriRepository.getNilaiSekolah(
             semester: semester, tahun: tahun);
-        debugPrint('Fetched Nilai count for student: ${rawNilai.length}');
         if (rawNilai.isNotEmpty) {
           _processMappedNilai(rawNilai);
         } else {
-          debugPrint('Filtered nilia empty, trying fetch without filters...');
           final allNilai = await _santriRepository.getNilaiSekolah();
           if (allNilai.isNotEmpty) {
             _processMappedNilai(allNilai);
@@ -321,7 +330,6 @@ class AkademikPondokController extends GetxController {
           }
         }
       } else {
-        // ... rest of pimpinan logic remains same
         final rawNilai = await _pimpinanRepository.getRekapNilai();
         if (rawNilai.isNotEmpty) {
           final Map<String, List<double>> groupedScores = {};
@@ -379,15 +387,6 @@ class AkademikPondokController extends GetxController {
             'semester': 'Ganjil',
             'tahun': '2025/2026',
             'jenis': 'UTS',
-          },
-          {
-            'is_personal': true,
-            'mapel': 'Bahasa Arab',
-            'nilai': 90,
-            'tingkat': 'VII',
-            'semester': 'Ganjil',
-            'tahun': '2025/2026',
-            'jenis': 'UAS',
           }
         ];
         _processMappedNilai(dummy);
@@ -398,18 +397,6 @@ class AkademikPondokController extends GetxController {
             'rata_rata': 84.5,
             'tertinggi': 98.0,
             'terendah': 65.0
-          },
-          {
-            'tingkat': 'VIII',
-            'rata_rata': 82.2,
-            'tertinggi': 97.0,
-            'terendah': 60.0
-          },
-          {
-            'tingkat': 'IX',
-            'rata_rata': 86.8,
-            'tertinggi': 99.0,
-            'terendah': 70.0
           },
         ]);
         groupedRekapNilai.clear();
@@ -438,7 +425,6 @@ class AkademikPondokController extends GetxController {
     }).toList();
     rekapNilai.assignAll(mapped);
 
-    // Grouping by mapel
     final Map<String, List<Map<String, dynamic>>> grouped = {};
     for (var item in mapped) {
       final mapel = item['mapel'] as String;
@@ -451,14 +437,13 @@ class AkademikPondokController extends GetxController {
   }
 
   Future<void> searchSiswaGrades(String query) async {
+    searchSiswaQuery.value = query;
     if (query.length < 3) {
       searchSiswaResults.clear();
       return;
     }
-
     try {
       isSearchingSiswa.value = true;
-      // Search for student first
       final students = await _pimpinanRepository.findSiswa(query);
       searchSiswaResults
           .assignAll(students.map((e) => e as Map<String, dynamic>).toList());
@@ -531,18 +516,6 @@ class AkademikPondokController extends GetxController {
           'location': 'Masjid',
           'category': 'Ibadah'
         },
-        {
-          'time': '08:00',
-          'title': 'KBM Sekolah',
-          'location': 'Gedung A',
-          'category': 'Sekolah'
-        },
-        {
-          'time': '20:00',
-          'title': 'Mudarasah',
-          'location': 'Kamar',
-          'category': 'Pondok'
-        },
       ]);
     }
   }
@@ -554,8 +527,6 @@ class AkademikPondokController extends GetxController {
         final progress = await _santriRepository.getMyTahfidz();
         if (progress.isNotEmpty) {
           final List<Map<String, dynamic>> items = [];
-
-          // Add overall progress item
           items.add({
             'nama': 'Total Hafalan',
             'target': 30,
@@ -568,8 +539,6 @@ class AkademikPondokController extends GetxController {
                     100,
             'type': 'Progress Keseluruhan'
           });
-
-          // Add some recent history as items
           final riwayat = progress['riwayat'] as List?;
           if (riwayat != null && riwayat.isNotEmpty) {
             for (var item in riwayat.take(4)) {
@@ -616,13 +585,6 @@ class AkademikPondokController extends GetxController {
           'percent': 0.42,
           'type': 'Pemula'
         },
-        {
-          'nama': 'Kelompok Umar',
-          'target': 30,
-          'achieved': 18.2,
-          'percent': 0.61,
-          'type': 'Menengah'
-        },
       ]);
     }
   }
@@ -642,9 +604,6 @@ class AkademikPondokController extends GetxController {
     } catch (e) {
       laporanAbsensi.assignAll([
         {'label': 'Hadir', 'value': 280, 'color': 'green'},
-        {'label': 'Izin', 'value': 12, 'color': 'blue'},
-        {'label': 'Sakit', 'value': 5, 'color': 'orange'},
-        {'label': 'Alpa', 'value': 2, 'color': 'red'},
       ]);
     }
   }
@@ -659,17 +618,9 @@ class AkademikPondokController extends GetxController {
   }
 
   Future<void> applyFilters() async {
-    // Reload Absensi if filters relevant to it change (Index 3)
-    if (selectedIndex.value == 3) {
-      await fetchLaporanAbsensi();
-    }
+    if (selectedIndex.value == 3) await fetchLaporanAbsensi();
+    if (selectedIndex.value == 0) await _fetchRekapNilai();
 
-    // Reload Rekap Nilai if filters relevant to it change (Index 0)
-    if (selectedIndex.value == 0) {
-      await _fetchRekapNilai();
-    }
-
-    // Filter Rekap Nilai
     final role = userRole.value.toLowerCase().trim();
     if (role == 'santri' || role == 'siswa') {
       filteredRekapNilai.assignAll(rekapNilai);
@@ -683,7 +634,6 @@ class AkademikPondokController extends GetxController {
       }
     }
 
-    // Filter Agenda
     if (selectedCategory.value == 'Semua') {
       filteredAgenda.assignAll(agendaKegiatan);
     } else {
@@ -692,7 +642,6 @@ class AkademikPondokController extends GetxController {
           .toList());
     }
 
-    // Filter Tahfidz
     if (selectedTahfidzGroup.value == 'Semua') {
       filteredTahfidz.assignAll(progressTahfidz);
     } else {
@@ -701,24 +650,19 @@ class AkademikPondokController extends GetxController {
           .toList());
     }
 
-    // Filter Kurikulum
     var tempKurikulum = dataKurikulum.toList();
-
     if (selectedTingkat.value != 'Semua') {
       tempKurikulum = tempKurikulum
           .where((item) => item['tingkat'] == selectedTingkat.value)
           .toList();
     }
-
     if (selectedCurriculumType.value != 'Semua') {
       tempKurikulum = tempKurikulum
           .where((item) => item['type'] == selectedCurriculumType.value)
           .toList();
     }
-
     filteredKurikulum.assignAll(tempKurikulum);
 
-    // Filter Tugas
     if (selectedTugasStatus.value == 'Semua') {
       filteredTugas.assignAll(tugasList);
     } else {
@@ -733,5 +677,48 @@ class AkademikPondokController extends GetxController {
     selectedSemester.value = 'Ganjil 2025/2026';
     selectedTugasStatus.value = 'Semua';
     applyFilters();
+  }
+
+  Future<void> downloadFile(String path, {String? filename}) async {
+    await FileHelper.downloadAndOpenFile(path, filename: filename);
+  }
+
+  Future<void> fetchSubmissions(String tugasId) async {
+    try {
+      selectedTugasId.value = tugasId;
+      isLoading.value = true;
+      final response = await _santriRepository.getTugasSubmissions(tugasId);
+      submissionsList
+          .assignAll(response.map((e) => e as Map<String, dynamic>).toList());
+    } catch (e) {
+      debugPrint('Error fetching submissions: $e');
+      Get.snackbar('Error', 'Gagal memuat daftar jawaban');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> submitGrade(
+      String submissionId, double grade, String? notes) async {
+    try {
+      isLoading.value = true;
+      final success = await _santriRepository.gradeTugasSubmission(
+          submissionId, grade, notes);
+      if (success) {
+        Get.back(); // close grading modal
+        Get.snackbar('Sukses', 'Penilaian berhasil disimpan',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        if (selectedTugasId.value.isNotEmpty) {
+          await fetchSubmissions(selectedTugasId.value);
+        }
+      } else {
+        Get.snackbar('Gagal', 'Gagal menyimpan penilaian');
+      }
+    } catch (e) {
+      debugPrint('Error grading: $e');
+      Get.snackbar('Error', 'Terjadi kesalahan saat menyimpan nilai');
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

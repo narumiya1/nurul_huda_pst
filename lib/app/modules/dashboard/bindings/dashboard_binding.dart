@@ -1,3 +1,5 @@
+import 'package:epesantren_mob/app/api/auth/auth_api.dart';
+import 'package:epesantren_mob/app/api/auth/auth_repository.dart';
 import 'package:epesantren_mob/app/api/news/news_api.dart';
 import 'package:epesantren_mob/app/api/news/news_repository.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_api.dart';
@@ -27,6 +29,7 @@ class DashboardBinding extends Bindings {
         SantriRepository(),
         OrangtuaRepository(OrangtuaApi()),
         RoisRepository(RoisApi()),
+        AuthRepository(AuthApi()),
         SdmRepository(SdmApi()),
       ),
     );

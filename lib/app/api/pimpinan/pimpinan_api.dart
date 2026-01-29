@@ -388,4 +388,50 @@ class PimpinanApi {
       header: _getAuthHeader(),
     );
   }
+
+  // Persuratan (Official Letters) Methods
+  Future<Map<String, dynamic>> getPersuratanSurat(
+      {String? search, String? status}) async {
+    final Map<String, String> params = {};
+    if (search != null) params['search'] = search;
+    if (status != null) params['status'] = status;
+
+    final uri =
+        ApiHelper.buildUri(endpoint: 'persuratan/surat', params: params);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<Map<String, dynamic>> approveSurat(String id) async {
+    final uri = ApiHelper.buildUri(endpoint: 'persuratan/surat/$id/approve');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: {},
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<Map<String, dynamic>> rejectSurat(String id) async {
+    final uri = ApiHelper.buildUri(endpoint: 'persuratan/surat/$id/reject');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: {},
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  Future<Map<String, dynamic>> submitSurat(String id) async {
+    final uri = ApiHelper.buildUri(endpoint: 'persuratan/surat/$id/submit');
+    return await _apiHelper.postData(
+      uri: uri,
+      jsonBody: {},
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
 }

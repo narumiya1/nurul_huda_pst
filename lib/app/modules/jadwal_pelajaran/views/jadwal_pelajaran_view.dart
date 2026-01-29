@@ -58,14 +58,40 @@ class JadwalPelajaranView extends GetView<JadwalPelajaranController> {
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final item = items[index];
+                            // Backend Santri response uses 'mata_pelajaran' and 'pengajar'
+                            final mataPelajaran = item['mata_pelajaran'];
+                            final pengajar = item['pengajar'];
+
+                            // Backend Guru response uses 'mapel' (object) and 'kelas' (object)
                             final mapel = item['mapel'];
                             final kelas = item['kelas'];
-                            final mapelName =
-                                (mapel is Map ? mapel['nama'] : mapel) ?? '-';
-                            final kelasName =
-                                (kelas is Map ? kelas['nama_kelas'] : kelas) ??
-                                    '-';
-                            final ruang = item['ruang'] ?? '-';
+
+                            // Safe name extraction
+                            String mapelName = '-';
+                            if (mataPelajaran != null) {
+                              mapelName = mataPelajaran.toString();
+                            } else if (mapel != null) {
+                              if (mapel is Map) {
+                                mapelName =
+                                    mapel['nama_mapel'] ?? mapel['nama'] ?? '-';
+                              } else {
+                                mapelName = mapel.toString();
+                              }
+                            }
+
+                            String kelasName = '-';
+                            if (kelas != null) {
+                              if (kelas is Map) {
+                                kelasName =
+                                    kelas['nama_kelas'] ?? kelas['nama'] ?? '-';
+                              } else {
+                                kelasName = kelas.toString();
+                              }
+                            }
+
+                            final ruang =
+                                item['ruang'] ?? '-'; // Guru might have room
+
                             final jamMulai = item['jam_mulai'] != null
                                 ? item['jam_mulai'].toString().substring(0, 5)
                                 : '-';
@@ -122,7 +148,9 @@ class JadwalPelajaranView extends GetView<JadwalPelajaranController> {
                                                 size: 14, color: Colors.grey),
                                             const SizedBox(width: 4),
                                             Text(
-                                              "$kelasName • $ruang",
+                                              pengajar != null
+                                                  ? "Pengajar: $pengajar"
+                                                  : "$kelasName • $ruang",
                                               style: const TextStyle(
                                                   color: Colors.grey,
                                                   fontSize: 13),

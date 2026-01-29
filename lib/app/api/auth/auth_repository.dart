@@ -45,4 +45,12 @@ class AuthRepository {
   Future<void> logout() async {
     await LocalStorage.clearAll();
   }
+
+  Future<void> updateFcmToken(String fcmToken) async {
+    try {
+      await _authApi.updateFcmToken(fcmToken);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

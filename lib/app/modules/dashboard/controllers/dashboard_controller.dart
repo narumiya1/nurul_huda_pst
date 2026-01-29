@@ -8,6 +8,7 @@ import 'package:epesantren_mob/app/api/rois/rois_repository.dart';
 import 'package:epesantren_mob/app/api/sdm/sdm_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:epesantren_mob/app/api/news/news_repository.dart';
+import 'package:epesantren_mob/app/api/auth/auth_repository.dart';
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
@@ -17,6 +18,7 @@ class DashboardController extends GetxController {
   final SantriRepository _santriRepository;
   final OrangtuaRepository _orangtuaRepository;
   final RoisRepository _roisRepository;
+  final AuthRepository _authRepository;
 
   DashboardController(
     this._newsRepository,
@@ -25,6 +27,7 @@ class DashboardController extends GetxController {
     this._santriRepository,
     this._orangtuaRepository,
     this._roisRepository,
+    this._authRepository,
     SdmRepository
         sdmRepository, // Keep it in constructor but don't save to field if unused
   );
@@ -45,6 +48,7 @@ class DashboardController extends GetxController {
     fetchBerita();
     loadQuickStats();
     fetchJadwalGuru();
+    registerFcmToken();
   }
 
   Future<void> fetchJadwalGuru() async {
@@ -339,6 +343,17 @@ class DashboardController extends GetxController {
       } catch (e) {
         debugPrint('Error fetching child attendance history: $e');
       }
+    }
+  }
+
+  Future<void> registerFcmToken() async {
+    try {
+      String? token = LocalStorage.read('fcm_token');
+      if (token != null) {
+        await _authRepository.updateFcmToken(token);
+      }
+    } catch (e) {
+      debugPrint('Error registering FCM token: $e');
     }
   }
 }

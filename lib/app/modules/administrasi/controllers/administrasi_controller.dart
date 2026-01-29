@@ -1,8 +1,8 @@
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../helpers/local_storage.dart';
+import '../../../helpers/file_helper.dart';
 
 class AdministrasiController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
@@ -49,118 +49,72 @@ class AdministrasiController extends GetxController {
     }
   }
 
-  bool get canManage => userRole.value == 'staff_pesantren';
+  bool get canManage =>
+      userRole.value == 'staff_pesantren' || userRole.value == 'staff_keuangan';
+  bool get canApprove =>
+      userRole.value == 'pimpinan' || userRole.value == 'superadmin';
 
   Future<void> fetchAdministrasiData() async {
     try {
       isLoading.value = true;
 
-      try {
-        // Fetch real data for Pimpinan/Staff
-        // We can fetch 'inbox' or 'archive' based on needs, here we use 'inbox' as default
-        final response = await _pimpinanRepository.getMails(
-          filter: 'inbox',
-          search: searchQuery.value,
-        );
+      // Fetch real data from persuratan/surat
+      final response = await _pimpinanRepository.getPersuratanSurat(
+        search: searchQuery.value,
+        status: selectedStatus.value == 'Semua'
+            ? null
+            : selectedStatus.value.toLowerCase(),
+      );
 
-        if (response['data'] != null) {
-          final List mailData = response['data']['data'] ?? [];
-          archiveList.assignAll(mailData.map((item) {
-            final mail = item['mail'] ?? {};
-            return {
-              'title': mail['subject'] ?? 'Tanpa Subjek',
-              'type': mail['type'] ?? 'Surat Masuk',
-              'number': mail['reference_number'] ?? 'No Number',
-              'date': mail['date'] ?? item['created_at']?.split('T')[0] ?? '',
-              'status': item['is_archive'] == true ? 'Arsip' : 'Baru',
-              'sender': mail['sender']?['details']?['full_name'] ?? 'System',
-              'recipient': 'Saya',
-              'content': mail['content'] ?? 'Tidak ada detil isi berkas.',
-              'attachment': mail['file_path'] ?? mail['file'],
-            };
-          }).toList());
-          filteredArchives.assignAll(archiveList);
-          return;
-        }
-      } catch (e) {
-        // Handle error silently
+      if (response['data'] != null) {
+        final List mailData = response['data'] is List
+            ? response['data']
+            : (response['data']['data'] ?? []);
+        archiveList.assignAll(mailData.map((item) {
+          return {
+            'id': item['id'],
+            'title': item['perihal'] ?? 'Tanpa Perihal',
+            'type': item['tipe'] == 'masuk' ? 'Surat Masuk' : 'Surat Keluar',
+            'number': item['nomor_surat'] ?? 'No Number',
+            'date': item['created_at']?.split('T')[0] ?? '',
+            'status': item['status'] ?? 'Draft',
+            'sender': item['pembuat']?['details']?['full_name'] ?? 'System',
+            'recipient': item['penerima_name'] ?? 'Internal',
+            'content': item['perihal'] ?? 'Tidak ada detil isi berkas.',
+            'attachment': item['file_path'],
+            'raw': item, // Store raw data for details
+          };
+        }).toList());
+
+        _applyClientFilters();
+        return;
       }
 
-      // Fallback or Initial Mock Data
+      // Fallback or Initial Mock Data (Optional, but kept for safety if API fails)
       archiveList.assignAll([
         {
           'title': 'Surat Masuk: Pengajuan Dana Bos',
           'type': 'Surat Masuk',
           'number': '201/ADM/2026',
           'date': '2026-01-18',
-          'status': 'Terima',
+          'status': 'Approved',
           'sender': 'Kemenag Pusat',
           'recipient': 'Kepala Pesantren',
           'content': 'Sehubungan dengan program bantuan operasional sekolah...',
           'attachment': 'dana_bos_2026.pdf'
         },
-        // ... rest of mock data
-        {
-          'title': 'Surat Keterangan Santri',
-          'type': 'Surat Keluar',
-          'number': '400/012/NH-2026',
-          'date': '2026-01-18',
-          'status': 'Arsip',
-          'sender': 'Sekretariat Pesantren',
-          'recipient': 'Wali Santri (Bpk. Ahmad)',
-          'content':
-              'Dengan ini menerangkan bahwa ananda Ahmad adalah santri...',
-          'attachment': 'sk_santri_ahmad.pdf'
-        },
-        {
-          'title': 'Surat Masuk: Kemenag Wilayah',
-          'type': 'Surat Masuk',
-          'number': 'KM/882/I/2026',
-          'date': '2026-01-16',
-          'status': 'Arsip',
-          'sender': 'Kemenag Wilayah Jabar',
-          'recipient': 'Bidang Akademik',
-          'content': 'Monitoring dan evaluasi kurikulum tingkat menengah...',
-          'attachment': 'monev_kurikulum.pdf'
-        },
-        {
-          'title': 'Proposal Renovasi Masjid',
-          'type': 'Proposal',
-          'number': '400/015/NH-2026',
-          'date': '2026-01-15',
-          'status': 'Proses',
-          'sender': 'Panitia Pembangunan',
-          'recipient': 'Dewan Pembina',
-          'content': 'Rancangan anggaran biaya pengembangan area masjid...',
-          'attachment': 'rab_masjid.pdf'
-        },
-        {
-          'title': 'Surat Tugas Pimpinan',
-          'type': 'Surat Masuk',
-          'number': 'ST/001/PIM/2026',
-          'date': '2026-01-14',
-          'status': 'Arsip',
-          'sender': 'Sekretaris Yayasan',
-          'recipient': 'Pimpinan Pesantren',
-          'content': 'Penugasan menghadiri Rakernas Pesantren Indonesia...',
-          'attachment': 'surat_tugas.pdf'
-        },
       ]);
       filteredArchives.assignAll(archiveList);
+    } catch (e) {
+      debugPrint('Error fetching administrasi data: $e');
+      Get.snackbar('Error', 'Gagal memuat data administrasi');
     } finally {
       isLoading.value = false;
     }
   }
 
-  void searchArchive(String query) {
-    applyFilters(search: query);
-  }
-
-  void applyFilters({String? search, String? type, String? status}) {
-    if (type != null) selectedType.value = type;
-    if (status != null) selectedStatus.value = status;
-    String q = search ?? searchQuery.value;
-
+  void _applyClientFilters() {
+    String q = searchQuery.value;
     var result = archiveList.where((a) {
       bool matchSearch = q.isEmpty ||
           a['title'].toLowerCase().contains(q.toLowerCase()) ||
@@ -168,11 +122,62 @@ class AdministrasiController extends GetxController {
       bool matchType =
           selectedType.value == 'Semua' || a['type'] == selectedType.value;
       bool matchStatus = selectedStatus.value == 'Semua' ||
-          a['status'] == selectedStatus.value;
+          a['status'].toString().toLowerCase() ==
+              selectedStatus.value.toLowerCase();
       return matchSearch && matchType && matchStatus;
     }).toList();
 
     filteredArchives.assignAll(result);
+  }
+
+  void searchArchive(String query) {
+    searchQuery.value = query;
+    _applyClientFilters();
+  }
+
+  void applyFilters({String? search, String? type, String? status}) {
+    if (type != null) selectedType.value = type;
+    if (status != null) selectedStatus.value = status;
+    _applyClientFilters();
+  }
+
+  Future<void> approveSurat(String id) async {
+    try {
+      isLoading.value = true;
+      await _pimpinanRepository.approvePersuratanSurat(id);
+      Get.snackbar('Berhasil', 'Surat berhasil disetujui');
+      fetchAdministrasiData();
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal menyetujui surat: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> rejectSurat(String id) async {
+    try {
+      isLoading.value = true;
+      await _pimpinanRepository.rejectPersuratanSurat(id);
+      Get.snackbar('Berhasil', 'Surat berhasil ditolak');
+      fetchAdministrasiData();
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal menonaktifkan surat: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> submitSurat(String id) async {
+    try {
+      isLoading.value = true;
+      await _pimpinanRepository.submitPersuratanSurat(id);
+      Get.snackbar('Berhasil', 'Surat berhasil diajukan');
+      fetchAdministrasiData();
+    } catch (e) {
+      Get.snackbar('Gagal', 'Gagal mengajukan surat: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void resetFilters() {
@@ -183,45 +188,17 @@ class AdministrasiController extends GetxController {
     applyFilters();
   }
 
-  Future<void> downloadFile(String fileName) async {
-    try {
-      Get.snackbar(
-        'Mengunduh',
-        'Sedang menyiapkan berkas $fileName...',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-        colorText: AppColors.primary,
-        duration: const Duration(seconds: 2),
-      );
+  Future<void> downloadFile(String path, {String? filename}) async {
+    await FileHelper.downloadAndOpenFile(path, filename: filename);
 
-      // Simulate download delay
-      await Future.delayed(const Duration(seconds: 3));
-
-      // Add to downloaded history if not already there
-      if (!downloadedFiles.any((file) => file['fileName'] == fileName)) {
-        downloadedFiles.add({
-          'fileName': fileName,
-          'downloadDate': DateTime.now().toString().split('.')[0],
-          'size': '1.${(fileName.length % 9) + 1} MB',
-        });
-      }
-
-      Get.snackbar(
-        'Berhasil',
-        'Berkas $fileName berhasil diunduh ke folder Download.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success.withValues(alpha: 0.1),
-        colorText: AppColors.success,
-        icon: const Icon(Icons.check_circle, color: AppColors.success),
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Gagal',
-        'Terjadi kesalahan saat mengunduh berkas.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.error.withValues(alpha: 0.1),
-        colorText: AppColors.error,
-      );
+    // Track downloads
+    if (!downloadedFiles.any(
+        (file) => file['fileName'] == (filename ?? path.split('/').last))) {
+      downloadedFiles.add({
+        'fileName': filename ?? path.split('/').last,
+        'downloadDate': DateTime.now().toString().split('.')[0],
+        'size': 'Unknown',
+      });
     }
   }
 }

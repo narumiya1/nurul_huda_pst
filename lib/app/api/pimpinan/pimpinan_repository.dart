@@ -238,4 +238,38 @@ class PimpinanRepository {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getPersuratanSurat(
+      {String? search, String? status}) async {
+    try {
+      return await _pimpinanApi.getPersuratanSurat(
+          search: search, status: status);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> approvePersuratanSurat(String id) async {
+    try {
+      return await _pimpinanApi.approveSurat(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> rejectPersuratanSurat(String id) async {
+    try {
+      return await _pimpinanApi.rejectSurat(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> submitPersuratanSurat(String id) async {
+    try {
+      return await _pimpinanApi.submitSurat(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

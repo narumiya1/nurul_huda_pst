@@ -939,6 +939,43 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                               fontStyle: FontStyle.italic)),
                     ],
                   ),
+                  if (item['files'] != null &&
+                      (item['files'] as List).isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 8),
+                    const Text('Materi / File:',
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    ...((item['files'] as List)
+                        .map((file) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: InkWell(
+                                onTap: () =>
+                                    controller.downloadFile(file.toString()),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.download_rounded,
+                                        size: 16, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        file.toString().split('/').last,
+                                        style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontSize: 13,
+                                            decoration:
+                                                TextDecoration.underline),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList()),
+                  ],
                 ],
               ),
             );
@@ -1015,13 +1052,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                     if (item['file_path'] != null) ...[
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () {
-                          // NOTE: Implement actual download/open file
-                          // For now just show snackbar
-                          Get.snackbar('Info',
-                              'Membuka file tugas: ${item['file_path'].split('/').last}',
-                              snackPosition: SnackPosition.BOTTOM);
-                        },
+                        onTap: () => controller.downloadFile(item['file_path']),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -1038,9 +1069,9 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                       )
                     ]
                   ]),
-              trailing: controller.userRole.value == 'pimpinan'
-                  ? null
-                  : ElevatedButton(
+              trailing: (controller.userRole.value == 'santri' ||
+                      controller.userRole.value == 'siswa')
+                  ? ElevatedButton(
                       onPressed: isDone
                           ? null
                           : () => _showSubmissionForm(context, item),
@@ -1055,12 +1086,190 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                           style: TextStyle(
                               fontSize: 12,
                               color: isDone ? Colors.white70 : Colors.white)),
+                    )
+                  : OutlinedButton(
+                      onPressed: () => _showSubmissionsList(context, item),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      child: Text('Lihat Jawaban',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.primary)),
                     ),
             ),
           );
         },
       );
     });
+  }
+
+  void _showSubmissionsList(BuildContext context, Map<String, dynamic> task) {
+    controller.fetchSubmissions(task['id'].toString());
+    Get.to(() => Scaffold(
+          appBar: AppBar(title: Text('Jawaban: ${task['judul']}')),
+          body: Obx(() {
+            if (controller.isLoading.value)
+              return Center(child: CircularProgressIndicator());
+            if (controller.submissionsList.isEmpty)
+              return Center(child: Text('Belum ada jawaban terkumpul.'));
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: controller.submissionsList.length,
+              itemBuilder: (context, index) {
+                final sub = controller.submissionsList[index];
+                final name =
+                    sub['siswa']?['user']?['details']?['full_name'] ?? 'Siswa';
+                final grade = sub['nilai'];
+                final date = sub['created_at']?.toString().split('T')[0] ?? '-';
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    title: Text(name,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Dikirim: $date'),
+                        if (sub['text_submission'] != null)
+                          Text('Jawaban: ${sub['text_submission']}',
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (grade != null)
+                          Text('$grade',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary))
+                        else
+                          Text('Belum Dinilai',
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.orange)),
+                        const Icon(Icons.chevron_right, size: 16),
+                      ],
+                    ),
+                    onTap: () => _showGradingDialog(context, sub),
+                  ),
+                );
+              },
+            );
+          }),
+        ));
+  }
+
+  void _showGradingDialog(
+      BuildContext context, Map<String, dynamic> submission) {
+    final gradeController =
+        TextEditingController(text: submission['nilai']?.toString() ?? '');
+    final notesController =
+        TextEditingController(text: submission['catatan_guru'] ?? '');
+    final name =
+        submission['siswa']?['user']?['details']?['full_name'] ?? 'Siswa';
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Penilaian: $name',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              if (submission['text_submission'] != null) ...[
+                Text('Jawaban Siswa:',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(submission['text_submission']),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (submission['files'] != null &&
+                  (submission['files'] as List).isNotEmpty) ...[
+                Text('Lampiran:',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ...(submission['files'] as List).map((f) => ListTile(
+                      leading: Icon(Icons.attach_file, size: 16),
+                      title: Text(f['file_path']?.split('/').last ?? 'File',
+                          style: TextStyle(fontSize: 12)),
+                      trailing: Icon(Icons.download,
+                          size: 16, color: AppColors.primary),
+                      onTap: () => controller.downloadFile(f['file_path']),
+                    )),
+                const SizedBox(height: 16),
+              ],
+              Text('Nilai (0-100)',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: gradeController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                    hintText: '85.5',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12))),
+              ),
+              const SizedBox(height: 16),
+              Text('Catatan Guru',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: notesController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                    hintText: 'Kerja bagus!',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12))),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final grade = double.tryParse(gradeController.text);
+                    if (grade == null) {
+                      Get.snackbar(
+                          'Kesalahan', 'Mohon masukkan nilai yang valid');
+                      return;
+                    }
+                    controller.submitGrade(submission['id'].toString(), grade,
+                        notesController.text);
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16)),
+                  child: Text('Simpan Penilaian',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   void _showSubmissionForm(BuildContext context, Map<String, dynamic> task) {

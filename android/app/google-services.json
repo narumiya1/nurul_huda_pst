@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "441177126485",
+    "project_id": "central-nurulhuda",
+    "storage_bucket": "central-nurulhuda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441177126485:android:0637411b07f7f90cb006dc",
+        "android_client_info": {
+          "package_name": "com.nurulhudamobile.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTLFg2sIV76D7txop1ic55QWEX_ZZnHdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

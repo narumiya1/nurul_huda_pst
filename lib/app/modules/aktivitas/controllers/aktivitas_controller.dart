@@ -5,7 +5,10 @@ import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
 class AktivitasController extends GetxController {
-  final ActivityRepository _repository = ActivityRepository();
+  final ActivityRepository _repository;
+
+  AktivitasController({ActivityRepository? repository})
+      : _repository = repository ?? ActivityRepository();
 
   final isLoading = false.obs;
   final aktivitasList = <dynamic>[].obs;

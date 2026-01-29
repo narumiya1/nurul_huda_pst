@@ -5,7 +5,11 @@ import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
 class PelanggaranController extends GetxController {
-  final SantriRepository _repository = SantriRepository();
+  final SantriRepository _repository;
+
+  PelanggaranController({SantriRepository? repository})
+      : _repository = repository ?? SantriRepository();
+
   final isLoading = false.obs;
   final pelanggaranList = <dynamic>[].obs;
   final santriList = <dynamic>[].obs;

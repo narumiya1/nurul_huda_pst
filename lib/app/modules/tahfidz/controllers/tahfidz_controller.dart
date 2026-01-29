@@ -2,7 +2,11 @@ import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 
 class TahfidzController extends GetxController {
-  final SantriRepository _repository = SantriRepository();
+  final SantriRepository _repository;
+
+  TahfidzController({SantriRepository? repository})
+      : _repository = repository ?? SantriRepository();
+
   final isLoading = false.obs;
   final hafalanList = <Map<String, dynamic>>[].obs;
   final targetJuz = 30.obs;

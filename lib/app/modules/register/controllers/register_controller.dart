@@ -16,15 +16,28 @@ import 'package:image_picker/image_picker.dart';
 class RegisterController extends GetxController {
   final AuthRepository _authRepository;
 
-  RegisterController(this._authRepository);
+  RegisterController(
+    this._authRepository, {
+    ProvinsiRepository? provinsiRepository,
+    KotaKabRepository? kotaKabRepository,
+    KecamatanRepository? kecamatanRepository,
+    DesaKelurahanRepository? desaKelurahanRepository,
+  })  : provinsiRepository =
+            provinsiRepository ?? ProvinsiRepository(ProvinsiApi()),
+        kotaKabRepository =
+            kotaKabRepository ?? KotaKabRepository(KotaKabApi()),
+        kecamatanRepository =
+            kecamatanRepository ?? KecamatanRepository(KecamatanApi()),
+        desaKelurahanRepository = desaKelurahanRepository ??
+            DesaKelurahanRepository(DesaKelurahanApi());
 
   RxList<ProvinsModel> provinsiDataList = <ProvinsModel>[].obs;
 
   // Repositories
-  late ProvinsiRepository provinsiRepository;
-  late final KotaKabRepository kotaKabRepository;
-  late final KecamatanRepository kecamatanRepository;
-  late final DesaKelurahanRepository desaKelurahanRepository;
+  final ProvinsiRepository provinsiRepository;
+  final KotaKabRepository kotaKabRepository;
+  final KecamatanRepository kecamatanRepository;
+  final DesaKelurahanRepository desaKelurahanRepository;
 
   RxList<ProvinsModel> allprovinsiDataList = <ProvinsModel>[].obs;
   final districtList = <ProvinsModel>[].obs;
@@ -40,10 +53,8 @@ class RegisterController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    provinsiRepository = ProvinsiRepository(ProvinsiApi());
-    kotaKabRepository = KotaKabRepository(KotaKabApi());
-    kecamatanRepository = KecamatanRepository(KecamatanApi());
-    desaKelurahanRepository = DesaKelurahanRepository(DesaKelurahanApi());
+
+    // Repositories already initialized in constructor
 
     fetchProvinsi();
   }

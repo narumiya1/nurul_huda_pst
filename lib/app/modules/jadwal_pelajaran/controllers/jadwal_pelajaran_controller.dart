@@ -6,7 +6,14 @@ import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
 class JadwalPelajaranController extends GetxController {
-  final GuruRepository _guruRepository = GuruRepository(GuruApi());
+  final GuruRepository _guruRepository;
+  final SantriRepository _santriRepository;
+
+  JadwalPelajaranController({
+    GuruRepository? guruRepository,
+    SantriRepository? santriRepository,
+  })  : _guruRepository = guruRepository ?? GuruRepository(GuruApi()),
+        _santriRepository = santriRepository ?? SantriRepository();
 
   final isLoading = false.obs;
   final jadwalList = <dynamic>[].obs;
@@ -47,9 +54,7 @@ class JadwalPelajaranController extends GetxController {
 
       List<dynamic> data = [];
       if (role == 'santri' || role == 'siswa') {
-        // Use Santri repository (lazy load or just new instance here since not injected yet)
-        final santriRepo = SantriRepository();
-        data = await santriRepo.getJadwalPelajaran();
+        data = await _santriRepository.getJadwalPelajaran();
       } else {
         // Default (Guru/Admin)
         data = await _guruRepository.getJadwalPelajaran();

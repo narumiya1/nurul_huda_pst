@@ -6,7 +6,11 @@ import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:epesantren_mob/app/routes/app_pages.dart';
 
 class ProfilController extends GetxController {
-  final ApiHelper _apiHelper = ApiHelper();
+  final ApiHelper _apiHelper;
+
+  ProfilController({ApiHelper? apiHelper})
+      : _apiHelper = apiHelper ?? ApiHelper();
+
   final isLoading = false.obs;
   final userData = Rxn<Map<String, dynamic>>();
 

@@ -7,7 +7,8 @@ class AkademikPondokBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<AkademikPondokController>(
-      () => AkademikPondokController(PimpinanRepository(PimpinanApi())),
+      () => AkademikPondokController(
+          pimpinanRepository: PimpinanRepository(PimpinanApi())),
     );
   }
 }

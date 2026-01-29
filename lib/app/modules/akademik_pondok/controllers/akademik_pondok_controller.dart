@@ -9,11 +9,15 @@ import '../../../helpers/local_storage.dart';
 
 class AkademikPondokController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
-  final SantriRepository _santriRepository = SantriRepository();
+  final SantriRepository _santriRepository;
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
 
-  AkademikPondokController(this._pimpinanRepository);
+  AkademikPondokController({
+    required PimpinanRepository pimpinanRepository,
+    SantriRepository? santriRepository,
+  })  : _pimpinanRepository = pimpinanRepository,
+        _santriRepository = santriRepository ?? SantriRepository();
 
   // Data for Pimpinan
   final rekapNilai = <Map<String, dynamic>>[].obs;

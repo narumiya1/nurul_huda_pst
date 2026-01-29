@@ -1090,13 +1090,13 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   : OutlinedButton(
                       onPressed: () => _showSubmissionsList(context, item),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColors.primary),
+                        side: const BorderSide(color: AppColors.primary),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                       ),
-                      child: Text('Lihat Jawaban',
+                      child: const Text('Lihat Jawaban',
                           style: TextStyle(
                               fontSize: 12, color: AppColors.primary)),
                     ),
@@ -1112,10 +1112,12 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     Get.to(() => Scaffold(
           appBar: AppBar(title: Text('Jawaban: ${task['judul']}')),
           body: Obx(() {
-            if (controller.isLoading.value)
-              return Center(child: CircularProgressIndicator());
-            if (controller.submissionsList.isEmpty)
-              return Center(child: Text('Belum ada jawaban terkumpul.'));
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.submissionsList.isEmpty) {
+              return const Center(child: Text('Belum ada jawaban terkumpul.'));
+            }
 
             return ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -1131,7 +1133,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     title: Text(name,
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1147,12 +1149,12 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                       children: [
                         if (grade != null)
                           Text('$grade',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary))
                         else
-                          Text('Belum Dinilai',
+                          const Text('Belum Dinilai',
                               style: TextStyle(
                                   fontSize: 10, color: Colors.orange)),
                         const Icon(Icons.chevron_right, size: 16),
@@ -1179,7 +1181,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
         child: SingleChildScrollView(
@@ -1188,10 +1190,11 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Penilaian: $name',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               if (submission['text_submission'] != null) ...[
-                Text('Jawaban Siswa:',
+                const Text('Jawaban Siswa:',
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 Container(
@@ -1206,20 +1209,20 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
               ],
               if (submission['files'] != null &&
                   (submission['files'] as List).isNotEmpty) ...[
-                Text('Lampiran:',
+                const Text('Lampiran:',
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 ...(submission['files'] as List).map((f) => ListTile(
-                      leading: Icon(Icons.attach_file, size: 16),
+                      leading: const Icon(Icons.attach_file, size: 16),
                       title: Text(f['file_path']?.split('/').last ?? 'File',
-                          style: TextStyle(fontSize: 12)),
-                      trailing: Icon(Icons.download,
+                          style: const TextStyle(fontSize: 12)),
+                      trailing: const Icon(Icons.download,
                           size: 16, color: AppColors.primary),
                       onTap: () => controller.downloadFile(f['file_path']),
                     )),
                 const SizedBox(height: 16),
               ],
-              Text('Nilai (0-100)',
+              const Text('Nilai (0-100)',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
@@ -1231,7 +1234,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                         borderRadius: BorderRadius.circular(12))),
               ),
               const SizedBox(height: 16),
-              Text('Catatan Guru',
+              const Text('Catatan Guru',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
@@ -1259,7 +1262,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: Text('Simpan Penilaian',
+                  child: const Text('Simpan Penilaian',
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
                 ),

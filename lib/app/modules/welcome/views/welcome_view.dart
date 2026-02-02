@@ -10,7 +10,7 @@ class WelcomeView extends GetView<WelcomeController> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
@@ -35,7 +35,7 @@ class WelcomeView extends GetView<WelcomeController> {
                   flex: 3,
                   child: _buildTopSection(size),
                 ),
-                
+
                 // Bottom Card Section
                 _buildBottomCard(context),
               ],
@@ -83,9 +83,9 @@ class WelcomeView extends GetView<WelcomeController> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // App Name
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
@@ -103,7 +103,8 @@ class WelcomeView extends GetView<WelcomeController> {
             child: Column(
               children: [
                 ShaderMask(
-                  shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                  shaderCallback: (bounds) =>
+                      AppColors.primaryGradient.createShader(bounds),
                   child: const Text(
                     "Sentral Nurulhuda",
                     style: TextStyle(
@@ -127,9 +128,9 @@ class WelcomeView extends GetView<WelcomeController> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Feature Pills
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
@@ -246,9 +247,9 @@ class WelcomeView extends GetView<WelcomeController> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 28),
-          
+
           // Login Button
           GestureDetector(
             onTap: controller.toLogin,
@@ -287,31 +288,41 @@ class WelcomeView extends GetView<WelcomeController> {
               ),
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Register Link
-          Center(
-            child: GestureDetector(
-              onTap: () => Get.toNamed('/register'),
-              child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                  children: [
-                    TextSpan(text: "Belum punya akun? "),
-                    TextSpan(
-                      text: "Daftar Sekarang",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ],
+
+          const SizedBox(height: 12),
+
+          // PSB Button (Penerimaan Santri Baru)
+          GestureDetector(
+            onTap: () => Get.toNamed('/psb'),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 1.5,
                 ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.school_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "Daftar Santri Baru",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

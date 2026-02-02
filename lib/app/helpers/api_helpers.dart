@@ -260,6 +260,7 @@ class ApiHelper {
       // debug removed
       switch (response.statusCode) {
         case HttpStatus.ok:
+        case HttpStatus.created: // Handle 201 Created response
           try {
             final data = jsonDecode(response.body);
             return builder(data);

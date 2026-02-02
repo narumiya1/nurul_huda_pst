@@ -11,7 +11,7 @@ class LoginView extends GetView<LoginController> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
@@ -36,7 +36,7 @@ class LoginView extends GetView<LoginController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    
+
                     // Back Button
                     GestureDetector(
                       onTap: () => Get.back(),
@@ -54,9 +54,9 @@ class LoginView extends GetView<LoginController> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Logo
                     Center(
                       child: TweenAnimationBuilder<double>(
@@ -76,7 +76,8 @@ class LoginView extends GetView<LoginController> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.12),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
                                 blurRadius: 24,
                                 offset: const Offset(0, 8),
                               ),
@@ -90,9 +91,9 @@ class LoginView extends GetView<LoginController> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     // Title
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: 1),
@@ -151,9 +152,9 @@ class LoginView extends GetView<LoginController> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     // Form Container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -171,28 +172,28 @@ class LoginView extends GetView<LoginController> {
                             prefixIcon: Icons.person_outline_rounded,
                             keyboardType: TextInputType.emailAddress,
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           Obx(() => CustomTextField(
-                            controller: controller.passwordController,
-                            labelText: "Password",
-                            hintText: "Masukkan password",
-                            prefixIcon: Icons.lock_outline_rounded,
-                            obscureText: !controller.showPassword.value,
-                            suffixIcon: GestureDetector(
-                              onTap: controller.togglePasswordVisibility,
-                              child: Icon(
-                                controller.showPassword.value
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: AppColors.textLight,
-                              ),
-                            ),
-                          )),
-                          
+                                controller: controller.passwordController,
+                                labelText: "Password",
+                                hintText: "Masukkan password",
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: !controller.showPassword.value,
+                                suffixIcon: GestureDetector(
+                                  onTap: controller.togglePasswordVisibility,
+                                  child: Icon(
+                                    controller.showPassword.value
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: AppColors.textLight,
+                                  ),
+                                ),
+                              )),
+
                           const SizedBox(height: 12),
-                          
+
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
@@ -207,120 +208,26 @@ class LoginView extends GetView<LoginController> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Login Button
                           Obx(() => PrimaryButton(
-                            text: "Masuk",
-                            icon: Icons.arrow_forward_rounded,
-                            isLoading: controller.isLoading.value,
-                            onPressed: controller.loginProcess,
-                          )),
+                                text: "Masuk",
+                                icon: Icons.arrow_forward_rounded,
+                                isLoading: controller.isLoading.value,
+                                onPressed: controller.loginProcess,
+                              )),
                         ],
                       ),
                     ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Divider
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            "atau",
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Social Login
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSocialButton(
-                            icon: Icons.g_mobiledata_rounded,
-                            color: Colors.red,
-                            onTap: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildSocialButton(
-                            icon: Icons.facebook_rounded,
-                            color: Colors.blue.shade800,
-                            onTap: () {},
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Register Link
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => Get.toNamed('/register'),
-                        child: RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                            children: [
-                              TextSpan(text: "Belum punya akun? "),
-                              TextSpan(
-                                text: "Daftar Sekarang",
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    
+
                     const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: AppShadows.softShadow,
-        ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 28,
         ),
       ),
     );

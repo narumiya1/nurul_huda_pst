@@ -24,6 +24,8 @@ import '../modules/welcome/bindings/welcome_binding.dart';
 import '../modules/welcome/views/welcome_view.dart';
 import '../modules/psb/bindings/psb_binding.dart';
 import '../modules/psb/views/psb_view.dart';
+import '../modules/psb/views/psb_form_view.dart';
+import '../modules/psb/views/psb_cek_status_view.dart';
 import '../modules/pondok/bindings/pondok_binding.dart';
 import '../modules/pondok/views/pondok_view.dart';
 import '../modules/administrasi/bindings/administrasi_binding.dart';
@@ -117,6 +119,16 @@ class AppPages {
     GetPage(
       name: _Paths.psb,
       page: () => const PsbView(),
+      binding: PsbBinding(),
+    ),
+    GetPage(
+      name: _Paths.psbForm,
+      page: () => const PsbFormView(),
+      binding: PsbBinding(),
+    ),
+    GetPage(
+      name: _Paths.psbCekStatus,
+      page: () => const PsbCekStatusView(),
       binding: PsbBinding(),
     ),
     GetPage(

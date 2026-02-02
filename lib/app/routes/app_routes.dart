@@ -15,6 +15,8 @@ abstract class Routes {
   static const profil = _Paths.profil;
   static const manajemenSdm = _Paths.manajemenSdm;
   static const psb = _Paths.psb;
+  static const psbForm = _Paths.psbForm;
+  static const psbCekStatus = _Paths.psbCekStatus;
   static const pondok = _Paths.pondok;
   static const administrasi = _Paths.administrasi;
   static const monitoring = _Paths.monitoring;
@@ -43,6 +45,8 @@ abstract class _Paths {
   static const manajemenSdmDetail = '/manajemen-sdm/detail';
   static const beritaDetail = '/berita-detail';
   static const psb = '/psb';
+  static const psbForm = '/psb/form';
+  static const psbCekStatus = '/psb/cek-status';
   static const pondok = '/pondok';
   static const administrasi = '/administrasi';
   static const monitoring = '/monitoring';

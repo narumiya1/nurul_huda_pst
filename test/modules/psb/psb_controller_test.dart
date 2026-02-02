@@ -15,35 +15,53 @@ void main() {
   });
 
   group('PsbController Test', () {
-    test('Initial fetch logic (simulation)', () async {
-      await controller.fetchPsbData();
-
+    test('Controller initializes correctly', () {
       expect(controller.isLoading.value, false);
-      expect(controller.registrants.length, 4);
-      expect(controller.stats['total'], 150);
+      expect(controller.currentStep.value, 0);
+      expect(controller.registrants.length, 0);
     });
 
-    test('Filter by status', () async {
-      await controller.fetchPsbData();
+    test('Step navigation works correctly', () {
+      expect(controller.currentStep.value, 0);
 
-      controller.filterStatus('Verified');
-      expect(controller.filteredRegistrants.length, 2);
+      controller.nextStep();
+      expect(controller.currentStep.value, 1);
 
-      controller.filterStatus('Rejected');
-      expect(controller.filteredRegistrants.length, 1);
+      controller.nextStep();
+      expect(controller.currentStep.value, 2);
 
-      controller.filterStatus('Semua');
-      expect(controller.filteredRegistrants.length, 4);
+      // Should not go beyond step 2
+      controller.nextStep();
+      expect(controller.currentStep.value, 2);
+
+      controller.previousStep();
+      expect(controller.currentStep.value, 1);
+
+      controller.previousStep();
+      expect(controller.currentStep.value, 0);
+
+      // Should not go below step 0
+      controller.previousStep();
+      expect(controller.currentStep.value, 0);
     });
 
-    test('Search functionality', () async {
-      await controller.fetchPsbData();
+    test('Filter by status updates correctly', () {
+      controller.filterByStatus('pending');
+      expect(controller.selectedStatus.value, 'pending');
 
-      controller.searchRegistrant('Al-Fatih');
-      expect(controller.filteredRegistrants.length, 1);
+      controller.filterByStatus('accepted');
+      expect(controller.selectedStatus.value, 'accepted');
 
-      controller.searchRegistrant('');
-      expect(controller.filteredRegistrants.length, 4);
+      controller.filterByStatus(null);
+      expect(controller.selectedStatus.value, null);
+    });
+
+    test('Search query updates correctly', () {
+      controller.searchQuery.value = 'Ahmad';
+      expect(controller.searchQuery.value, 'Ahmad');
+
+      controller.searchQuery.value = '';
+      expect(controller.searchQuery.value, '');
     });
   });
 }

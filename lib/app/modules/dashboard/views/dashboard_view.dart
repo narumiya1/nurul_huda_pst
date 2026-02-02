@@ -57,35 +57,45 @@ class HomePage extends GetView<DashboardController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWelcomeCard(),
-                  _buildJadwalGuru(),
-                  const SizedBox(height: 24),
-                  _buildQuickStats(),
-                  _buildChildrenList(),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle("Berita Terbaru", onSeeAll: () {}),
-                  const SizedBox(height: 16),
-                  _buildNewsSection(),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle("Menu Utama", onSeeAll: () {}),
-                  const SizedBox(height: 16),
-                  _buildMenuGrid(),
-                  const SizedBox(height: 100),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.loadQuickStats();
+          await controller.fetchBerita();
+          await controller.fetchJadwalGuru();
+          await controller.fetchAttendanceHistory();
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            _buildAppBar(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeCard(),
+                    _buildJadwalGuru(),
+                    const SizedBox(height: 24),
+                    _buildQuickStats(),
+                    _buildChildrenList(),
+                    const SizedBox(height: 28),
+                    _buildSectionTitle("Berita Terbaru", onSeeAll: () {}),
+                    const SizedBox(height: 16),
+                    _buildNewsSection(),
+                    const SizedBox(height: 28),
+                    _buildSectionTitle("Menu Utama", onSeeAll: () {}),
+                    const SizedBox(height: 16),
+                    _buildMenuGrid(),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -502,17 +512,34 @@ class HomePage extends GetView<DashboardController> {
                                         )),
                                     const SizedBox(height: 2),
                                     Obx(() {
-                                      // Try to get class from quickStats
-                                      final kelas = controller
-                                              .quickStats['stat1']?['value']
-                                              ?.toString() ??
-                                          '-';
-                                      return Text(
-                                        "Kelas: $kelas",
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
+                                      final stat1 =
+                                          controller.quickStats['stat1'];
+                                      final kelas =
+                                          stat1?['value']?.toString() ?? '-';
+                                      final subInfo =
+                                          stat1?['sub_value']?.toString() ?? '';
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Kelas: $kelas",
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          if (subInfo.isNotEmpty)
+                                            Text(
+                                              subInfo,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 10,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                        ],
                                       );
                                     }),
                                     const SizedBox(height: 8),
@@ -685,6 +712,7 @@ class HomePage extends GetView<DashboardController> {
             icon: _getIconData(controller.quickStats['stat1']?['icon']),
             value: controller.quickStats['stat1']?['value'] ?? "0",
             label: controller.quickStats['stat1']?['label'] ?? "",
+            subValue: controller.quickStats['stat1']?['sub_value'],
             color: AppColors.accentBlue,
           ),
           const SizedBox(width: 12),
@@ -718,6 +746,10 @@ class HomePage extends GetView<DashboardController> {
         return Icons.assignment_outlined;
       case 'check_circle':
         return Icons.check_circle_outline;
+      case 'auto_stories':
+        return Icons.auto_stories_outlined;
+      case 'room':
+        return Icons.room_outlined;
       default:
         return Icons.workspace_premium_outlined;
     }
@@ -728,10 +760,11 @@ class HomePage extends GetView<DashboardController> {
     required String value,
     required String label,
     required Color color,
+    String? subValue,
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -740,26 +773,42 @@ class HomePage extends GetView<DashboardController> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(height: 10),
             Text(
               value,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            if (subValue != null && subValue.isNotEmpty)
+              Text(
+                subValue,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            const SizedBox(height: 2),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: AppColors.textSecondary,
               ),
             ),
@@ -961,7 +1010,7 @@ class HomePage extends GetView<DashboardController> {
         'roles': ['pimpinan', 'staff_pesantren']
       },
       {
-        'title': 'Akademik',
+        'title': 'Sekolah',
         'icon': Icons.school_outlined,
         'color': AppColors.accentBlue,
         'roles': ['pimpinan', 'staff_pesantren', 'guru', 'santri', 'siswa']
@@ -970,7 +1019,14 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Pondok',
         'icon': Icons.home_work_outlined,
         'color': const Color(0xFF6C5CE7),
-        'roles': ['staff_pesantren', 'guru', 'santri', 'rois']
+        'roles': [
+          'pimpinan',
+          'staff_pesantren',
+          'guru',
+          'santri',
+          'siswa',
+          'rois'
+        ]
       },
       {
         'title': 'Keuangan',
@@ -1053,11 +1109,17 @@ class HomePage extends GetView<DashboardController> {
                   case 'PSB':
                     Get.toNamed(Routes.psb);
                     break;
-                  case 'Akademik':
-                    Get.toNamed(Routes.akademikPondok);
+                  case 'Sekolah':
+                    Get.toNamed(Routes.akademikPondok,
+                        arguments: {'type': 'SCHOOL'});
                     break;
                   case 'Pondok':
-                    Get.toNamed(Routes.pondok);
+                    if (role == 'santri' || role == 'siswa') {
+                      Get.toNamed(Routes.akademikPondok,
+                          arguments: {'type': 'PONDOK'});
+                    } else {
+                      Get.toNamed(Routes.pondok);
+                    }
                     break;
                   case 'Tahfidz':
                     Get.toNamed(Routes.tahfidz);

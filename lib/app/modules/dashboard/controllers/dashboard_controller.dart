@@ -135,10 +135,16 @@ class DashboardController extends GetxController {
     } else if (role == 'santri' || role == 'siswa') {
       try {
         final profile = await _santriRepository.getMyProfile();
-        final tugas = await _santriRepository.getTugasSekolah();
+        // Fetch both school and pondok tasks
+        final taskResults = await Future.wait([
+          _santriRepository.getTugasSekolah(),
+          _santriRepository.getTugasPondok(),
+        ]);
+        final allTasks = [...taskResults[0], ...taskResults[1]];
         final tahfidz = await _santriRepository.getMyTahfidz();
 
         String kelasName = '-';
+        String subInfo = ''; // For Room/School info
 
         if (profile != null) {
           // Extract NIS
@@ -147,39 +153,54 @@ class DashboardController extends GetxController {
           } else if (profile['siswa'] != null &&
               profile['siswa']['nis'] != null) {
             nis.value = profile['siswa']['nis'].toString();
-          } else if (profile['details'] != null &&
-              profile['details']['identifier_number'] != null) {
-            nis.value = profile['details']['identifier_number'].toString();
           }
 
-          // Try to find class name in relations
+          // Santri Info
           if (profile['santri'] != null) {
             final s = profile['santri'];
-            // Check various potential keys for class relation
             final kObj = s['kelas_obj'] ?? s['kelasObj'] ?? s['kelas'];
             if (kObj is Map && kObj['nama_kelas'] != null) {
               kelasName = kObj['nama_kelas'];
             } else if (s['kelas'] is String) {
-              kelasName = s['kelas']; // Fallback if just string
+              kelasName = s['kelas'];
+            }
+
+            final kamar = s['kamar'];
+            if (kamar != null) {
+              final blok = kamar['blok']?['nama_blok'] ?? '';
+              subInfo =
+                  "Km. ${kamar['nama_kamar']}${blok.isNotEmpty ? ' ($blok)' : ''}";
             }
           }
 
-          if (kelasName == '-' &&
-              profile['siswa'] != null &&
-              profile['siswa']['kelas'] != null) {
-            final k = profile['siswa']['kelas'];
-            if (k is Map && k['nama_kelas'] != null) {
-              kelasName = k['nama_kelas'];
+          // Siswa Info
+          if (profile['siswa'] != null) {
+            final sw = profile['siswa'];
+            if (kelasName == '-') {
+              final k = sw['kelas'];
+              if (k is Map && k['nama_kelas'] != null) {
+                kelasName = k['nama_kelas'];
+              }
+            }
+
+            final sekolah = sw['sekolah'];
+            if (sekolah != null && sekolah['nama_sekolah'] != null) {
+              if (subInfo.isEmpty) {
+                subInfo = sekolah['nama_sekolah'];
+              } else {
+                subInfo += " | ${sekolah['nama_sekolah']}";
+              }
             }
           }
         }
 
         // Count pending tasks
         int pendingTasks = 0;
-        if (tugas.isNotEmpty) {
-          pendingTasks = tugas.where((t) {
-            final isSubmitted =
-                t['my_submission'] != null || (t['is_submitted'] == true);
+        if (allTasks.isNotEmpty) {
+          pendingTasks = allTasks.where((t) {
+            final isSubmitted = t['my_submission'] != null ||
+                (t['is_submitted'] == true) ||
+                (t['status'] == 'Selesai');
             return !isSubmitted;
           }).length;
         }
@@ -191,7 +212,12 @@ class DashboardController extends GetxController {
         }
 
         quickStats.value = {
-          'stat1': {'label': 'Kelas', 'value': kelasName, 'icon': 'room'},
+          'stat1': {
+            'label': 'Kelas',
+            'value': kelasName,
+            'sub_value': subInfo, // New field for sub-info
+            'icon': 'room'
+          },
           'stat2': {
             'label': 'Tugas Pending',
             'value': pendingTasks.toString(),

@@ -108,6 +108,27 @@ class ProfilController extends GetxController {
     return false;
   }
 
+  // Santri Data
+  String get santriTingkat =>
+      userData.value?['santri']?['tingkat']?['nama_tingkat'] ?? '-';
+  String get santriKelas =>
+      userData.value?['santri']?['kelas_obj']?['nama_kelas'] ?? '-';
+  String get santriKamar =>
+      userData.value?['santri']?['kamar']?['nama_kamar'] ?? '-';
+  String get santriBlok =>
+      userData.value?['santri']?['kamar']?['blok']?['nama_blok'] ?? '-';
+
+  // Siswa Data
+  String get siswaSekolah =>
+      userData.value?['siswa']?['sekolah']?['nama_sekolah'] ?? '-';
+  String get siswaTingkat =>
+      userData.value?['siswa']?['kelas']?['tingkat']?.toString() ?? '-';
+  String get siswaKelas =>
+      userData.value?['siswa']?['kelas']?['nama_kelas'] ?? '-';
+
+  bool get hasSantriData => userData.value?['santri'] != null;
+  bool get hasSiswaData => userData.value?['siswa'] != null;
+
   Future<void> updateProfile() async {
     if (fullNameController.text.isEmpty) {
       Get.snackbar('Peringatan', 'Nama lengkap tidak boleh kosong',

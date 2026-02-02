@@ -24,21 +24,31 @@ class PelanggaranView extends GetView<PelanggaranController> {
         }
 
         if (controller.pelanggaranList.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
-                SizedBox(height: 16),
-                Text(
-                  'Alhamdulillah, Bersih!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          return RefreshIndicator(
+            onRefresh: () => controller.fetchPelanggaran(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Container(
+                height: MediaQuery.of(context).size.height - 100,
+                alignment: Alignment.center,
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        size: 80, color: Colors.green),
+                    SizedBox(height: 16),
+                    Text(
+                      'Alhamdulillah, Bersih!',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Tidak ada catatan pelanggaran.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Tidak ada catatan pelanggaran.',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
+              ),
             ),
           );
         }
@@ -47,6 +57,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
           onRefresh: () => controller.fetchPelanggaran(),
           child: ListView.builder(
             padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: controller.pelanggaranList.length,
             itemBuilder: (context, index) {
               final item = controller.pelanggaranList[index];

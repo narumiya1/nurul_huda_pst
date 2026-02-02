@@ -10,6 +10,8 @@ abstract class Routes {
   static const featurePlaceholder = _Paths.featurePlaceholder;
   static const keuangan = _Paths.keuangan;
   static const absensi = _Paths.absensi;
+  static const absensiSantri = _Paths.absensiSantri;
+  static const absensiSiswa = _Paths.absensiSiswa;
   static const tahfidz = _Paths.tahfidz;
   static const aktivitas = _Paths.aktivitas;
   static const profil = _Paths.profil;
@@ -38,6 +40,8 @@ abstract class _Paths {
   static const featurePlaceholder = '/feature-placeholder';
   static const keuangan = '/keuangan';
   static const absensi = '/absensi';
+  static const absensiSantri = '/absensi-santri';
+  static const absensiSiswa = '/absensi-siswa';
   static const tahfidz = '/tahfidz';
   static const aktivitas = '/aktivitas';
   static const profil = '/profil';

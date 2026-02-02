@@ -33,7 +33,7 @@ class FileHelper {
       }
 
       const String scheme = ApiConfig.useHttps ? "https" : "http";
-      final String host = ApiConfig.baseUrlAddress;
+      const String host = ApiConfig.baseUrlAddress;
       final String portStr =
           ApiConfig.port.isNotEmpty ? ":${ApiConfig.port}" : "";
 

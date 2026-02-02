@@ -12,6 +12,7 @@ class AkademikPondokController extends GetxController {
   final SantriRepository _santriRepository;
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
+  final menuType = 'ALL'.obs; // SCHOOL, PONDOK, ALL
 
   AkademikPondokController({
     required PimpinanRepository pimpinanRepository,
@@ -61,6 +62,9 @@ class AkademikPondokController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (Get.arguments is Map && Get.arguments['type'] != null) {
+      menuType.value = Get.arguments['type'];
+    }
     _loadUserRole();
     fetchAllData();
   }
@@ -126,10 +130,22 @@ class AkademikPondokController extends GetxController {
         'text_submission': jawaban,
       };
 
-      final success = await _santriRepository.submitTugas(
-        fields,
-        files: selectedAssignmentFiles,
-      );
+      // Check if it's school or pondok task
+      final task = tugasList.firstWhereOrNull((t) => t['id'] == tugasId);
+      final isPondok = task?['source'] == 'Pondok';
+
+      final bool success;
+      if (isPondok) {
+        success = await _santriRepository.submitTugasPondok({
+          'tugas_santri_id': tugasId,
+          'jawaban_teks': jawaban,
+        });
+      } else {
+        success = await _santriRepository.submitTugas(
+          fields,
+          files: selectedAssignmentFiles,
+        );
+      }
 
       if (success) {
         Get.back(); // close bottomsheet
@@ -140,7 +156,7 @@ class AkademikPondokController extends GetxController {
           colorText: Colors.white,
         );
         // Refresh tugas list
-        await _fetchTugasSekolah();
+        await _fetchTugas();
       } else {
         Get.snackbar('Gagal', 'Gagal mengirim tugas',
             backgroundColor: Colors.red, colorText: Colors.white);
@@ -199,7 +215,7 @@ class AkademikPondokController extends GetxController {
 
       // Fetch all data in parallel for better performance
       await Future.wait([
-        _fetchTugasSekolah(),
+        _fetchTugas(),
         _fetchKurikulum(),
         _fetchRekapNilai(),
         _fetchAgenda(),
@@ -213,51 +229,83 @@ class AkademikPondokController extends GetxController {
     }
   }
 
-  Future<void> _fetchTugasSekolah() async {
+  Future<void> _fetchTugas() async {
     try {
       final role = userRole.value.toLowerCase().trim();
       if (role == 'santri' || role == 'siswa') {
-        final data = await _santriRepository.getTugasSekolah();
-        tugasList.assignAll(data.map((e) {
-          final map = e as Map<String, dynamic>;
+        // Fetch both in parallel
+        final List<Future<dynamic>> tugasFutures = [
+          _santriRepository.getTugasSekolah(),
+          _santriRepository.getTugasPondok(),
+        ];
+        final results = await Future.wait(tugasFutures);
 
+        final schoolTasks = results[0];
+        final pondokTasks = results[1];
+
+        final List<Map<String, dynamic>> combined = [];
+
+        // Map School Tasks
+        combined.addAll(schoolTasks.map((e) {
+          final map = e as Map<String, dynamic>;
           String mapelName = 'Mapel Lain';
           if (map['mapel'] != null && map['mapel'] is Map) {
             mapelName = map['mapel']['nama'] ??
                 map['mapel']['nama_mapel'] ??
                 'Mapel Lain';
           }
-
           final isSubmitted =
               map['my_submission'] != null || (map['is_submitted'] == true);
-
           return {
             'id': map['id']?.toString(),
-            'judul': map['judul'] ?? 'Tugas',
+            'judul': map['judul'] ?? 'Tugas Sekolah',
             'mapel': {'nama_mapel': mapelName},
             'deadline': map['deadline']?.toString().split(' ')[0] ?? '-',
             'status': isSubmitted ? 'Selesai' : 'Pending',
             'description': map['deskripsi'] ?? map['description'] ?? '',
             'is_submitted': isSubmitted,
+            'source': 'Sekolah',
             'submission_id': map['my_submission']?['id'],
             'file_path': map['file_path']
           };
-        }).toList());
+        }));
+
+        // Map Pondok Tasks
+        combined.addAll(pondokTasks.map((e) {
+          final map = e as Map<String, dynamic>;
+          String mapelName = 'Kegiatan Pondok';
+          if (map['mapel'] != null && map['mapel'] is Map) {
+            mapelName = map['mapel']['nama'] ??
+                map['mapel']['nama_mapel'] ??
+                'Kegiatan Pondok';
+          }
+
+          final isSubmitted =
+              map['status'] == 'Selesai' || map['is_submitted'] == true;
+
+          return {
+            'id': map['id']?.toString(),
+            'judul': map['judul'] ?? 'Tugas Pondok',
+            'mapel': {'nama_mapel': mapelName},
+            'deadline': map['deadline']?.toString().split(' ')[0] ?? '-',
+            'status': map['status'] ?? (isSubmitted ? 'Selesai' : 'Pending'),
+            'description': map['deskripsi'] ?? map['description'] ?? '',
+            'is_submitted': isSubmitted,
+            'source': 'Pondok',
+            'submission_id': map['submissions'] is List &&
+                    (map['submissions'] as List).isNotEmpty
+                ? map['submissions'][0]['id']
+                : null,
+            'file_path': map['file_path']
+          };
+        }));
+
+        tugasList.assignAll(combined);
       } else {
         tugasList.clear();
       }
     } catch (e) {
-      debugPrint('Error fetching tugas sekolah: $e');
-      tugasList.assignAll([
-        {
-          'id': '1',
-          'judul': 'Contoh Tugas (Offline)',
-          'mapel': {'nama_mapel': 'Bahasa Indonesia'},
-          'deadline': '2026-01-30',
-          'status': 'Pending',
-          'description': 'Silakan hubungkan internet.'
-        }
-      ]);
+      debugPrint('Error fetching combined tugas: $e');
     }
   }
 
@@ -673,6 +721,15 @@ class AkademikPondokController extends GetxController {
       filteredTugas.assignAll(tugasList
           .where((item) => item['status'] == selectedTugasStatus.value)
           .toList());
+    }
+
+    // Filter by menuType (SCHOOL / PONDOK)
+    if (menuType.value == 'SCHOOL') {
+      filteredTugas.assignAll(
+          filteredTugas.where((item) => item['source'] == 'Sekolah').toList());
+    } else if (menuType.value == 'PONDOK') {
+      filteredTugas.assignAll(
+          filteredTugas.where((item) => item['source'] == 'Pondok').toList());
     }
   }
 

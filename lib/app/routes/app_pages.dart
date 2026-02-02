@@ -11,6 +11,10 @@ import '../modules/keuangan/bindings/keuangan_binding.dart';
 import '../modules/keuangan/views/keuangan_view.dart';
 import '../modules/absensi/bindings/absensi_binding.dart';
 import '../modules/absensi/views/absensi_view.dart';
+import '../modules/absensi_santri/bindings/absensi_santri_binding.dart';
+import '../modules/absensi_santri/views/absensi_santri_view.dart';
+import '../modules/absensi_siswa/bindings/absensi_siswa_binding.dart';
+import '../modules/absensi_siswa/views/absensi_siswa_view.dart';
 import '../modules/tahfidz/bindings/tahfidz_binding.dart';
 import '../modules/tahfidz/views/tahfidz_view.dart';
 import '../modules/aktivitas/bindings/aktivitas_binding.dart';
@@ -91,6 +95,16 @@ class AppPages {
       name: _Paths.absensi,
       page: () => const AbsensiView(),
       binding: AbsensiBinding(),
+    ),
+    GetPage(
+      name: _Paths.absensiSantri,
+      page: () => const AbsensiSantriView(),
+      binding: AbsensiSantriBinding(),
+    ),
+    GetPage(
+      name: _Paths.absensiSiswa,
+      page: () => const AbsensiSiswaView(),
+      binding: AbsensiSiswaBinding(),
     ),
     GetPage(
       name: _Paths.tahfidz,

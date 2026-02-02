@@ -12,15 +12,115 @@ class ProfilView extends GetView<ProfilController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+      body: RefreshIndicator(
+        onRefresh: () async => await controller.fetchUserProfile(),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          child: Column(
+            children: [
+              _buildHeader(context),
+              _buildInfoSection(),
+              _buildAcademicSection(),
+              _buildMenuSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAcademicSection() {
+    return Obx(() {
+      if (!controller.hasSantriData && !controller.hasSiswaData) {
+        return const SizedBox.shrink();
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           children: [
-            _buildHeader(context),
-            _buildInfoSection(),
-            _buildMenuSection(),
+            if (controller.hasSantriData) ...[
+              _buildSectionTitle('Informasi Pondok'),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppShadows.cardShadow,
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(Icons.apartment, 'Blok / Gedung',
+                        controller.santriBlok),
+                    const Divider(height: 32),
+                    _buildInfoRow(
+                        Icons.meeting_room, 'Kamar', controller.santriKamar),
+                    const Divider(height: 32),
+                    _buildInfoRow(Icons.trending_up, 'Tingkat Pondok',
+                        controller.santriTingkat),
+                    const Divider(height: 32),
+                    _buildInfoRow(
+                        Icons.class_, 'Kelas Pondok', controller.santriKelas),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+            if (controller.hasSiswaData) ...[
+              _buildSectionTitle('Informasi Sekolah'),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppShadows.cardShadow,
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(Icons.school_outlined, 'Sekolah',
+                        controller.siswaSekolah),
+                    const Divider(height: 32),
+                    _buildInfoRow(Icons.leaderboard_outlined, 'Tingkat Sekolah',
+                        'Kelas ${controller.siswaTingkat}'),
+                    const Divider(height: 32),
+                    _buildInfoRow(
+                        Icons.groups_outlined, 'Rombel', controller.siswaKelas),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
           ],
         ),
+      );
+    });
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

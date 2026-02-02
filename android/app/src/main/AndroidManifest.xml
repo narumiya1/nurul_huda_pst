@@ -15,7 +15,7 @@
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:label="Sentran Nurul Huda"
+        android:label="Sentral Nurul Huda"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConfig {
   // For Android Emulator: use 10.0.2.2 to access localhost
   // For Chrome/Web: use localhost or 127.0.0.1

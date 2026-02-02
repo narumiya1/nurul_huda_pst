@@ -122,11 +122,48 @@ class SantriRepository {
         },
         header: _getAuthHeader(),
       );
-      debugPrint('Tugas fetched: ${response.length} items');
+      debugPrint('Tugas Sekolah fetched: ${response.length} items');
       return response;
     } catch (e) {
-      debugPrint('Error fetching tugas: $e');
+      debugPrint('Error fetching tugas sekolah: $e');
       return [];
+    }
+  }
+
+  Future<List<dynamic>> getTugasPondok() async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) {
+          if (data is Map && data['data'] != null) {
+            return data['data'] is List ? data['data'] : [];
+          }
+          return [];
+        },
+        header: _getAuthHeader(),
+      );
+      debugPrint('Tugas Pondok fetched: ${response.length} items');
+      return response;
+    } catch (e) {
+      debugPrint('Error fetching tugas pondok: $e');
+      return [];
+    }
+  }
+
+  Future<bool> submitTugasPondok(Map<String, dynamic> payload) async {
+    try {
+      final uri = ApiHelper.buildUri(endpoint: 'submit-tugas-santri');
+      final response = await _apiHelper.postData(
+        uri: uri,
+        jsonBody: payload,
+        builder: (data) => data,
+        header: _getAuthHeader(),
+      );
+      return response['success'] == true;
+    } catch (e) {
+      debugPrint('Error submitting tugas pondok: $e');
+      return false;
     }
   }
 

@@ -43,6 +43,15 @@ class AbsensiController extends GetxController
       currentTabIndex.value = tabController.index;
     });
 
+    // Check for initial tab argument
+    if (Get.arguments is Map && Get.arguments['initialTab'] != null) {
+      final initialTab = Get.arguments['initialTab'] as int;
+      if (initialTab >= 0 && initialTab < 2) {
+        tabController.index = initialTab;
+        currentTabIndex.value = initialTab;
+      }
+    }
+
     // Initial load
     _loadInitialData();
   }

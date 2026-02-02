@@ -24,9 +24,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           backgroundColor: AppColors.background,
           appBar: AppBar(
             title: Text(isMain
-                ? (controller.userRole.value == 'pimpinan'
-                    ? 'Akademik & Pondok'
-                    : 'Area Akademik')
+                ? _getMainTitle()
                 : _getPageTitle(controller.selectedIndex.value)),
             centerTitle: true,
             leading: isMain
@@ -45,11 +43,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 ),
             ],
           ),
-          body: isMain
-              ? _buildGridMenu()
-              : Obx(() => controller.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildPageContent(controller.selectedIndex.value)),
+          body: RefreshIndicator(
+            onRefresh: () async => await controller.fetchAllData(),
+            child: isMain
+                ? _buildGridMenu()
+                : Obx(() => controller.isLoading.value
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildPageContent(controller.selectedIndex.value)),
+          ),
         ),
       );
     });
@@ -250,7 +251,27 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     );
   }
 
+  String _getMainTitle() {
+    if (controller.userRole.value == 'pimpinan') {
+      return 'Akademik & Pondok';
+    }
+
+    // Determine title based on menuType
+    if (controller.menuType.value == 'PONDOK') {
+      return 'Area Pondok';
+    } else if (controller.menuType.value == 'SCHOOL') {
+      return 'Area Akademik';
+    }
+    return 'Akademik & Pondok'; // Default for 'ALL'
+  }
+
   String _getPageTitle(int index) {
+    if (controller.selectedIndex.value == -1) {
+      if (controller.menuType.value == 'SCHOOL') return 'Area Sekolah';
+      if (controller.menuType.value == 'PONDOK') return 'Area Pondok';
+      return 'Area Akademik';
+    }
+
     switch (index) {
       case 0:
         return 'Rekap Nilai';
@@ -282,67 +303,81 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Rekap Nilai',
         'icon': Icons.grade_rounded,
         'color': AppColors.primary,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
-      },
-      {
-        'index': 1,
-        'title': 'Agenda',
-        'icon': Icons.event_note_rounded,
-        'color': AppColors.accentBlue,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
-      },
-      {
-        'index': 7,
-        'title': 'Aktivitas',
-        'icon': Icons.today_rounded,
-        'color': const Color(0xFF00B894),
-        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren']
-      },
-      {
-        'index': 2,
-        'title': 'Tahfidz',
-        'icon': Icons.menu_book_rounded,
-        'color': AppColors.success,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'SCHOOL',
       },
       {
         'index': 3,
-        'title': 'Absensi',
+        'title': 'Absensi', // Riwayat Absensi
         'icon': Icons.assignment_turned_in_rounded,
         'color': AppColors.accentOrange,
-        'roles': ['pimpinan', 'staff_pesantren']
+        'roles': ['pimpinan', 'santri', 'siswa', 'staff_pesantren'],
+        'category': 'ALL',
       },
       {
         'index': 6,
         'title': 'Jadwal',
         'icon': Icons.calendar_today_rounded,
         'color': const Color(0xFF6C5CE7),
-        'roles': ['santri', 'siswa', 'guru']
-      },
-      {
-        'index': 4,
-        'title':
-            (controller.userRole.value == 'pimpinan' ? 'Kurikulum' : 'Materi'),
-        'icon': Icons.library_books_rounded,
-        'color': AppColors.accentPurple,
-        'roles': ['pimpinan', 'guru', 'staff_pesantren']
+        'roles': ['santri', 'siswa', 'guru'],
+        'category': 'SCHOOL',
       },
       {
         'index': 5,
         'title': 'Tugas',
         'icon': Icons.assignment_rounded,
         'color': Colors.blueGrey,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren']
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'ALL',
+      },
+      {
+        'index': 2,
+        'title': 'Tahfidz',
+        'icon': Icons.menu_book_rounded,
+        'color': AppColors.success,
+        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'PONDOK',
+      },
+      {
+        'index': 7,
+        'title': 'Aktivitas',
+        'icon': Icons.today_rounded,
+        'color': const Color(0xFF00B894),
+        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'PONDOK',
+      },
+      {
+        'index': 8,
+        'title': 'Kedisiplinan',
+        'icon': Icons.gavel_rounded,
+        'color': AppColors.error,
+        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'PONDOK',
+      },
+      {
+        'index': 9,
+        'title': 'Perizinan',
+        'icon': Icons.fact_check_rounded,
+        'color': Colors.teal,
+        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'category': 'PONDOK',
       },
     ];
 
     final menus = allMenus.where((menu) {
       final roles = menu['roles'] as List<String>;
-      return roles.contains(controller.userRole.value);
+      final isRoleAllowed = roles.contains(controller.userRole.value);
+      if (!isRoleAllowed) return false;
+
+      final category = menu['category'] as String;
+      if (controller.menuType.value == 'ALL') return true;
+      if (category == 'ALL') return true;
+      return category == controller.menuType.value;
     }).toList();
 
     return GridView.builder(
       padding: const EdgeInsets.all(24),
+      physics: const AlwaysScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 20,
@@ -355,10 +390,32 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         return InkWell(
           onTap: () {
             final targetIndex = menu['index'] as int;
+            final role = controller.userRole.value.toLowerCase().trim();
+            final isSantri = role == 'santri';
+            final isSiswa = role == 'siswa';
+
             if (targetIndex == 6) {
               Get.toNamed(Routes.jadwalPelajaran);
             } else if (targetIndex == 7) {
               Get.toNamed(Routes.aktivitas);
+            } else if (targetIndex == 8) {
+              Get.toNamed(Routes.pelanggaran);
+            } else if (targetIndex == 9) {
+              // Perizinan - use role-specific route
+              if (isSantri) {
+                Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 1});
+              } else if (isSiswa) {
+                Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 1});
+              } else {
+                Get.toNamed(Routes.absensi, arguments: {'initialTab': 1});
+              }
+            } else if (targetIndex == 3 && (isSantri || isSiswa)) {
+              // Absensi - use role-specific route
+              if (isSantri) {
+                Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 0});
+              } else {
+                Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 0});
+              }
             } else {
               controller.selectedIndex.value = targetIndex;
               controller.applyFilters();
@@ -401,14 +458,10 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     switch (index) {
       case 0:
         return _buildGradeRecap();
-      case 1:
-        return _buildAgenda();
       case 2:
         return _buildTahfidzProgress();
       case 3:
         return _buildAttendanceReport();
-      case 4:
-        return _buildCurriculumData();
       case 5:
         return _buildTugasSekolah();
       default:
@@ -498,6 +551,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(20),
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: controller.filteredRekapNilai.length,
                   itemBuilder: (context, index) {
                     final item = controller.filteredRekapNilai[index];
@@ -569,6 +623,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
 
       return ListView.builder(
         padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: subjects.length,
         itemBuilder: (context, index) {
           final subject = subjects[index];
@@ -735,57 +790,10 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
     );
   }
 
-  Widget _buildAgenda() {
-    return Obx(() => ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: controller.filteredAgenda.length,
-          itemBuilder: (context, index) {
-            final item = controller.filteredAgenda[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.cardShadow,
-              ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                      color: AppColors.accentBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8)),
-                  child: Text(item['time'],
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.accentBlue)),
-                ),
-                title: Text(item['title'],
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(item['location']),
-                trailing: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    item['category'] ?? '',
-                    style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            );
-          },
-        ));
-  }
-
   Widget _buildTahfidzProgress() {
     return Obx(() => ListView.builder(
           padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: controller.filteredTahfidz.length,
           itemBuilder: (context, index) {
             final item = controller.filteredTahfidz[index];
@@ -873,116 +881,6 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         ));
   }
 
-  Widget _buildCurriculumData() {
-    return Obx(() => ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: controller.filteredKurikulum.length,
-          itemBuilder: (context, index) {
-            final item = controller.filteredKurikulum[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.cardShadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(item['mapel'],
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentPurple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item['type'] ?? '',
-                          style: const TextStyle(
-                              color: AppColors.accentPurple,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 16),
-                  Row(
-                    children: [
-                      const Icon(Icons.person,
-                          size: 14, color: AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text('Pengajar: ${item['pengajar']}',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.book,
-                          size: 14, color: AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text('Kitab: ${item['kitab']}',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic)),
-                    ],
-                  ),
-                  if (item['files'] != null &&
-                      (item['files'] as List).isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    const Divider(height: 1),
-                    const SizedBox(height: 8),
-                    const Text('Materi / File:',
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    ...((item['files'] as List)
-                        .map((file) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: InkWell(
-                                onTap: () =>
-                                    controller.downloadFile(file.toString()),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.download_rounded,
-                                        size: 16, color: AppColors.primary),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        file.toString().split('/').last,
-                                        style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontSize: 13,
-                                            decoration:
-                                                TextDecoration.underline),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ))
-                        .toList()),
-                  ],
-                ],
-              ),
-            );
-          },
-        ));
-  }
-
   Widget _buildTugasSekolah() {
     return Obx(() {
       if (controller.filteredTugas.isEmpty) {
@@ -992,6 +890,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
       }
       return ListView.builder(
         padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: controller.filteredTugas.length,
         itemBuilder: (context, index) {
           final item = controller.filteredTugas[index];
@@ -1009,26 +908,61 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
               title: Row(
                 children: [
                   Expanded(
-                    child: Text(item['judul'] ?? 'Tugas',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color:
-                          (isDone ? AppColors.success : AppColors.accentOrange)
-                              .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      item['status'] ?? 'Pending',
-                      style: TextStyle(
-                        color:
-                            isDone ? AppColors.success : AppColors.accentOrange,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item['judul'] ?? 'Tugas',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (item['source'] == 'Sekolah'
+                                        ? Colors.blue
+                                        : Colors.teal)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                item['source'] ?? '-',
+                                style: TextStyle(
+                                  color: item['source'] == 'Sekolah'
+                                      ? Colors.blue
+                                      : Colors.teal,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (isDone
+                                        ? AppColors.success
+                                        : AppColors.accentOrange)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                item['status'] ?? 'Pending',
+                                style: TextStyle(
+                                  color: isDone
+                                      ? AppColors.success
+                                      : AppColors.accentOrange,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],

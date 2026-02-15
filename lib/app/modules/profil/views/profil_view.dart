@@ -163,36 +163,67 @@ class ProfilView extends GetView<ProfilController> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.5), width: 3),
-            ),
-            child: Obx(() {
-              final photoUrl =
-                  controller.userData.value?['details']?['photo_url'];
-              return CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                backgroundImage: photoUrl != null
-                    ? NetworkImage(
-                        photoUrl.toString().startsWith('http')
-                            ? photoUrl.toString()
-                            : ApiHelper.buildUri(endpoint: '')
-                                    .toString()
-                                    .replaceAll('/v1/api/', '') +
-                                (photoUrl.toString().startsWith('/')
-                                    ? photoUrl.toString()
-                                    : '/$photoUrl'),
-                      )
-                    : null,
-                child: photoUrl == null
-                    ? const Icon(Icons.person, size: 56, color: Colors.white)
-                    : null,
-              );
-            }),
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5), width: 3),
+                ),
+                child: Obx(() {
+                  final photoUrl =
+                      controller.userData.value?['details']?['photo_url'];
+                  return CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    backgroundImage: photoUrl != null
+                        ? NetworkImage(
+                            photoUrl.toString().startsWith('http')
+                                ? photoUrl.toString()
+                                : ApiHelper.buildUri(endpoint: '')
+                                        .toString()
+                                        .replaceAll('/v1/api/', '') +
+                                    (photoUrl.toString().startsWith('/')
+                                        ? photoUrl.toString()
+                                        : '/$photoUrl'),
+                          )
+                        : null,
+                    child: photoUrl == null
+                        ? const Icon(Icons.person,
+                            size: 56, color: Colors.white)
+                        : null,
+                  );
+                }),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: InkWell(
+                  onTap: () => controller.showImageSourceDialog(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Obx(() => Text(

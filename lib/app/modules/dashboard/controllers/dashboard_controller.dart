@@ -10,6 +10,11 @@ import 'package:epesantren_mob/app/helpers/local_storage.dart';
 import 'package:epesantren_mob/app/api/news/news_repository.dart';
 import 'package:epesantren_mob/app/api/auth/auth_repository.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:epesantren_mob/app/helpers/api_helpers.dart';
+import 'package:epesantren_mob/app/core/theme/app_theme.dart';
+import 'package:flutter/material.dart';
+import 'dart:io';
 
 class DashboardController extends GetxController {
   final NewsRepository _newsRepository;
@@ -34,6 +39,7 @@ class DashboardController extends GetxController {
 
   final beritaList = <BeritaModel>[].obs;
   final isLoadingBerita = false.obs;
+  final isUploading = false.obs;
   final userData = Rxn<Map<String, dynamic>>();
   final quickStats = <String, dynamic>{}.obs;
   final jadwalGuru = <Map<String, dynamic>>[].obs; // Add this
@@ -381,5 +387,152 @@ class DashboardController extends GetxController {
     } catch (e) {
       debugPrint('Error registering FCM token: $e');
     }
+  }
+
+  Future<void> refreshProfile() async {
+    try {
+      final data = await _authRepository.getUser();
+      if (data != null && data['user'] != null) {
+        final user = data['user'];
+        LocalStorage.saveUser(user);
+        userData.value = user;
+      }
+    } catch (e) {
+      debugPrint('Error refreshing profile: $e');
+    }
+  }
+
+  Future<void> pickAndUploadImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 70,
+        maxWidth: 1024,
+      );
+
+      if (image == null) return;
+
+      isUploading.value = true;
+      Get.dialog(
+        const Center(
+            child: CircularProgressIndicator(color: AppColors.primary)),
+        barrierDismissible: false,
+      );
+
+      final uri = ApiHelper.buildUri(endpoint: 'upload-avatar');
+      final files = {'avatar': File(image.path)};
+
+      // Use raw ApiHelper for multipart, similar to ProfilController
+      final apiHelper = ApiHelper();
+      final response = await apiHelper.postImageData(
+        uri: uri,
+        files: files,
+        builder: (data) => data,
+        header: ApiHelper.tokenHeaderMultipart(LocalStorage.getToken() ?? ''),
+      );
+
+      Get.back(); // Close loading dialog
+
+      if (response['status'] == true || response['data'] != null) {
+        await refreshProfile();
+        Get.snackbar('Sukses', 'Foto profil berhasil diperbarui',
+            backgroundColor: AppColors.success, colorText: Colors.white);
+      } else {
+        Get.snackbar('Gagal', response['message'] ?? 'Gagal mengunggah foto',
+            backgroundColor: AppColors.error, colorText: Colors.white);
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: AppColors.error, colorText: Colors.white);
+    } finally {
+      isUploading.value = false;
+    }
+  }
+
+  void showImageSourceDialog() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Pilih Sumber Foto',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSourceOption(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'Kamera',
+                  onTap: () {
+                    Get.back();
+                    pickAndUploadImage(ImageSource.camera);
+                  },
+                ),
+                _buildSourceOption(
+                  icon: Icons.photo_library_rounded,
+                  label: 'Galeri',
+                  onTap: () {
+                    Get.back();
+                    pickAndUploadImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 32),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

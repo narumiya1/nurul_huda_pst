@@ -29,7 +29,7 @@ class AuthApi {
     );
   }
 
-  Future<dynamic> updateFcmToken(String fcmToken) async {
+  Future<dynamic> updateFcmToken(String fcmToken, String token) async {
     final uri = ApiHelper.buildUri(endpoint: 'user/update-fcm-token');
     final body = {'fcm_token': fcmToken};
 
@@ -37,7 +37,17 @@ class AuthApi {
       uri: uri,
       builder: (data) => data,
       jsonBody: body,
-      header: ApiHelper.header(),
+      header: ApiHelper.tokenHeader(token),
+    );
+  }
+
+  Future<dynamic> getUser(String token) async {
+    final uri = ApiHelper.buildUri(endpoint: 'user/my-profile');
+
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: ApiHelper.tokenHeader(token),
     );
   }
 }

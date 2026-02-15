@@ -18,7 +18,8 @@ class ApiHelper {
       );
 
       // Debug logging for response
-      // print('API GET: $uri -> status=${response.statusCode}, size=${response.body.length}');
+      print(
+          'API GET: $uri -> status=${response.statusCode}, size=${response.body.length}');
 
       switch (response.statusCode) {
         case HttpStatus.ok:
@@ -148,7 +149,7 @@ class ApiHelper {
         headers: header,
         body: jsonEncode(jsonBody),
       );
-      // debug removed
+      print('API POST: $uri -> body=$jsonBody, status=${response.statusCode}');
       switch (response.statusCode) {
         case HttpStatus.ok:
         case HttpStatus.created:
@@ -304,6 +305,7 @@ class ApiHelper {
       queryParameters: params,
     );
 
+    print("Constructed URI: $uri");
     return uri;
   }
 
@@ -360,7 +362,6 @@ class ApiHelper {
   //     path: "${ApiConfig.api}$endpoint",
   //     queryParameters: params,
   //   );
-  //   print("$uri");
   //   print(uri.toString());
   //   return uri;
   // }

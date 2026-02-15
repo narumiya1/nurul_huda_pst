@@ -54,7 +54,25 @@ class AuthRepository {
 
   Future<void> updateFcmToken(String fcmToken) async {
     try {
-      await _authApi.updateFcmToken(fcmToken);
+      final token = LocalStorage.getToken();
+      if (token != null) {
+        await _authApi.updateFcmToken(fcmToken, token);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUser() async {
+    try {
+      final token = LocalStorage.getToken();
+      if (token == null) return null;
+
+      final response = await _authApi.getUser(token);
+      if (response['status'] == true || response['data'] != null) {
+        return response['data'];
+      }
+      return null;
     } catch (e) {
       rethrow;
     }

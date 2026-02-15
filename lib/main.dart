@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app/routes/app_pages.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:epesantren_mob/app/services/notification_service.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -40,6 +41,9 @@ void main() async {
   ]);
 
   await GetStorage.init();
+
+  // Initialize UserContextService as a permanent service
+  Get.put(UserContextService(), permanent: true);
 
   runApp(const MyApp());
 }

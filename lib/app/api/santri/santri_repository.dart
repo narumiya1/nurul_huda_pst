@@ -370,9 +370,17 @@ class SantriRepository {
     }
   }
 
-  Future<List<dynamic>> getMyAbsensi() async {
+  Future<List<dynamic>> getMyAbsensi({String? tipe}) async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'santri/my-absensi');
+      final queryParams = <String, String>{};
+      if (tipe != null) {
+        queryParams['tipe'] = tipe;
+      }
+
+      final uri = ApiHelper.buildUri(
+        endpoint: 'santri/my-absensi',
+        params: queryParams.isNotEmpty ? queryParams : null,
+      );
       final response = await _apiHelper.getData(
         uri: uri,
         builder: (data) => data['data'] is List ? data['data'] : [],
@@ -381,6 +389,31 @@ class SantriRepository {
       return response;
     } catch (e) {
       debugPrint('Error fetching my-absensi: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getMyTugas({String? tipe}) async {
+    try {
+      final queryParams = <String, String>{};
+      if (tipe != null) {
+        queryParams['tipe'] = tipe;
+      }
+
+      final uri = ApiHelper.buildUri(
+        endpoint: 'santri/my-tugas',
+        params: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      final response = await _apiHelper.getData(
+        uri: uri,
+        builder: (data) => data['data'] is List ? data['data'] : [],
+        header: _getAuthHeader(),
+      );
+      debugPrint('My Tugas fetched: ${response.length} items (tipe: $tipe)');
+      return response;
+    } catch (e) {
+      debugPrint('Error fetching my-tugas: $e');
       return [];
     }
   }

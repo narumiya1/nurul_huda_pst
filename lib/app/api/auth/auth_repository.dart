@@ -1,5 +1,7 @@
+import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/auth/auth_api.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
 
 class AuthRepository {
   final AuthApi _authApi;
@@ -20,6 +22,10 @@ class AuthRepository {
         }
         if (user != null) {
           await LocalStorage.saveUser(user);
+          // Initialize user context for dual-role detection
+          if (Get.isRegistered<UserContextService>()) {
+            Get.find<UserContextService>().setFromUserData(user);
+          }
         }
         return true;
       }

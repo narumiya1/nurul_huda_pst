@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../api/santri/santri_repository.dart';
 import '../controllers/absensi_siswa_controller.dart';
 
 class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
@@ -18,25 +19,33 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
-        bottom: TabBar(
-          controller: controller.tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: 'Absensi'),
-            Tab(text: 'Perizinan'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: GetBuilder<AbsensiSiswaController>(
+            init: AbsensiSiswaController(SantriRepository()),
+            builder: (ctrl) => TabBar(
+              controller: ctrl.tabController,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              tabs: const [
+                Tab(text: 'Absensi'),
+                Tab(text: 'Perizinan'),
+              ],
+            ),
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: controller.tabController,
-        children: [
-          _buildAbsensiTab(),
-          _buildPerizinanTab(context),
-        ],
+      body: GetBuilder<AbsensiSiswaController>(
+        builder: (ctrl) => TabBarView(
+          controller: ctrl.tabController,
+          children: [
+            _buildAbsensiTab(),
+            _buildPerizinanTab(context),
+          ],
+        ),
       ),
       floatingActionButton: Obx(() {
         if (controller.currentTabIndex.value == 1) {
@@ -361,7 +370,7 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
                 ),
                 const SizedBox(height: 20),
                 Obx(() => DropdownButtonFormField<String>(
-                      value: controller.selectedJenisIzin.value,
+                      initialValue: controller.selectedJenisIzin.value,
                       decoration: InputDecoration(
                         labelText: 'Jenis Izin',
                         border: OutlineInputBorder(

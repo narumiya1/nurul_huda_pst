@@ -6,7 +6,7 @@ class AbsensiSiswaBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<AbsensiSiswaController>(
-      () => AbsensiSiswaController(Get.find<SantriRepository>()),
+      () => AbsensiSiswaController(SantriRepository()),
     );
   }
 }

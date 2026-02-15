@@ -98,4 +98,101 @@ class GuruApi {
       header: _getAuthHeader(),
     );
   }
+
+  // ========== TUGAS SANTRI ==========
+
+  /// Get list of tugas santri (created by this guru)
+  Future<dynamic> getTugasSantriList() async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get detail of a tugas santri
+  Future<dynamic> getTugasSantriDetail(int id) async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/$id');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Create new tugas santri
+  Future<dynamic> createTugasSantri(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
+    return await _apiHelper.postData(
+      uri: uri,
+      builder: (data) => data,
+      jsonBody: data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Update tugas santri
+  Future<dynamic> updateTugasSantri(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
+    return await _apiHelper.patchData(
+      uri: uri,
+      builder: (data) => data,
+      jsonBody: data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Delete tugas santri
+  Future<dynamic> deleteTugasSantri(int id) async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/$id');
+    return await _apiHelper.deleteData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Grade a tugas santri submission
+  Future<dynamic> gradeTugasSantri(Map<String, dynamic> data) async {
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/grade');
+    return await _apiHelper.postData(
+      uri: uri,
+      builder: (data) => data,
+      jsonBody: data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get tingkat santri list
+  Future<dynamic> getTingkatSantri() async {
+    final uri = ApiHelper.buildUri(endpoint: 'tingkat-santri');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get kelas santri by tingkat
+  Future<dynamic> getKelasSantri({int? tingkatId}) async {
+    final params = <String, String>{};
+    if (tingkatId != null) params['tingkat_id'] = tingkatId.toString();
+    final uri = ApiHelper.buildUri(endpoint: 'kelas', params: params);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
+  /// Get mapel pondok list
+  Future<dynamic> getMapelPondok() async {
+    final uri = ApiHelper.buildUri(endpoint: 'mapels');
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
 }

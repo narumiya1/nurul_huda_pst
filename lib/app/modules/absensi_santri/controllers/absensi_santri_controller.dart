@@ -74,12 +74,14 @@ class AbsensiSantriController extends GetxController
   Future<void> fetchAbsensi() async {
     try {
       isLoading.value = true;
-      final data = await _santriRepository.getMyAbsensi();
+      // Use backend filtering by passing tipe parameter
+      final data = await _santriRepository.getMyAbsensi(tipe: 'Pesantren');
 
       // Filter only Santri (Pondok) attendance
+      // Backend returns 'Pesantren' for AbsensiSantri
       absensiList.assignAll(data.where((e) {
         final map = e as Map<String, dynamic>;
-        return map['tipe'] == 'AbsensiSantri' || map['tipe'] == 'Pondok';
+        return map['tipe'] == 'Pesantren';
       }).map((e) {
         final map = e as Map<String, dynamic>;
         return {

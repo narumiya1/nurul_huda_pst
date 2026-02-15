@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/absensi_controller.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
 
 class AbsensiView extends GetView<AbsensiController> {
   const AbsensiView({super.key});
@@ -12,8 +13,24 @@ class AbsensiView extends GetView<AbsensiController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Kehadiran & Izin',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Obx(() {
+          // Show mode-specific title for dual-role users
+          final modeLabel = controller.activeModeLabel.value;
+          final role = controller.userRole;
+
+          if (role == 'santri' || role == 'siswa') {
+            // Check if dual-role
+            if (Get.isRegistered<UserContextService>()) {
+              final ucs = Get.find<UserContextService>();
+              if (ucs.isDualRole) {
+                return Text('Kehadiran $modeLabel',
+                    style: const TextStyle(fontWeight: FontWeight.bold));
+              }
+            }
+          }
+          return const Text('Kehadiran & Izin',
+              style: TextStyle(fontWeight: FontWeight.bold));
+        }),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,

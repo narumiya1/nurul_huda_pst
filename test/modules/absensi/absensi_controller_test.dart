@@ -17,10 +17,15 @@ class MockSantriRepository extends SantriRepository {
   MockSantriRepository();
 
   @override
-  Future<List<dynamic>> getMyAbsensi() async {
+  Future<List<dynamic>> getMyAbsensi({String? tipe}) async {
     return [
       {'tanggal': '2026-01-29', 'status': 'hadir', 'keterangan': '-'}
     ];
+  }
+
+  @override
+  Future<List<dynamic>> getMyTugas({String? tipe}) async {
+    return [];
   }
 
   @override

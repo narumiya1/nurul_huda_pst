@@ -118,6 +118,17 @@ class OrangtuaApi {
     );
   }
 
+  Future<dynamic> getChildTasks(int santriId, {String? tipe}) async {
+    final uri = ApiHelper.buildUri(
+        endpoint: 'orangtua/child-tasks/$santriId',
+        params: tipe != null ? {'tipe': tipe} : null);
+    return await _apiHelper.getData(
+      uri: uri,
+      builder: (data) => data,
+      header: _getAuthHeader(),
+    );
+  }
+
   Future<dynamic> claimChild(
       {required String code, required String hubungan}) async {
     final uri = ApiHelper.buildUri(endpoint: 'orangtua/claim-child');

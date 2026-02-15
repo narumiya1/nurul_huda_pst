@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
+import 'package:epesantren_mob/app/core/user_context.dart';
 import 'package:get/get.dart';
 import '../../../helpers/file_helper.dart';
 import '../../../helpers/local_storage.dart';
@@ -10,14 +13,17 @@ import '../../../helpers/local_storage.dart';
 class AkademikPondokController extends GetxController {
   final PimpinanRepository _pimpinanRepository;
   final SantriRepository _santriRepository;
+  final OrangtuaRepository _orangtuaRepository;
   final isLoading = false.obs;
   final userRole = 'netizen'.obs;
   final menuType = 'ALL'.obs; // SCHOOL, PONDOK, ALL
 
   AkademikPondokController({
     required PimpinanRepository pimpinanRepository,
+    required OrangtuaRepository orangtuaRepository,
     SantriRepository? santriRepository,
   })  : _pimpinanRepository = pimpinanRepository,
+        _orangtuaRepository = orangtuaRepository,
         _santriRepository = santriRepository ?? SantriRepository();
 
   // Data for Pimpinan
@@ -59,6 +65,12 @@ class AkademikPondokController extends GetxController {
   final submissionsList = <Map<String, dynamic>>[].obs;
   final selectedTugasId = ''.obs;
 
+  // Selected child for parents
+  final selectedChildId = RxnInt();
+  final selectedChildTipe = RxnString();
+  final selectedChildKey = RxnString();
+  final children = <Map<String, dynamic>>[].obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -66,7 +78,64 @@ class AkademikPondokController extends GetxController {
       menuType.value = Get.arguments['type'];
     }
     _loadUserRole();
-    fetchAllData();
+    _syncWithUserContext();
+
+    if (userRole.value == 'orangtua') {
+      _loadInitialParentData();
+    } else {
+      fetchAllData();
+    }
+  }
+
+  Future<void> _loadInitialParentData() async {
+    try {
+      isLoading.value = true;
+      final data = await _orangtuaRepository.getMyChildren();
+      children.assignAll(data.map((e) => e as Map<String, dynamic>).toList());
+      if (children.isNotEmpty) {
+        final first = children[0];
+        selectedChildId.value = first['id'];
+        selectedChildTipe.value = first['tipe'];
+        selectedChildKey.value = '${first['tipe']}_${first['id']}';
+        await fetchAllData();
+      }
+    } catch (e) {
+      debugPrint('Error loading parent data: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void onChildKeyChanged(String? key) {
+    if (key == null) return;
+    final parts = key.split('_');
+    if (parts.length == 2) {
+      selectedChildTipe.value = parts[0];
+      selectedChildId.value = int.tryParse(parts[1]);
+      selectedChildKey.value = key;
+      fetchAllData();
+    }
+  }
+
+  /// Sync menuType with UserContextService active mode for dual-role users
+  void _syncWithUserContext() {
+    if (Get.isRegistered<UserContextService>()) {
+      final ucs = Get.find<UserContextService>();
+
+      // Set initial menuType based on active mode if not set via argument
+      if (menuType.value == 'ALL' && ucs.isDualRole) {
+        menuType.value =
+            ucs.activeMode.value == ActiveMode.pondok ? 'PONDOK' : 'SCHOOL';
+      }
+
+      // Listen for mode changes
+      ever(ucs.activeMode, (mode) {
+        if (ucs.isDualRole) {
+          menuType.value = mode == ActiveMode.pondok ? 'PONDOK' : 'SCHOOL';
+          applyFilters();
+        }
+      });
+    }
   }
 
   void _loadUserRole() {
@@ -232,75 +301,47 @@ class AkademikPondokController extends GetxController {
   Future<void> _fetchTugas() async {
     try {
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' || role == 'siswa') {
-        // Fetch both in parallel
-        final List<Future<dynamic>> tugasFutures = [
-          _santriRepository.getTugasSekolah(),
-          _santriRepository.getTugasPondok(),
-        ];
-        final results = await Future.wait(tugasFutures);
+      List<dynamic> allTasks = [];
 
-        final schoolTasks = results[0];
-        final pondokTasks = results[1];
+      if (role == 'orangtua' && selectedChildId.value != null) {
+        allTasks = await _orangtuaRepository.getChildTasks(
+          selectedChildId.value!,
+          tipe: selectedChildTipe.value,
+        );
+      } else if (role == 'santri' || role == 'siswa') {
+        allTasks = await _santriRepository.getMyTugas();
+      }
 
+      if (allTasks.isNotEmpty) {
         final List<Map<String, dynamic>> combined = [];
-
-        // Map School Tasks
-        combined.addAll(schoolTasks.map((e) {
+        combined.addAll(allTasks.map((e) {
           final map = e as Map<String, dynamic>;
-          String mapelName = 'Mapel Lain';
+          String mapelName = 'Kegiatan';
           if (map['mapel'] != null && map['mapel'] is Map) {
             mapelName = map['mapel']['nama'] ??
                 map['mapel']['nama_mapel'] ??
-                'Mapel Lain';
+                'Kegiatan';
           }
           final isSubmitted =
-              map['my_submission'] != null || (map['is_submitted'] == true);
-          return {
-            'id': map['id']?.toString(),
-            'judul': map['judul'] ?? 'Tugas Sekolah',
-            'mapel': {'nama_mapel': mapelName},
-            'deadline': map['deadline']?.toString().split(' ')[0] ?? '-',
-            'status': isSubmitted ? 'Selesai' : 'Pending',
-            'description': map['deskripsi'] ?? map['description'] ?? '',
-            'is_submitted': isSubmitted,
-            'source': 'Sekolah',
-            'submission_id': map['my_submission']?['id'],
-            'file_path': map['file_path']
-          };
-        }));
-
-        // Map Pondok Tasks
-        combined.addAll(pondokTasks.map((e) {
-          final map = e as Map<String, dynamic>;
-          String mapelName = 'Kegiatan Pondok';
-          if (map['mapel'] != null && map['mapel'] is Map) {
-            mapelName = map['mapel']['nama'] ??
-                map['mapel']['nama_mapel'] ??
-                'Kegiatan Pondok';
-          }
-
-          final isSubmitted =
-              map['status'] == 'Selesai' || map['is_submitted'] == true;
+              map['is_submitted'] == true || map['status'] == 'Selesai';
+          final source = map['tipe'] == 'Pesantren' ? 'Pondok' : 'Sekolah';
 
           return {
             'id': map['id']?.toString(),
-            'judul': map['judul'] ?? 'Tugas Pondok',
-            'mapel': {'nama_mapel': mapelName},
-            'deadline': map['deadline']?.toString().split(' ')[0] ?? '-',
-            'status': map['status'] ?? (isSubmitted ? 'Selesai' : 'Pending'),
-            'description': map['deskripsi'] ?? map['description'] ?? '',
+            'title': map['judul'] ?? 'Tugas',
+            'subject': mapelName,
+            'deadline': map['deadline'] ?? '-',
+            'description': map['deskripsi'] ?? '',
+            'status': isSubmitted ? 'Selesai' : 'Belum',
             'is_submitted': isSubmitted,
-            'source': 'Pondok',
-            'submission_id': map['submissions'] is List &&
-                    (map['submissions'] as List).isNotEmpty
-                ? map['submissions'][0]['id']
-                : null,
-            'file_path': map['file_path']
+            'source': source,
+            'file_path': map['file_path'],
+            'raw_data': map,
           };
-        }));
+        }).toList());
 
         tugasList.assignAll(combined);
+        applyFilters();
       } else {
         tugasList.clear();
       }
@@ -367,7 +408,26 @@ class AkademikPondokController extends GetxController {
       final tahun = semesterParts.length > 1 ? semesterParts[1] : null;
 
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' || role == 'siswa') {
+      if (role == 'orangtua' && selectedChildId.value != null) {
+        final rawNilai = await _orangtuaRepository.getChildScores(
+            selectedChildId.value!,
+            tipe: selectedChildTipe.value);
+        if (rawNilai != null && rawNilai is List) {
+          _processMappedNilai(rawNilai);
+        } else {
+          rekapNilai.clear();
+          groupedRekapNilai.clear();
+        }
+      } else if (role == 'santri' || role == 'siswa') {
+        // PERBAIKAN: Pisahkan data berdasarkan context menu (PONDOK vs SCHOOL)
+        if (menuType.value == 'PONDOK') {
+          // Jika di area Pondok, jangan tampilkan nilai sekolah
+          // Nanti bisa diganti dengan getNilaiPondok() jika fitur sudah ada
+          rekapNilai.clear();
+          groupedRekapNilai.clear();
+          return;
+        }
+
         final rawNilai = await _santriRepository.getNilaiSekolah(
             semester: semester, tahun: tahun);
         if (rawNilai.isNotEmpty) {

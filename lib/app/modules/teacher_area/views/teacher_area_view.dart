@@ -19,7 +19,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -34,12 +34,22 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorWeight: 3,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            isScrollable: true,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             tabs: [
-              Tab(icon: Icon(Icons.fact_check_outlined), text: 'Absensi'),
-              Tab(icon: Icon(Icons.menu_book_outlined), text: 'Tahfidz'),
-              Tab(icon: Icon(Icons.grade_outlined), text: 'Nilai'),
-              Tab(icon: Icon(Icons.calendar_today_outlined), text: 'Jadwal'),
+              Tab(
+                  icon: Icon(Icons.fact_check_outlined, size: 20),
+                  text: 'Absensi'),
+              Tab(
+                  icon: Icon(Icons.menu_book_outlined, size: 20),
+                  text: 'Tahfidz'),
+              Tab(
+                  icon: Icon(Icons.assignment_outlined, size: 20),
+                  text: 'Tugas'),
+              Tab(icon: Icon(Icons.grade_outlined, size: 20), text: 'Nilai'),
+              Tab(
+                  icon: Icon(Icons.calendar_today_outlined, size: 20),
+                  text: 'Jadwal'),
             ],
           ),
         ),
@@ -47,6 +57,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
           children: [
             _buildAbsensiTab(),
             _buildTahfidzTab(),
+            _buildTugasSantriTab(),
             _buildNilaiTab(),
             _buildJadwalTab(),
           ],
@@ -1173,5 +1184,939 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
         ),
       );
     });
+  }
+
+  // ========== TUGAS SANTRI TAB ==========
+  Widget _buildTugasSantriTab() {
+    return Column(
+      children: [
+        // Header with Add Button
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Daftar Tugas Santri',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showCreateTugasDialog(),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Buat Tugas'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Tugas List
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoadingTugasSantri.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (controller.tugasSantriList.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.assignment_outlined,
+                        size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Belum ada tugas santri',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => _showCreateTugasDialog(),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Buat Tugas Baru'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: controller.fetchTugasSantriList,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: controller.tugasSantriList.length,
+                itemBuilder: (context, index) {
+                  final tugas = controller.tugasSantriList[index];
+                  return _buildTugasCard(tugas);
+                },
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTugasCard(dynamic tugas) {
+    final judul = tugas['judul'] ?? 'Tugas';
+    final deskripsi = tugas['deskripsi'] ?? '-';
+    final deadline = tugas['deadline'] ?? '-';
+    final mapelName = tugas['mapel']?['nama_mapel'] ??
+        tugas['mapel']?['nama'] ??
+        'Mata Pelajaran';
+    final kelasName = tugas['kelas']?['nama_kelas'] ?? 'Kelas';
+    final tingkatName =
+        tugas['tingkat']?['nama_tingkat'] ?? tugas['tingkat']?['nama'] ?? '';
+    final submissions = tugas['submissions'] as List? ?? [];
+    final submissionCount = submissions.length;
+
+    // Check if deadline passed
+    bool isOverdue = false;
+    try {
+      final deadlineDate = DateTime.parse(deadline);
+      isOverdue = DateTime.now().isAfter(deadlineDate);
+    } catch (_) {}
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          ListTile(
+            contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.assignment, color: AppColors.primary),
+            ),
+            title: Text(
+              judul,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            subtitle: Text(
+              mapelName,
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmation(tugas['id']);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Text('Hapus', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Info
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (deskripsi.isNotEmpty && deskripsi != '-')
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      deskripsi,
+                      style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '$tingkatName - $kelasName',
+                        style:
+                            const TextStyle(color: Colors.blue, fontSize: 11),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.calendar_today,
+                        size: 14, color: isOverdue ? Colors.red : Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      deadline,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isOverdue ? Colors.red : Colors.grey[600],
+                        fontWeight: isOverdue ? FontWeight.bold : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 24),
+
+          // Submissions Section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Pengumpulan ($submissionCount)',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    if (submissions.isNotEmpty)
+                      TextButton(
+                        onPressed: () =>
+                            _showSubmissionsDialog(tugas, submissions),
+                        child: const Text('Lihat Semua'),
+                      ),
+                  ],
+                ),
+                if (submissions.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inbox, color: Colors.grey, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Belum ada pengumpulan',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  // Show first few submissions
+                  ...submissions.take(2).map((sub) {
+                    final santriName = sub['santri']?['user']?['details']
+                            ?['full_name'] ??
+                        sub['santri']?['details']?['full_name'] ??
+                        'Santri';
+                    final nilai = sub['nilai'];
+                    final isGraded = nilai != null;
+
+                    return Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.1),
+                            child: Text(
+                              santriName.isNotEmpty
+                                  ? santriName[0].toUpperCase()
+                                  : 'S',
+                              style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              santriName,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                          if (isGraded)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Nilai: $nilai',
+                                style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          else
+                            TextButton(
+                              onPressed: () => _showGradeDialog(sub),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                minimumSize: Size.zero,
+                              ),
+                              child: const Text('Beri Nilai',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateTugasDialog() {
+    controller.fetchTugasSantriDropdowns();
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: double.maxFinite,
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.assignment_add, color: Colors.white),
+                    SizedBox(width: 12),
+                    Text(
+                      'Buat Tugas Baru',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Form
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Judul
+                      const Text('Judul Tugas *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: controller.tugasJudulController,
+                        decoration: InputDecoration(
+                          hintText: 'Masukkan judul tugas',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Deskripsi
+                      const Text('Deskripsi',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: controller.tugasDeskripsiController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Deskripsi tugas (opsional)',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Tingkat
+                      const Text('Tingkat *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
+                            value: controller.selectedTingkatSantri.value,
+                            decoration: InputDecoration(
+                              hintText: 'Pilih tingkat',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            items: controller.tingkatSantriList.map((t) {
+                              final tingkat = t as Map<String, dynamic>;
+                              return DropdownMenuItem(
+                                value: tingkat,
+                                child: Text(tingkat['nama_tingkat'] ??
+                                    tingkat['nama'] ??
+                                    'Tingkat'),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              controller.selectedTingkatSantri.value = val;
+                              controller.selectedKelasSantri.value = null;
+                              if (val != null) {
+                                controller.fetchKelasSantriByTingkat(val['id']);
+                              }
+                            },
+                          )),
+                      const SizedBox(height: 16),
+
+                      // Kelas
+                      const Text('Kelas *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
+                            value: controller.selectedKelasSantri.value,
+                            decoration: InputDecoration(
+                              hintText:
+                                  controller.selectedTingkatSantri.value == null
+                                      ? 'Pilih tingkat terlebih dahulu'
+                                      : 'Pilih kelas',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            items: controller.kelasSantriList.map((k) {
+                              final kelas = k as Map<String, dynamic>;
+                              return DropdownMenuItem(
+                                value: kelas,
+                                child: Text(kelas['nama_kelas'] ?? 'Kelas'),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              controller.selectedKelasSantri.value = val;
+                            },
+                          )),
+                      const SizedBox(height: 16),
+
+                      // Mapel
+                      const Text('Mata Pelajaran *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
+                            value: controller.selectedMapelPondok.value,
+                            decoration: InputDecoration(
+                              hintText: 'Pilih mata pelajaran',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            items: controller.mapelPondokList.map((m) {
+                              final mapel = m as Map<String, dynamic>;
+                              return DropdownMenuItem(
+                                value: mapel,
+                                child: Text(mapel['nama_mapel'] ??
+                                    mapel['nama'] ??
+                                    'Mapel'),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              controller.selectedMapelPondok.value = val;
+                            },
+                          )),
+                      const SizedBox(height: 16),
+
+                      // Tanggal Mulai
+                      const Text('Tanggal Mulai *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => InkWell(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: Get.context!,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
+                              );
+                              if (date != null) {
+                                controller.selectedTanggalMulai.value = date;
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    controller.selectedTanggalMulai.value !=
+                                            null
+                                        ? controller.selectedTanggalMulai.value!
+                                            .toIso8601String()
+                                            .split('T')[0]
+                                        : 'Pilih tanggal',
+                                    style: TextStyle(
+                                      color: controller
+                                                  .selectedTanggalMulai.value !=
+                                              null
+                                          ? Colors.black
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                  const Icon(Icons.calendar_today,
+                                      color: Colors.grey),
+                                ],
+                              ),
+                            ),
+                          )),
+                      const SizedBox(height: 16),
+
+                      // Deadline
+                      const Text('Deadline *',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => InkWell(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: Get.context!,
+                                initialDate:
+                                    controller.selectedTanggalMulai.value ??
+                                        DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
+                              );
+                              if (date != null) {
+                                controller.selectedDeadline.value = date;
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    controller.selectedDeadline.value != null
+                                        ? controller.selectedDeadline.value!
+                                            .toIso8601String()
+                                            .split('T')[0]
+                                        : 'Pilih deadline',
+                                    style: TextStyle(
+                                      color:
+                                          controller.selectedDeadline.value !=
+                                                  null
+                                              ? Colors.black
+                                              : Colors.grey,
+                                    ),
+                                  ),
+                                  const Icon(Icons.calendar_today,
+                                      color: Colors.grey),
+                                ],
+                              ),
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Buttons
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Batal'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : controller.createTugasSantri,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: controller.isLoading.value
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white))
+                                : const Text('Simpan'),
+                          )),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSubmissionsDialog(dynamic tugas, List submissions) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: double.maxFinite,
+          constraints: const BoxConstraints(maxHeight: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.assignment_turned_in, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Pengumpulan: ${tugas['judul']}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+
+              // List
+              Flexible(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: submissions.length,
+                  itemBuilder: (context, index) {
+                    final sub = submissions[index];
+                    final santriName = sub['santri']?['user']?['details']
+                            ?['full_name'] ??
+                        sub['santri']?['details']?['full_name'] ??
+                        'Santri';
+                    final nilai = sub['nilai'];
+                    final isGraded = nilai != null;
+                    final submittedAt = sub['submitted_at'] ?? '-';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.1),
+                            child: Text(
+                              santriName.isNotEmpty
+                                  ? santriName[0].toUpperCase()
+                                  : 'S',
+                              style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  santriName,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Dikumpulkan: $submittedAt',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isGraded)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '$nilai',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          else
+                            ElevatedButton(
+                              onPressed: () {
+                                Get.back();
+                                _showGradeDialog(sub);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Beri Nilai'),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showGradeDialog(dynamic submission) {
+    controller.selectedSubmission.value = submission as Map<String, dynamic>;
+    controller.nilaiTugasController.clear();
+    controller.catatanGuruController.clear();
+
+    final santriName = submission['santri']?['user']?['details']
+            ?['full_name'] ??
+        submission['santri']?['details']?['full_name'] ??
+        'Santri';
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.grade, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Beri Nilai',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        Text(
+                          santriName,
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Nilai
+              const Text('Nilai (0-100) *',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller.nilaiTugasController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Masukkan nilai',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Catatan
+              const Text('Catatan (opsional)',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller.catatanGuruController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Catatan untuk santri',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                          onPressed: controller.isLoading.value
+                              ? null
+                              : controller.gradeTugasSantriSubmission,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: controller.isLoading.value
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Text('Simpan'),
+                        )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(int id) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 12),
+            Text('Hapus Tugas'),
+          ],
+        ),
+        content: const Text(
+            'Apakah Anda yakin ingin menghapus tugas ini? Semua pengumpulan akan ikut terhapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteTugasSantri(id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
   }
 }

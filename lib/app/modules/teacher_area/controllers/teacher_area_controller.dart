@@ -69,6 +69,8 @@ class TeacherAreaController extends GetxController {
     super.onInit();
     loadDashboard();
     fetchMapelList();
+    fetchTugasSantriList();
+    fetchTugasSantriDropdowns();
   }
 
   Future<void> loadDashboard() async {
@@ -149,6 +151,10 @@ class TeacherAreaController extends GetxController {
     ayatController.dispose();
     catatanController.dispose();
     searchController.dispose();
+    tugasJudulController.dispose();
+    tugasDeskripsiController.dispose();
+    nilaiTugasController.dispose();
+    catatanGuruController.dispose();
     _debounce?.cancel();
     super.onClose();
   }
@@ -658,5 +664,204 @@ class TeacherAreaController extends GetxController {
 
   void onNilaiFilterChanged() {
     _fetchExistingGrades();
+  }
+
+  // ========== TUGAS SANTRI ==========
+
+  final tugasSantriList = <dynamic>[].obs;
+  final isLoadingTugasSantri = false.obs;
+  final selectedTugasSantri = Rxn<Map<String, dynamic>>();
+
+  // Form fields for create/edit tugas
+  final tugasJudulController = TextEditingController();
+  final tugasDeskripsiController = TextEditingController();
+  final selectedTingkatSantri = Rxn<Map<String, dynamic>>();
+  final selectedKelasSantri = Rxn<Map<String, dynamic>>();
+  final selectedMapelPondok = Rxn<Map<String, dynamic>>();
+  final selectedTanggalMulai = Rxn<DateTime>();
+  final selectedDeadline = Rxn<DateTime>();
+
+  // Lists for dropdowns
+  final tingkatSantriList = <dynamic>[].obs;
+  final kelasSantriList = <dynamic>[].obs;
+  final mapelPondokList = <dynamic>[].obs;
+
+  // Grading
+  final nilaiTugasController = TextEditingController();
+  final catatanGuruController = TextEditingController();
+  final selectedSubmission = Rxn<Map<String, dynamic>>();
+
+  Future<void> fetchTugasSantriList() async {
+    try {
+      isLoadingTugasSantri.value = true;
+      final data = await _guruRepository.getTugasSantriList();
+      tugasSantriList.assignAll(data);
+    } catch (e) {
+      debugPrint('Error fetching tugas santri: $e');
+    } finally {
+      isLoadingTugasSantri.value = false;
+    }
+  }
+
+  Future<void> fetchTugasSantriDropdowns() async {
+    try {
+      // Fetch tingkat santri
+      final tingkatData = await _guruRepository.getTingkatSantri();
+      tingkatSantriList.assignAll(tingkatData);
+
+      // Fetch mapel pondok
+      final mapelData = await _guruRepository.getMapelPondok();
+      mapelPondokList.assignAll(mapelData);
+    } catch (e) {
+      debugPrint('Error fetching dropdowns: $e');
+    }
+  }
+
+  Future<void> fetchKelasSantriByTingkat(int tingkatId) async {
+    try {
+      final data = await _guruRepository.getKelasSantri(tingkatId: tingkatId);
+      kelasSantriList.assignAll(data);
+    } catch (e) {
+      debugPrint('Error fetching kelas santri: $e');
+    }
+  }
+
+  Future<void> createTugasSantri() async {
+    if (tugasJudulController.text.isEmpty) {
+      Get.snackbar('Peringatan', 'Judul tugas wajib diisi',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+    if (selectedTingkatSantri.value == null ||
+        selectedKelasSantri.value == null) {
+      Get.snackbar('Peringatan', 'Pilih tingkat dan kelas',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+    if (selectedMapelPondok.value == null) {
+      Get.snackbar('Peringatan', 'Pilih mata pelajaran',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+    if (selectedTanggalMulai.value == null || selectedDeadline.value == null) {
+      Get.snackbar('Peringatan', 'Pilih tanggal mulai dan deadline',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      final data = {
+        'judul': tugasJudulController.text,
+        'deskripsi': tugasDeskripsiController.text,
+        'tingkat_id': selectedTingkatSantri.value!['id'],
+        'kelas_id': selectedKelasSantri.value!['id'],
+        'mapel_id': selectedMapelPondok.value!['id'],
+        'tanggal_mulai':
+            selectedTanggalMulai.value!.toIso8601String().split('T')[0],
+        'deadline': selectedDeadline.value!.toIso8601String().split('T')[0],
+      };
+
+      final success = await _guruRepository.createTugasSantri(data);
+
+      if (success) {
+        Get.snackbar('Sukses', 'Tugas berhasil dibuat!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        _resetTugasForm();
+        fetchTugasSantriList();
+        Get.back();
+      } else {
+        Get.snackbar('Gagal', 'Gagal membuat tugas',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteTugasSantri(int id) async {
+    try {
+      isLoading.value = true;
+      final success = await _guruRepository.deleteTugasSantri(id);
+
+      if (success) {
+        Get.snackbar('Sukses', 'Tugas berhasil dihapus!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        fetchTugasSantriList();
+      } else {
+        Get.snackbar('Gagal', 'Gagal menghapus tugas',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> gradeTugasSantriSubmission() async {
+    if (selectedSubmission.value == null) {
+      Get.snackbar('Peringatan', 'Pilih submission terlebih dahulu',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+    if (nilaiTugasController.text.isEmpty) {
+      Get.snackbar('Peringatan', 'Masukkan nilai',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    final nilai = double.tryParse(nilaiTugasController.text);
+    if (nilai == null || nilai < 0 || nilai > 100) {
+      Get.snackbar('Peringatan', 'Nilai harus antara 0-100',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      final success = await _guruRepository.gradeTugasSantri(
+        submissionId: selectedSubmission.value!['id'],
+        nilai: nilai,
+        catatan: catatanGuruController.text.isNotEmpty
+            ? catatanGuruController.text
+            : null,
+      );
+
+      if (success) {
+        Get.snackbar('Sukses', 'Nilai berhasil disimpan!',
+            backgroundColor: Colors.green, colorText: Colors.white);
+        nilaiTugasController.clear();
+        catatanGuruController.clear();
+        selectedSubmission.value = null;
+        fetchTugasSantriList(); // Refresh to show updated grade
+        Get.back();
+      } else {
+        Get.snackbar('Gagal', 'Gagal menyimpan nilai',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _resetTugasForm() {
+    tugasJudulController.clear();
+    tugasDeskripsiController.clear();
+    selectedTingkatSantri.value = null;
+    selectedKelasSantri.value = null;
+    selectedMapelPondok.value = null;
+    selectedTanggalMulai.value = null;
+    selectedDeadline.value = null;
+    kelasSantriList.clear();
   }
 }

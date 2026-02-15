@@ -6,10 +6,14 @@ import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
 import 'package:epesantren_mob/app/api/pimpinan/pimpinan_api.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/api/santri/santri_api.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_api.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
 
 class MockPimpinanApi extends PimpinanApi {}
 
 class MockSantriApi extends SantriApi {}
+
+class MockOrangtuaApi extends OrangtuaApi {}
 
 class MockPimpinanRepository extends PimpinanRepository {
   MockPimpinanRepository() : super(MockPimpinanApi());
@@ -55,20 +59,47 @@ class MockPimpinanRepository extends PimpinanRepository {
 
 class MockSantriRepository extends SantriRepository {
   MockSantriRepository();
+  @override
+  Future<List<dynamic>> getMyTugas({String? tipe}) async => [];
+  @override
+  Future<List<dynamic>> getMateriList() async => [];
+  @override
+  Future<List<dynamic>> getNilaiSekolah(
+          {String? semester,
+          String? tahun,
+          int? siswaId,
+          String? tahunAjaran}) async =>
+      [];
+  @override
+  Future<Map<String, dynamic>> getMyTahfidz() async => {};
+}
+
+class MockOrangtuaRepository extends OrangtuaRepository {
+  MockOrangtuaRepository() : super(MockOrangtuaApi());
+
+  @override
+  Future<List<dynamic>> getMyChildren() async => [];
+  @override
+  Future<List<dynamic>> getChildTasks(int santriId, {String? tipe}) async => [];
+  @override
+  Future<dynamic> getChildScores(int santriId, {String? tipe}) async => [];
 }
 
 void main() {
   late AkademikPondokController controller;
   late MockPimpinanRepository mockPimpinanRepo;
   late MockSantriRepository mockSantriRepo;
+  late MockOrangtuaRepository mockOrangtuaRepo;
 
   setUp(() {
     Get.testMode = true;
     mockPimpinanRepo = MockPimpinanRepository();
     mockSantriRepo = MockSantriRepository();
+    mockOrangtuaRepo = MockOrangtuaRepository();
 
     controller = AkademikPondokController(
       pimpinanRepository: mockPimpinanRepo,
+      orangtuaRepository: mockOrangtuaRepo,
       santriRepository: mockSantriRepo,
     );
   });
@@ -86,12 +117,10 @@ void main() {
       await controller.fetchAllData();
 
       expect(controller.isLoading.value, false);
-      // Check result from getRekapNilai mock
       expect(controller.rekapNilai.length, 1);
       expect(controller.rekapNilai[0]['tingkat'], 'VII');
       expect(controller.rekapNilai[0]['rata_rata'], 90.0);
 
-      // Check absensi
       expect(controller.laporanAbsensi.length, 4);
       expect(controller.laporanAbsensi[0]['value'], 10);
 

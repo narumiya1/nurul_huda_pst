@@ -102,4 +102,16 @@ class OrangtuaRepository {
       rethrow;
     }
   }
+
+  Future<List<dynamic>> getChildTasks(int santriId, {String? tipe}) async {
+    try {
+      final response = await _orangtuaApi.getChildTasks(santriId, tipe: tipe);
+      if (response['status'] == true) {
+        return response['data'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

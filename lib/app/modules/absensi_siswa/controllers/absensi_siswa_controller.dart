@@ -74,12 +74,18 @@ class AbsensiSiswaController extends GetxController
   Future<void> fetchAbsensi() async {
     try {
       isLoading.value = true;
-      final data = await _santriRepository.getMyAbsensi();
+      // Use backend filtering by passing tipe parameter
+      final data = await _santriRepository.getMyAbsensi(tipe: 'Sekolah');
+
+      debugPrint('=== SISWA ABSENSI DEBUG ===');
+      debugPrint('Total data received: ${data.length}');
 
       // Filter only Siswa (School) attendance
-      absensiList.assignAll(data.where((e) {
+      final filtered = data.where((e) {
         final map = e as Map<String, dynamic>;
-        return map['tipe'] == 'AbsensiSiswa' || map['tipe'] == 'Sekolah';
+        final tipe = map['tipe'];
+        debugPrint('Data tipe: $tipe');
+        return tipe == 'Sekolah';
       }).map((e) {
         final map = e as Map<String, dynamic>;
         return {
@@ -89,7 +95,10 @@ class AbsensiSiswaController extends GetxController
           'detail': map['detail'] ?? '-',
           'tipe': map['tipe'] ?? 'Sekolah'
         };
-      }).toList());
+      }).toList();
+
+      debugPrint('Filtered data count: ${filtered.length}');
+      absensiList.assignAll(filtered);
     } catch (e) {
       debugPrint('Error fetching siswa attendance: $e');
     } finally {

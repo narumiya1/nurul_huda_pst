@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
+import 'package:epesantren_mob/app/core/user_context.dart';
 
 class AbsensiController extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -35,6 +37,9 @@ class AbsensiController extends GetxController
   final selectedChildKey = RxnString(); // Format: 'Santri_1' or 'Siswa_51'
   final children = <Map<String, dynamic>>[].obs;
 
+  // Current active mode label for UI
+  final activeModeLabel = 'Pondok'.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -54,6 +59,22 @@ class AbsensiController extends GetxController
 
     // Initial load
     _loadInitialData();
+
+    // Listen to mode changes for dual-role users
+    _listenToModeChanges();
+  }
+
+  void _listenToModeChanges() {
+    if (Get.isRegistered<UserContextService>()) {
+      final ucs = Get.find<UserContextService>();
+      ever(ucs.activeMode, (_) {
+        // Refresh data when mode changes
+        activeModeLabel.value = ucs.activeModeLabel;
+        fetchAbsensi();
+        fetchPerizinan();
+      });
+      activeModeLabel.value = ucs.activeModeLabel;
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -93,6 +114,22 @@ class AbsensiController extends GetxController
     return 'netizen';
   }
 
+  /// Get the effective tipe for data fetching based on active mode
+  String get _effectiveTipe {
+    if (Get.isRegistered<UserContextService>()) {
+      final ucs = Get.find<UserContextService>();
+      if (ucs.isDualRole) {
+        // For dual-role: use active mode to determine tipe
+        return ucs.activeMode.value == ActiveMode.pondok ? 'Santri' : 'Siswa';
+      }
+    }
+    // Default: based on role
+    final role = userRole;
+    if (role == 'santri') return 'Santri';
+    if (role == 'siswa') return 'Siswa';
+    return 'Santri';
+  }
+
   Future<void> fetchChildren() async {
     try {
       final data = await _orangtuaRepository.getMyChildren();
@@ -109,7 +146,8 @@ class AbsensiController extends GetxController
 
       List<dynamic> data = [];
       if (role == 'santri' || role == 'siswa') {
-        data = await _santriRepository.getMyAbsensi();
+        // For santri/siswa, pass tipe to filter by mode for dual-role users
+        data = await _santriRepository.getMyAbsensi(tipe: _effectiveTipe);
       } else if (role == 'orangtua' && selectedChildId.value != null) {
         data = await _orangtuaRepository.getChildAbsensi(
           selectedChildId.value!,

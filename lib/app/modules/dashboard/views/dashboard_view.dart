@@ -1,5 +1,7 @@
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:epesantren_mob/app/widgets/custom_bottom.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
+import 'package:epesantren_mob/app/core/user_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -77,6 +79,7 @@ class HomePage extends GetView<DashboardController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeCard(),
+                    _buildModeToggle(), // Mode toggle for dual-role users
                     _buildJadwalGuru(),
                     const SizedBox(height: 24),
                     _buildQuickStats(),
@@ -195,6 +198,107 @@ class HomePage extends GetView<DashboardController> {
         ],
       );
     });
+  }
+
+  /// Mode toggle for dual-role users (Santri+Siswa)
+  Widget _buildModeToggle() {
+    // Get UserContextService
+    if (!Get.isRegistered<UserContextService>()) {
+      return const SizedBox.shrink();
+    }
+
+    final ucs = Get.find<UserContextService>();
+
+    return Obx(() {
+      // Only show for dual-role users
+      if (!ucs.isDualRole) {
+        return const SizedBox.shrink();
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(top: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppShadows.cardShadow,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              _buildModeTab(
+                'Pondok',
+                Icons.home_work_outlined,
+                ActiveMode.pondok,
+                AppColors.primary,
+                ucs,
+              ),
+              _buildModeTab(
+                'Sekolah',
+                Icons.school_outlined,
+                ActiveMode.sekolah,
+                Colors.blue,
+                ucs,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildModeTab(
+    String label,
+    IconData icon,
+    ActiveMode mode,
+    Color color,
+    UserContextService ucs,
+  ) {
+    final isActive = ucs.activeMode.value == mode;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => ucs.setMode(mode),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: isActive
+                ? Border.all(color: color.withValues(alpha: 0.3), width: 1)
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isActive ? color : AppColors.textLight,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  color: isActive ? color : AppColors.textLight,
+                ),
+              ),
+              if (isActive) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: color,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAppBar() {
@@ -996,6 +1100,10 @@ class HomePage extends GetView<DashboardController> {
   }
 
   Widget _buildMenuGrid() {
+    // Menu items with optional 'modeRelevant' for dual-role filtering
+    // 'modeRelevant': null means visible in all modes
+    // 'modeRelevant': 'pondok' means only visible in Pondok mode
+    // 'modeRelevant': 'sekolah' means only visible in Sekolah mode
     final allMenuItems = [
       {
         'title': 'Master Data',
@@ -1013,7 +1121,8 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Sekolah',
         'icon': Icons.school_outlined,
         'color': AppColors.accentBlue,
-        'roles': ['pimpinan', 'staff_pesantren', 'guru', 'santri', 'siswa']
+        'roles': ['pimpinan', 'staff_pesantren', 'guru', 'santri', 'siswa'],
+        'modeRelevant': 'sekolah', // Only in Sekolah mode for dual-role
       },
       {
         'title': 'Pondok',
@@ -1026,13 +1135,15 @@ class HomePage extends GetView<DashboardController> {
           'santri',
           'siswa',
           'rois'
-        ]
+        ],
+        'modeRelevant': 'pondok', // Only in Pondok mode for dual-role
       },
       {
         'title': 'Keuangan',
         'icon': Icons.account_balance_wallet_outlined,
         'color': AppColors.primary,
         'roles': ['pimpinan', 'staff_keuangan', 'santri', 'siswa', 'orangtua']
+        // No modeRelevant - visible in all modes
       },
       {
         'title': 'Administrasi',
@@ -1046,12 +1157,12 @@ class HomePage extends GetView<DashboardController> {
         'color': AppColors.error,
         'roles': ['guru', 'rois']
       },
-      // Monitoring removed as per requirement
       {
         'title': 'Absensi',
         'icon': Icons.how_to_reg_outlined,
         'color': AppColors.primary,
         'roles': ['santri', 'siswa', 'orangtua']
+        // No modeRelevant - visible in all modes (content changes based on mode)
       },
       {
         'title': 'Tambah Anak',
@@ -1067,16 +1178,36 @@ class HomePage extends GetView<DashboardController> {
       },
     ];
 
+    // Get UserContextService for dual-role filtering
+    UserContextService? ucs;
+    if (Get.isRegistered<UserContextService>()) {
+      ucs = Get.find<UserContextService>();
+    }
+
     return Obx(() {
       final role = controller.userRole.toLowerCase();
 
-      // Filter items based on role
+      // Current active mode for filtering
+      final currentMode = ucs?.isPondokMode == true ? 'pondok' : 'sekolah';
+      final isDualRole = ucs?.isDualRole ?? false;
+
+      // Filter items based on role AND active mode for dual-role users
       final filteredItems = allMenuItems.where((item) {
         final roles = item['roles'];
-        if (roles == null) return true; // Show if no roles defined
+        if (roles == null) return true;
         if (roles is! List) return true;
         final allowedRoles = List<String>.from(roles);
-        return allowedRoles.contains(role);
+
+        // First check role permission
+        if (!allowedRoles.contains(role)) return false;
+
+        // For dual-role users, also filter by mode
+        if (isDualRole && item['modeRelevant'] != null) {
+          final modeRelevant = item['modeRelevant'] as String;
+          if (modeRelevant != currentMode) return false;
+        }
+
+        return true;
       }).toList();
 
       // If no menu items match, show all items (for debugging or unrecognized roles)

@@ -45,15 +45,51 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           ),
           body: RefreshIndicator(
             onRefresh: () async => await controller.fetchAllData(),
-            child: isMain
-                ? _buildGridMenu()
-                : Obx(() => controller.isLoading.value
-                    ? const Center(child: CircularProgressIndicator())
-                    : _buildPageContent(controller.selectedIndex.value)),
+            child: Column(
+              children: [
+                if (controller.userRole.value == 'orangtua')
+                  _buildChildSelectorHeader(),
+                Expanded(
+                  child: isMain
+                      ? _buildGridMenu()
+                      : Obx(() => controller.isLoading.value
+                          ? const Center(child: CircularProgressIndicator())
+                          : _buildPageContent(controller.selectedIndex.value)),
+                ),
+              ],
+            ),
           ),
         ),
       );
     });
+  }
+
+  Widget _buildChildSelectorHeader() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppShadows.softShadow,
+      ),
+      child: Obx(() => DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: controller.selectedChildKey.value,
+              isExpanded: true,
+              hint: const Text("Pilih Anak"),
+              items: controller.children.map((child) {
+                final key = '${child['tipe']}_${child['id']}';
+                final tipe = child['tipe'] ?? '';
+                return DropdownMenuItem<String>(
+                  value: key,
+                  child: Text('${child['nama'] ?? 'Tanpa Nama'} ($tipe)'),
+                );
+              }).toList(),
+              onChanged: controller.onChildKeyChanged,
+            ),
+          )),
+    );
   }
 
   void _showFilterBottomSheet(BuildContext context) {
@@ -303,7 +339,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Rekap Nilai',
         'icon': Icons.grade_rounded,
         'color': AppColors.primary,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'pimpinan',
+          'santri',
+          'siswa',
+          'guru',
+          'staff_pesantren',
+          'orangtua'
+        ],
         'category': 'SCHOOL',
       },
       {
@@ -327,7 +370,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Tugas',
         'icon': Icons.assignment_rounded,
         'color': Colors.blueGrey,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'pimpinan',
+          'santri',
+          'siswa',
+          'guru',
+          'staff_pesantren',
+          'orangtua'
+        ],
         'category': 'ALL',
       },
       {
@@ -335,7 +385,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Tahfidz',
         'icon': Icons.menu_book_rounded,
         'color': AppColors.success,
-        'roles': ['pimpinan', 'santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'pimpinan',
+          'santri',
+          'siswa',
+          'guru',
+          'staff_pesantren',
+          'orangtua'
+        ],
         'category': 'PONDOK',
       },
       {

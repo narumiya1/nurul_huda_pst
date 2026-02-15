@@ -13,6 +13,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
+import 'package:epesantren_mob/app/core/user_context.dart';
 import 'dart:io';
 
 class DashboardController extends GetxController {
@@ -54,6 +56,14 @@ class DashboardController extends GetxController {
     loadQuickStats();
     fetchJadwalGuru();
     registerFcmToken();
+
+    // Listen to mode changes for dual-role users
+    if (Get.isRegistered<UserContextService>()) {
+      ever(Get.find<UserContextService>().activeMode, (_) {
+        loadQuickStats();
+        fetchBerita(); // Berita might also differ or just refresh
+      });
+    }
   }
 
   Future<void> fetchJadwalGuru() async {
@@ -201,8 +211,26 @@ class DashboardController extends GetxController {
 
         // Count pending tasks
         int pendingTasks = 0;
-        if (allTasks.isNotEmpty) {
-          pendingTasks = allTasks.where((t) {
+
+        // Filter tasks based on mode if dual role
+        final currentMode = Get.isRegistered<UserContextService>()
+            ? Get.find<UserContextService>().activeMode.value
+            : ActiveMode.pondok;
+
+        final filteredTasks = allTasks.where((t) {
+          if (Get.isRegistered<UserContextService>() &&
+              Get.find<UserContextService>().isDualRole) {
+            final taskType = t['type']?.toString().toUpperCase() ?? 'PONDOK';
+            if (currentMode == ActiveMode.sekolah && taskType != 'SCHOOL')
+              return false;
+            if (currentMode == ActiveMode.pondok && taskType == 'SCHOOL')
+              return false;
+          }
+          return true;
+        }).toList();
+
+        if (filteredTasks.isNotEmpty) {
+          pendingTasks = filteredTasks.where((t) {
             final isSubmitted = t['my_submission'] != null ||
                 (t['is_submitted'] == true) ||
                 (t['status'] == 'Selesai');
@@ -216,12 +244,82 @@ class DashboardController extends GetxController {
           hafalanInfo = '${tahfidz['total_juz'] ?? 0} Juz';
         }
 
+        // Final filtering for dual role
+        if (Get.isRegistered<UserContextService>() &&
+            Get.find<UserContextService>().isDualRole) {
+          if (currentMode == ActiveMode.sekolah) {
+            // Sekolah mode: Show School Class and School Tasks
+            String schoolClass = '-';
+            String schoolName = '';
+            if (profile != null && profile['siswa'] != null) {
+              final sw = profile['siswa'];
+              final k = sw['kelas'];
+              if (k is Map && k['nama_kelas'] != null) {
+                schoolClass = k['nama_kelas'];
+              }
+              final s = sw['sekolah'];
+              if (s != null && s['nama_sekolah'] != null) {
+                schoolName = s['nama_sekolah'];
+              }
+            }
+
+            quickStats.value = {
+              'stat1': {
+                'label': 'Kelas',
+                'value': schoolClass,
+                'sub_value': schoolName,
+                'icon': 'school'
+              },
+              'stat2': {
+                'label': 'Tugas Sekolah',
+                'value': pendingTasks.toString(),
+                'icon': 'assignment'
+              },
+            };
+          } else {
+            // Pondok mode
+            String pondokClass = '-';
+            String roomInfo = '';
+            if (profile != null && profile['santri'] != null) {
+              final s = profile['santri'];
+              final kObj = s['kelas_obj'] ?? s['kelas'];
+              if (kObj is Map && kObj['nama_kelas'] != null) {
+                pondokClass = kObj['nama_kelas'];
+              }
+              final kamar = s['kamar'];
+              if (kamar != null) {
+                roomInfo = "Km. ${kamar['nama_kamar']}";
+              }
+            }
+
+            quickStats.value = {
+              'stat1': {
+                'label': 'Kelas Pondok',
+                'value': pondokClass,
+                'sub_value': roomInfo,
+                'icon': 'room'
+              },
+              'stat2': {
+                'label': 'Tugas Pondok',
+                'value': pendingTasks.toString(),
+                'icon': 'assignment'
+              },
+              'stat3': {
+                'label': 'Hafalan',
+                'value': hafalanInfo,
+                'icon': 'auto_stories'
+              },
+            };
+          }
+          return;
+        }
+
         quickStats.value = {
           'stat1': {
             'label': 'Kelas',
             'value': kelasName,
-            'sub_value': subInfo, // New field for sub-info
-            'icon': 'room'
+            'sub_value': subInfo,
+            'icon': role == 'siswa' ? 'school' : 'room'
           },
           'stat2': {
             'label': 'Tugas Pending',

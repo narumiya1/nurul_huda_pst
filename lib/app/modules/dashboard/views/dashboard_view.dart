@@ -928,30 +928,34 @@ class HomePage extends GetView<DashboardController> {
     return Obx(() {
       if (controller.quickStats.isEmpty) return const SizedBox.shrink();
 
+      final stats = controller.quickStats;
+      final keys = stats.keys.toList()..sort();
+      final colors = [
+        AppColors.accentBlue,
+        AppColors.accentPurple,
+        AppColors.accentOrange,
+      ];
+
       return Row(
-        children: [
-          _buildStatCard(
-            icon: _getIconData(controller.quickStats['stat1']?['icon']),
-            value: controller.quickStats['stat1']?['value'] ?? "0",
-            label: controller.quickStats['stat1']?['label'] ?? "",
-            subValue: controller.quickStats['stat1']?['sub_value'],
-            color: AppColors.accentBlue,
-          ),
-          const SizedBox(width: 12),
-          _buildStatCard(
-            icon: _getIconData(controller.quickStats['stat2']?['icon']),
-            value: controller.quickStats['stat2']?['value'] ?? "0",
-            label: controller.quickStats['stat2']?['label'] ?? "",
-            color: AppColors.accentPurple,
-          ),
-          const SizedBox(width: 12),
-          _buildStatCard(
-            icon: _getIconData(controller.quickStats['stat3']?['icon']),
-            value: controller.quickStats['stat3']?['value'] ?? "0",
-            label: controller.quickStats['stat3']?['label'] ?? "",
-            color: AppColors.accentOrange,
-          ),
-        ],
+        children: List.generate(keys.length, (index) {
+          final key = keys[index];
+          final stat = stats[key];
+          final color = colors[index % colors.length];
+
+          return Expanded(
+            child: Padding(
+              padding:
+                  EdgeInsets.only(right: index == keys.length - 1 ? 0 : 12),
+              child: _buildStatCard(
+                icon: _getIconData(stat?['icon']),
+                value: stat?['value'] ?? "0",
+                label: stat?['label'] ?? "",
+                subValue: stat?['sub_value'],
+                color: color,
+              ),
+            ),
+          );
+        }),
       );
     });
   }
@@ -1392,24 +1396,23 @@ class HomePage extends GetView<DashboardController> {
       final displayItems = filteredItems.isEmpty ? allMenuItems : filteredItems;
 
       return Container(
-        height: 120, // Increased height for better text visibility
-        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.08),
+          color: AppColors.primary.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(24),
         ),
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          physics: const BouncingScrollPhysics(),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(12),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: displayItems.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final item = displayItems[index];
             final color = (item['color'] is Color
                 ? item['color'] as Color
                 : AppColors.primary);
 
-            return GestureDetector(
+            return InkWell(
               onTap: () {
                 try {
                   final title = item['title']?.toString() ?? 'Fitur';
@@ -1470,65 +1473,52 @@ class HomePage extends GetView<DashboardController> {
                   // Navigation error
                 }
               },
+              borderRadius: BorderRadius.circular(16),
               child: Container(
-                margin: const EdgeInsets.only(right: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: color.withValues(alpha: 0.2)),
+                ),
+                child: Row(
                   children: [
                     Container(
-                      width: 58,
-                      height: 58,
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: color.withValues(alpha: 0.12),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: color.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  color.withValues(alpha: 0.15),
-                                  color.withValues(alpha: 0.05),
-                                ],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          Icon(
-                            item['icon'] is IconData
-                                ? item['icon'] as IconData
-                                : Icons.help_outline,
-                            color: color,
-                            size: 26,
-                          ),
-                        ],
+                      child: Icon(
+                        item['icon'] is IconData
+                            ? item['icon'] as IconData
+                            : Icons.help_outline,
+                        color: color,
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item['title']?.toString() ?? '',
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                        color: AppColors.textPrimary.withValues(alpha: 0.9),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        item['title']?.toString() ?? '',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: color.withValues(alpha: 0.5),
                     ),
                   ],
                 ),

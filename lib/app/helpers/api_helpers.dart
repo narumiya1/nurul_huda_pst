@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:epesantren_mob/app/helpers/config.dart';
 import 'package:http/http.dart' as http;
 
@@ -18,7 +19,7 @@ class ApiHelper {
       );
 
       // Debug logging for response
-      print(
+      debugPrint(
           'API GET: $uri -> status=${response.statusCode}, size=${response.body.length}');
 
       switch (response.statusCode) {
@@ -149,7 +150,8 @@ class ApiHelper {
         headers: header,
         body: jsonEncode(jsonBody),
       );
-      print('API POST: $uri -> body=$jsonBody, status=${response.statusCode}');
+      debugPrint(
+          'API POST: $uri -> body=$jsonBody, status=${response.statusCode}');
       switch (response.statusCode) {
         case HttpStatus.ok:
         case HttpStatus.created:
@@ -305,7 +307,7 @@ class ApiHelper {
       queryParameters: params,
     );
 
-    print("Constructed URI: $uri");
+    debugPrint("Constructed URI: $uri");
     return uri;
   }
 

@@ -13,7 +13,7 @@ class ApiConfig {
   // static const useHttps = true;
 
   // === LOCAL SERVER (Android Emulator) ===
-  static const baseUrlAddress = "10.0.2.2";
+  static const baseUrlAddress = "127.0.0.1";
   static const port = "8000";
   static const useHttps = false;
 

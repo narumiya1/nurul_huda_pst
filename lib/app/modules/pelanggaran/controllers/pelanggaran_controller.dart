@@ -64,8 +64,15 @@ class PelanggaranController extends GetxController {
     String roleName = '';
     if (role is String) roleName = role;
     if (role is Map) roleName = role['role_name'] ?? '';
-    return ['superadmin', 'pimpinan', 'guru', 'staff_pesantren', 'roissantri']
-        .contains(roleName.toLowerCase());
+    return [
+      'superadmin',
+      'pimpinan',
+      'guru',
+      'guru_pesantren',
+      'guru_sekolah',
+      'staff_pesantren',
+      'roissantri'
+    ].contains(roleName.toLowerCase());
   }
 
   Future<void> fetchPelanggaran() async {
@@ -88,7 +95,10 @@ class PelanggaranController extends GetxController {
       if (role is String) roleName = role;
       if (role is Map) roleName = role['role_name'] ?? '';
 
-      final bool onlyShowMyKelas = roleName.toLowerCase() == 'guru';
+      final String roleLower = roleName.toLowerCase();
+      final bool onlyShowMyKelas = roleLower == 'guru' ||
+          roleLower == 'guru_pesantren' ||
+          roleLower == 'guru_sekolah';
 
       final rawKelas = onlyShowMyKelas
           ? await _repository.getMyKelasList()

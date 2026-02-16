@@ -344,6 +344,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'santri',
           'siswa',
           'guru',
+          'guru_pesantren',
+          'guru_sekolah',
           'staff_pesantren',
           'orangtua'
         ],
@@ -362,7 +364,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Jadwal',
         'icon': Icons.calendar_today_rounded,
         'color': const Color(0xFF6C5CE7),
-        'roles': ['santri', 'siswa', 'guru'],
+        'roles': ['santri', 'siswa', 'guru', 'guru_pesantren', 'guru_sekolah'],
         'category': 'SCHOOL',
       },
       {
@@ -375,6 +377,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'santri',
           'siswa',
           'guru',
+          'guru_pesantren',
+          'guru_sekolah',
           'staff_pesantren',
           'orangtua'
         ],
@@ -390,6 +394,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'santri',
           'siswa',
           'guru',
+          'guru_pesantren',
+          'guru_sekolah',
           'staff_pesantren',
           'orangtua'
         ],
@@ -400,7 +406,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Aktivitas',
         'icon': Icons.today_rounded,
         'color': const Color(0xFF00B894),
-        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'santri',
+          'siswa',
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'staff_pesantren'
+        ],
         'category': 'PONDOK',
       },
       {
@@ -408,7 +421,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Kedisiplinan',
         'icon': Icons.gavel_rounded,
         'color': AppColors.error,
-        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'santri',
+          'siswa',
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'staff_pesantren'
+        ],
         'category': 'PONDOK',
       },
       {
@@ -416,7 +436,14 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'title': 'Perizinan',
         'icon': Icons.fact_check_rounded,
         'color': Colors.teal,
-        'roles': ['santri', 'siswa', 'guru', 'staff_pesantren'],
+        'roles': [
+          'santri',
+          'siswa',
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'staff_pesantren'
+        ],
         'category': 'PONDOK',
       },
     ];
@@ -535,6 +562,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'superadmin',
         'admin',
         'guru',
+        'guru_pesantren',
+        'guru_sekolah',
         'staff_pesantren'
       ].contains(role);
 

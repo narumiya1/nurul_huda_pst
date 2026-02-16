@@ -16,54 +16,80 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Area Guru',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.textPrimary,
-          bottom: const TabBar(
-            indicatorColor: AppColors.primary,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorWeight: 3,
-            isScrollable: true,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            tabs: [
-              Tab(
-                  icon: Icon(Icons.fact_check_outlined, size: 20),
-                  text: 'Absensi'),
-              Tab(
-                  icon: Icon(Icons.menu_book_outlined, size: 20),
-                  text: 'Tahfidz'),
-              Tab(
-                  icon: Icon(Icons.assignment_outlined, size: 20),
-                  text: 'Tugas'),
-              Tab(icon: Icon(Icons.grade_outlined, size: 20), text: 'Nilai'),
-              Tab(
-                  icon: Icon(Icons.calendar_today_outlined, size: 20),
-                  text: 'Jadwal'),
-            ],
+    return Obx(() {
+      final tabs = <Widget>[];
+      final tabViews = <Widget>[];
+
+      // Absensi available for both (Sekolah/Pesantren)
+      tabs.add(const Tab(
+          icon: Icon(Icons.fact_check_outlined, size: 20), text: 'Absensi'));
+      tabViews.add(_buildAbsensiTab());
+
+      // Pesantren specific
+      if (controller.isGuruPesantren || (!controller.isGuruSekolah)) {
+        tabs.add(const Tab(
+            icon: Icon(Icons.menu_book_outlined, size: 20), text: 'Tahfidz'));
+        tabViews.add(_buildTahfidzTab());
+
+        tabs.add(const Tab(
+            icon: Icon(Icons.assignment_outlined, size: 20), text: 'Tugas'));
+        tabViews.add(_buildTugasSantriTab());
+      }
+
+      // Sekolah specific
+      if (controller.isGuruSekolah || (!controller.isGuruPesantren)) {
+        if (controller.isGuruSekolah) {
+          tabs.add(const Tab(
+              icon: Icon(Icons.grade_outlined, size: 20), text: 'Nilai'));
+          tabViews.add(_buildNilaiTab());
+
+          tabs.add(const Tab(
+              icon: Icon(Icons.calendar_today_outlined, size: 20),
+              text: 'Jadwal'));
+          tabViews.add(_buildJadwalTab());
+        } else if (!controller.isGuruPesantren) {
+          // If legacy guru or unrecognized, show all for safety
+          tabs.add(const Tab(
+              icon: Icon(Icons.grade_outlined, size: 20), text: 'Nilai'));
+          tabViews.add(_buildNilaiTab());
+
+          tabs.add(const Tab(
+              icon: Icon(Icons.calendar_today_outlined, size: 20),
+              text: 'Jadwal'));
+          tabViews.add(_buildJadwalTab());
+        }
+      }
+
+      // Final cleanup to ensure length matches
+      return DefaultTabController(
+        length: tabs.length,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('Area Guru',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            centerTitle: true,
+            elevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.textPrimary,
+            bottom: TabBar(
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorWeight: 3,
+              isScrollable: tabs.length > 3,
+              labelStyle:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              tabs: tabs,
+            ),
+          ),
+          body: TabBarView(
+            children: tabViews,
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildAbsensiTab(),
-            _buildTahfidzTab(),
-            _buildTugasSantriTab(),
-            _buildNilaiTab(),
-            _buildJadwalTab(),
-          ],
-        ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildAbsensiTab() {

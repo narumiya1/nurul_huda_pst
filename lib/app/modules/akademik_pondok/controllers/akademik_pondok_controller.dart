@@ -308,7 +308,11 @@ class AkademikPondokController extends GetxController {
           selectedChildId.value!,
           tipe: selectedChildTipe.value,
         );
-      } else if (role == 'santri' || role == 'siswa') {
+      } else if (role == 'santri' ||
+          role == 'siswa' ||
+          role == 'guru' ||
+          role == 'guru_pesantren' ||
+          role == 'guru_sekolah') {
         allTasks = await _santriRepository.getMyTugas();
       }
 
@@ -353,7 +357,11 @@ class AkademikPondokController extends GetxController {
   Future<void> _fetchKurikulum() async {
     try {
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' || role == 'siswa') {
+      if (role == 'santri' ||
+          role == 'siswa' ||
+          role == 'guru' ||
+          role == 'guru_pesantren' ||
+          role == 'guru_sekolah') {
         final data = await _santriRepository.getMateriList();
         dataKurikulum.assignAll(data.map((item) {
           final mapel = item['mapel'] ?? {};
@@ -418,7 +426,11 @@ class AkademikPondokController extends GetxController {
           rekapNilai.clear();
           groupedRekapNilai.clear();
         }
-      } else if (role == 'santri' || role == 'siswa') {
+      } else if (role == 'santri' ||
+          role == 'siswa' ||
+          role == 'guru' ||
+          role == 'guru_pesantren' ||
+          role == 'guru_sekolah') {
         // PERBAIKAN: Pisahkan data berdasarkan context menu (PONDOK vs SCHOOL)
         if (menuType.value == 'PONDOK') {
           // Jika di area Pondok, jangan tampilkan nilai sekolah
@@ -489,7 +501,11 @@ class AkademikPondokController extends GetxController {
     } catch (e) {
       debugPrint('Error fetching rekap nilai: $e');
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' || role == 'siswa') {
+      if (role == 'santri' ||
+          role == 'siswa' ||
+          role == 'guru' ||
+          role == 'guru_pesantren' ||
+          role == 'guru_sekolah') {
         final dummy = [
           {
             'is_personal': true,
@@ -635,7 +651,11 @@ class AkademikPondokController extends GetxController {
   Future<void> _fetchTahfidz() async {
     try {
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' || role == 'siswa') {
+      if (role == 'santri' ||
+          role == 'siswa' ||
+          role == 'guru' ||
+          role == 'guru_pesantren' ||
+          role == 'guru_sekolah') {
         final progress = await _santriRepository.getMyTahfidz();
         if (progress.isNotEmpty) {
           final List<Map<String, dynamic>> items = [];
@@ -734,7 +754,11 @@ class AkademikPondokController extends GetxController {
     if (selectedIndex.value == 0) await _fetchRekapNilai();
 
     final role = userRole.value.toLowerCase().trim();
-    if (role == 'santri' || role == 'siswa') {
+    if (role == 'santri' ||
+        role == 'siswa' ||
+        role == 'guru' ||
+        role == 'guru_pesantren' ||
+        role == 'guru_sekolah') {
       filteredRekapNilai.assignAll(rekapNilai);
     } else {
       if (selectedTingkat.value == 'Semua') {

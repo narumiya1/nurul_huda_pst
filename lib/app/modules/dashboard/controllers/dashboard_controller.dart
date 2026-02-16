@@ -67,7 +67,7 @@ class DashboardController extends GetxController {
   }
 
   Future<void> fetchJadwalGuru() async {
-    if (userRole == 'guru') {
+    if (isGuru) {
       try {
         final data = await _guruRepository.getTodaySchedule();
         final mapped = data.map((item) {
@@ -121,7 +121,7 @@ class DashboardController extends GetxController {
       } catch (e) {
         // Handle error silently or with a proper logger
       }
-    } else if (role == 'guru') {
+    } else if (isGuru) {
       try {
         final data = await _guruRepository.getDashboardStats();
         if (data != null) {
@@ -403,6 +403,10 @@ class DashboardController extends GetxController {
     }
     return 'netizen';
   }
+
+  bool get isGuru => userRole == 'guru' || isGuruPesantren || isGuruSekolah;
+  bool get isGuruPesantren => userRole == 'guru_pesantren';
+  bool get isGuruSekolah => userRole == 'guru_sekolah';
 
   String get userName {
     final details = userData.value?['details'];

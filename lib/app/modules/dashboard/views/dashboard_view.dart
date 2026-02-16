@@ -832,7 +832,7 @@ class HomePage extends GetView<DashboardController> {
   Widget _buildJadwalGuru() {
     return Obx(() {
       // Only show for guru
-      if (controller.userRole != 'guru') return const SizedBox.shrink();
+      if (!controller.isGuru) return const SizedBox.shrink();
 
       // Only show if there is schedule data (currently we need to add schedule data to dashboard controller)
       // Since the user asked to put it here, we will mock it for now or fetch it if possible.
@@ -1303,7 +1303,14 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Sekolah',
         'icon': Icons.school_outlined,
         'color': AppColors.accentBlue,
-        'roles': ['pimpinan', 'staff_pesantren', 'guru', 'santri', 'siswa'],
+        'roles': [
+          'pimpinan',
+          'staff_pesantren',
+          'guru',
+          'guru_sekolah',
+          'santri',
+          'siswa'
+        ],
         'modeRelevant': 'sekolah', // Only in Sekolah mode for dual-role
       },
       {
@@ -1314,6 +1321,7 @@ class HomePage extends GetView<DashboardController> {
           'pimpinan',
           'staff_pesantren',
           'guru',
+          'guru_pesantren',
           'santri',
           'siswa',
           'rois'
@@ -1337,7 +1345,7 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Kedisiplinan',
         'icon': Icons.gavel_outlined,
         'color': AppColors.error,
-        'roles': ['guru', 'rois']
+        'roles': ['guru', 'guru_pesantren', 'guru_sekolah', 'rois']
       },
       {
         'title': 'Absensi',
@@ -1356,7 +1364,13 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Area Guru',
         'icon': Icons.edit_note,
         'color': AppColors.success,
-        'roles': ['guru', 'rois', 'staff_pesantren']
+        'roles': [
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'rois',
+          'staff_pesantren'
+        ]
       },
     ];
 

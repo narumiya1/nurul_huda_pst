@@ -21,6 +21,19 @@ class TeacherAreaController extends GetxController {
   final jadwalHariIni = <Map<String, dynamic>>[].obs; // Today's schedule
   final userDetails = Rxn<Map<String, dynamic>>(); // User profile for welcome
 
+  String get userRole {
+    final role = userDetails.value?['role'];
+    if (role == null) return 'netizen';
+    if (role is String) return role.toLowerCase();
+    if (role is Map) {
+      return (role['role_name'] ?? 'netizen').toString().toLowerCase();
+    }
+    return 'netizen';
+  }
+
+  bool get isGuruPesantren => userRole == 'guru_pesantren';
+  bool get isGuruSekolah => userRole == 'guru_sekolah';
+
   // Input Nilai
   final mapelList = <Map<String, dynamic>>[].obs;
   final selectedMapel = Rxn<Map<String, dynamic>>();

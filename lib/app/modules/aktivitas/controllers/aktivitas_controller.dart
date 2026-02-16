@@ -42,7 +42,14 @@ class AktivitasController extends GetxController {
     }
 
     // Roles authorized to manage activities (as per api routes)
-    if (['superadmin', 'pimpinan', 'staff_pesantren', 'guru'].contains(role)) {
+    if ([
+      'superadmin',
+      'pimpinan',
+      'staff_pesantren',
+      'guru',
+      'guru_pesantren',
+      'guru_sekolah'
+    ].contains(role)) {
       canManage.value = true;
     }
   }

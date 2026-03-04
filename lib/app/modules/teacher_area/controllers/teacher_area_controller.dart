@@ -7,9 +7,14 @@ import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
+import 'package:epesantren_mob/app/core/theme/app_theme.dart';
+import 'package:epesantren_mob/app/api/rois/rois_api.dart';
+import 'package:epesantren_mob/app/api/rois/rois_repository.dart';
+
 class TeacherAreaController extends GetxController {
   final GuruRepository _guruRepository = GuruRepository(GuruApi());
   final SantriRepository _santriRepository = SantriRepository();
+  final RoisRepository _roisRepository = RoisRepository(RoisApi());
   final ApiHelper _apiHelper = ApiHelper();
 
   final isLoading = false.obs;
@@ -23,8 +28,12 @@ class TeacherAreaController extends GetxController {
 
   String get userRole {
     final role = userDetails.value?['role'];
-    if (role == null) return 'netizen';
-    if (role is String) return role.toLowerCase();
+    if (role == null) {
+      return 'netizen';
+    }
+    if (role is String) {
+      return role.toLowerCase();
+    }
     if (role is Map) {
       return (role['role_name'] ?? 'netizen').toString().toLowerCase();
     }
@@ -33,6 +42,7 @@ class TeacherAreaController extends GetxController {
 
   bool get isGuruPesantren => userRole == 'guru_pesantren';
   bool get isGuruSekolah => userRole == 'guru_sekolah';
+  bool get isRois => userRole == 'roissantri';
 
   // Input Nilai
   final mapelList = <Map<String, dynamic>>[].obs;
@@ -51,6 +61,8 @@ class TeacherAreaController extends GetxController {
   final selectedKelasTahfidz = Rxn<Map<String, dynamic>>();
   final isLoadingSantri = false.obs;
   final searchController = TextEditingController();
+  final perizinanList = <Map<String, dynamic>>[].obs;
+  final isLoadingPerizinan = false.obs;
   final selectedSantriName = Rxn<String>(); // Handle name display
   Timer? _debounce;
 
@@ -93,6 +105,9 @@ class TeacherAreaController extends GetxController {
     fetchHafalanList(); // Load recent tahfidz submissions
     fetchJadwalHariIni();
     fetchStats();
+    if (isRois) {
+      fetchPerizinan();
+    }
   }
 
   Future<void> fetchStats() async {
@@ -173,7 +188,9 @@ class TeacherAreaController extends GetxController {
   }
 
   void onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    if (_debounce?.isActive ?? false) {
+      _debounce?.cancel();
+    }
     _debounce = Timer(const Duration(milliseconds: 500), () {
       fetchSantriList(query: query);
     });
@@ -182,8 +199,34 @@ class TeacherAreaController extends GetxController {
   Future<void> fetchKelasList() async {
     try {
       isLoading.value = true;
-      debugPrint('DEBUG: Fetching kelas list...');
-      final data = await _guruRepository.getMyKelas();
+      debugPrint('DEBUG: Fetching kelas list for role: $userRole');
+
+      List<dynamic> data = [];
+
+      if (isRois) {
+        // Rois doesn't usually browse classes, they have their rooms.
+        // We can mock a "Kamar" placeholder or fetch their room if API supports it as a list.
+        // For now, if getSantri returns all, we just mock "Kamar Saya"
+        kelasList.assignAll([
+          {
+            'id': -1, // Special ID for "My Room"
+            'nama_kelas': 'Kamar Saya',
+            'is_room': true,
+          }
+        ]);
+        selectedKelas.value = kelasList.first;
+        fetchSiswaByKelas(-1);
+        return;
+      }
+
+      // Try fetching school classes first (from jadwal)
+      data = await _guruRepository.getMyKelas();
+
+      // If none found and user is guru_pesantren, try fetching pondok classes
+      if (data.isEmpty && isGuruPesantren) {
+        data = await _guruRepository.getKelasSantri();
+      }
+
       debugPrint('DEBUG: Kelas list response: $data');
 
       if (data.isEmpty) {
@@ -229,6 +272,38 @@ class TeacherAreaController extends GetxController {
     }
   }
 
+  Future<void> fetchPerizinan() async {
+    try {
+      isLoadingPerizinan.value = true;
+      final data = await _roisRepository.getPerizinan();
+      perizinanList
+          .assignAll(data.map((e) => Map<String, dynamic>.from(e)).toList());
+    } catch (e) {
+      debugPrint('Error fetching perizinan: $e');
+    } finally {
+      isLoadingPerizinan.value = false;
+    }
+  }
+
+  Future<void> verifyPerizinan(int id) async {
+    try {
+      isLoadingPerizinan.value = true;
+      final success = await _roisRepository.verifyPerizinan(id);
+      if (success) {
+        Get.snackbar('Sukses', 'Perizinan berhasil diverifikasi',
+            backgroundColor: AppColors.success, colorText: Colors.white);
+        fetchPerizinan(); // Refresh
+      } else {
+        Get.snackbar('Gagal', 'Terjadi kesalahan saat memverifikasi perizinan',
+            backgroundColor: AppColors.error, colorText: Colors.white);
+      }
+    } catch (e) {
+      debugPrint('Error verifying perizinan: $e');
+    } finally {
+      isLoadingPerizinan.value = false;
+    }
+  }
+
   Future<void> fetchSiswaByKelas(int kelasId, {bool refresh = true}) async {
     try {
       if (refresh) {
@@ -241,24 +316,66 @@ class TeacherAreaController extends GetxController {
         isLoadingMore.value = true;
       }
 
+      final tanggal = DateTime.now().toString().split(' ')[0];
       debugPrint(
-          'DEBUG: Fetching siswa for kelasId: $kelasId, Page: ${currentPage.value}');
-      final uri = ApiHelper.buildUri(
-        endpoint: 'siswa',
-        params: {
-          'kelas_id': kelasId.toString(),
-          'per_page':
-              '5', // Reduced to 5 to avoid truncated response on emulator
-          'page': currentPage.value.toString(),
-        },
-      );
-      debugPrint('DEBUG: URI: $uri');
+          'DEBUG: Fetching siswa/santri for kelasId: $kelasId, Role: $userRole, Page: ${currentPage.value}');
 
-      final response = await _apiHelper.getData(
-        uri: uri,
-        builder: (data) => data,
-        header: _getAuthHeader(),
-      );
+      if (isRois && kelasId == -1) {
+        final data = await _roisRepository.getSantri();
+        siswaList.assignAll(data.map((e) {
+          final map = e as Map<String, dynamic>;
+          // Normalize to common format
+          return {
+            'id': map['id'],
+            'username': map['details']?['full_name'] ?? map['nama'] ?? '-',
+            'details': {
+              'full_name': map['details']?['full_name'] ?? map['nama'] ?? '-',
+            },
+          };
+        }).toList());
+
+        for (var s in siswaList) {
+          if (!attendanceData.containsKey(s['id'])) {
+            attendanceData[s['id']] = 'H';
+          }
+        }
+        isLoading.value = false;
+        isLoadingMore.value = false;
+        return;
+      }
+
+      dynamic response;
+      if (isGuruPesantren) {
+        // Use AbsensiSantri list for guru_pesantren
+        final uri = ApiHelper.buildUri(
+          endpoint: 'absensi-santri',
+          params: {
+            'kelas_id': kelasId.toString(),
+            'tanggal': tanggal,
+          },
+        );
+        response = await _apiHelper.getData(
+          uri: uri,
+          builder: (data) => data,
+          header: _getAuthHeader(),
+        );
+      } else {
+        // Use standard Siswa list for guru_sekolah or others
+        final uri = ApiHelper.buildUri(
+          endpoint: 'siswa',
+          params: {
+            'kelas_id': kelasId.toString(),
+            'per_page': '10',
+            'page': currentPage.value.toString(),
+          },
+        );
+        response = await _apiHelper.getData(
+          uri: uri,
+          builder: (data) => data,
+          header: _getAuthHeader(),
+        );
+      }
+      debugPrint('DEBUG: Response: $response');
       debugPrint('DEBUG: Response received (truncated)');
 
       if (response != null && response['data'] != null) {
@@ -297,33 +414,68 @@ class TeacherAreaController extends GetxController {
             },
           ];
         } else {
-          mappedList = rawList.map((e) => e as Map<String, dynamic>).toList();
+          mappedList = rawList.map((e) {
+            final map = e as Map<String, dynamic>;
+            if (isGuruPesantren) {
+              // Normalize AbsensiSantri response to match UI expectations
+              return {
+                'id': map['santri_id'] ?? map['id'],
+                'username': map['nama'] ?? '-',
+                'details': {
+                  'full_name': map['nama'] ?? '-',
+                },
+                'current_status': map['status'],
+                'current_keterangan': map['keterangan']
+              };
+            }
+            return map;
+          }).toList();
         }
 
         if (refresh) {
           siswaList.assignAll(mappedList);
 
           // FETCH EXISTING ATTENDANCE
-          try {
-            final existingAttendance = await _guruRepository.getAbsensi(
-              sekolahId: selectedKelas.value?['sekolah_id'] ?? 1,
-              kelasId: kelasId,
-              tanggal: DateTime.now().toString().split(' ')[0],
-            );
-
-            // Map existing attendance to local state
-            for (var item in existingAttendance) {
-              final sId = item['siswa_id']; // Usually this is an int
-              final status = item['status'];
-              if (sId != null && status != null) {
-                attendanceData[sId] = status;
+          if (isGuruPesantren) {
+            // Already handled by AbsensiSantriController@list returning status
+            for (var item in mappedList) {
+              if (item['current_status'] != null) {
+                attendanceData[item['id']] = item['current_status'];
+              } else {
+                attendanceData[item['id']] = 'hadir';
               }
             }
-          } catch (e) {
-            debugPrint('Error fetching existing attendance: $e');
+          } else {
+            try {
+              final existingAttendance = await _guruRepository.getAbsensi(
+                sekolahId: selectedKelas.value?['sekolah_id'] ?? 1,
+                kelasId: kelasId,
+                tanggal: DateTime.now().toString().split(' ')[0],
+              );
+
+              // Map existing attendance to local state
+              for (var item in existingAttendance) {
+                final sId = item['siswa_id'];
+                final status = item['status'];
+                if (sId != null && status != null) {
+                  attendanceData[sId] = status;
+                }
+              }
+            } catch (e) {
+              debugPrint('Error fetching existing attendance: $e');
+              // Default to 'hadir' for all if failed
+              for (var s in mappedList) {
+                attendanceData[s['id']] = 'hadir';
+              }
+            }
           }
         } else {
           siswaList.addAll(mappedList);
+          for (var s in mappedList) {
+            if (attendanceData[s['id']] == null) {
+              attendanceData[s['id']] = s['current_status'] ?? 'hadir';
+            }
+          }
         }
 
         // Initialize 'hadir' only for new items that don't have status yet
@@ -367,22 +519,73 @@ class TeacherAreaController extends GetxController {
 
     try {
       isLoading.value = true;
+      bool success = false;
 
-      final students = attendanceData.entries
-          .map((e) => {
-                'siswa_id': e.key,
-                'status': e.value,
-              })
-          .toList();
+      if (isRois) {
+        final List<Map<String, dynamic>> items =
+            attendanceData.entries.map((e) {
+          return {
+            'santri_id': e.key,
+            'status': e.value,
+          };
+        }).toList();
 
-      final data = {
-        'sekolah_id': selectedKelas.value!['sekolah_id'] ?? 1,
-        'kelas_id': selectedKelas.value!['id'],
-        'tanggal': DateTime.now().toString().split(' ')[0],
-        'students': students,
-      };
+        success = await _roisRepository.submitAbsensiKamar({
+          'tanggal': DateTime.now().toString().split(' ')[0],
+          'absensi': items,
+        });
 
-      final success = await _guruRepository.createAbsensi(data);
+        if (success) {
+          Get.snackbar('Sukses', 'Absensi kamar berhasil disimpan',
+              backgroundColor: AppColors.success, colorText: Colors.white);
+        } else {
+          Get.snackbar('Gagal', 'Terjadi kesalahan saat menyimpan absensi',
+              backgroundColor: AppColors.error, colorText: Colors.white);
+        }
+        isLoading.value = false;
+        return;
+      }
+
+      if (isGuruPesantren) {
+        final students = attendanceData.entries
+            .map((e) => {
+                  'santri_id': e.key,
+                  'status': e.value,
+                  'keterangan': '',
+                })
+            .toList();
+
+        final data = {
+          'kelas_id': selectedKelas.value!['id'],
+          'tanggal': DateTime.now().toString().split(' ')[0],
+          'students': students,
+        };
+
+        final uri = ApiHelper.buildUri(endpoint: 'absensi-santri');
+        final response = await _apiHelper.postData(
+          uri: uri,
+          builder: (data) => data,
+          jsonBody: data,
+          header: _getAuthHeader(),
+        );
+        success = (response != null && response['success'] == true);
+      } else {
+        final students = attendanceData.entries
+            .map((e) => {
+                  'siswa_id': e.key,
+                  'status': e.value,
+                })
+            .toList();
+
+        final data = {
+          'sekolah_id': selectedKelas.value!['sekolah_id'] ?? 1,
+          'kelas_id': selectedKelas.value!['id'],
+          'tanggal': DateTime.now().toString().split(' ')[0],
+          'students': students,
+        };
+
+        success = await _guruRepository.createAbsensi(data);
+      }
 
       if (success) {
         Get.snackbar('Sukses', 'Absensi berhasil disimpan!',

@@ -121,80 +121,107 @@ class HomePage extends GetView<DashboardController> {
                   color: AppColors.textPrimary)),
           const SizedBox(height: 12),
           SizedBox(
-              height: 100,
+              height: 110,
               child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   itemCount: controller.childrenList.length,
                   itemBuilder: (context, index) {
                     final child = controller.childrenList[index];
-                    return Container(
-                        width: 280,
-                        margin: const EdgeInsets.only(right: 16, bottom: 4),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: AppShadows.cardShadow),
-                        child: Row(children: [
-                          CircleAvatar(
-                              radius: 30,
-                              backgroundColor:
-                                  AppColors.primary.withValues(alpha: 0.1),
-                              backgroundImage: child['foto'] != null
-                                  ? NetworkImage(child['foto'])
-                                  : null,
-                              child: child['foto'] == null
-                                  ? const Icon(Icons.person,
-                                      color: AppColors.primary)
-                                  : null),
-                          const SizedBox(width: 16),
-                          Expanded(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                Text(child['nama'] ?? '-',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: (child['tipe'] == 'Santri'
-                                                ? AppColors.primary
-                                                : Colors.blue)
-                                            .withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        child['tipe'] ?? '-',
-                                        style: TextStyle(
-                                          color: (child['tipe'] == 'Santri'
-                                              ? AppColors.primary
-                                              : Colors.blue),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(child['kelas'] ?? '-',
-                                          style: const TextStyle(
-                                              color: AppColors.textLight,
-                                              fontSize: 11),
-                                          overflow: TextOverflow.ellipsis),
-                                    ),
-                                  ],
+                    return GestureDetector(
+                        onTap: () {
+                          // Optional: navigate to specific child detail if we have one,
+                          // for now maybe show a snackbar or just highlight.
+                        },
+                        child: Container(
+                            width: 280,
+                            margin: const EdgeInsets.only(right: 16, bottom: 8),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ]),
+                            child: Row(children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.2),
+                                      width: 2),
                                 ),
-                              ]))
-                        ]));
+                                child: CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    backgroundImage: child['foto'] != null
+                                        ? NetworkImage(child['foto'])
+                                        : null,
+                                    child: child['foto'] == null
+                                        ? const Icon(Icons.person,
+                                            color: AppColors.primary, size: 30)
+                                        : null),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                    Text(child['nama'] ?? '-',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: AppColors.textPrimary),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: (child['tipe'] == 'Santri'
+                                                    ? AppColors.primary
+                                                    : Colors.blue)
+                                                .withValues(alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            child['tipe'] ?? '-',
+                                            style: TextStyle(
+                                              color: (child['tipe'] == 'Santri'
+                                                  ? AppColors.primary
+                                                  : Colors.blue),
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(child['kelas'] ?? '-',
+                                              style: const TextStyle(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500),
+                                              overflow: TextOverflow.ellipsis),
+                                        ),
+                                      ],
+                                    ),
+                                  ]))
+                            ])));
                   }))
         ],
       );
@@ -976,6 +1003,12 @@ class HomePage extends GetView<DashboardController> {
         return Icons.auto_stories_outlined;
       case 'room':
         return Icons.room_outlined;
+      case 'family_restroom':
+        return Icons.family_restroom_outlined;
+      case 'payments':
+        return Icons.payments_outlined;
+      case 'description':
+        return Icons.description_outlined;
       default:
         return Icons.workspace_premium_outlined;
     }
@@ -1309,7 +1342,8 @@ class HomePage extends GetView<DashboardController> {
           'guru',
           'guru_sekolah',
           'santri',
-          'siswa'
+          'siswa',
+          'orangtua'
         ],
         'modeRelevant': 'sekolah', // Only in Sekolah mode for dual-role
       },
@@ -1324,7 +1358,8 @@ class HomePage extends GetView<DashboardController> {
           'guru_pesantren',
           'santri',
           'siswa',
-          'rois'
+          'roissantri',
+          'orangtua'
         ],
         'modeRelevant': 'pondok', // Only in Pondok mode for dual-role
       },
@@ -1345,7 +1380,13 @@ class HomePage extends GetView<DashboardController> {
         'title': 'Kedisiplinan',
         'icon': Icons.gavel_outlined,
         'color': AppColors.error,
-        'roles': ['guru', 'guru_pesantren', 'guru_sekolah', 'rois']
+        'roles': [
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'roissantri',
+          'orangtua'
+        ]
       },
       {
         'title': 'Absensi',
@@ -1368,7 +1409,7 @@ class HomePage extends GetView<DashboardController> {
           'guru',
           'guru_pesantren',
           'guru_sekolah',
-          'rois',
+          'roissantri',
           'staff_pesantren'
         ]
       },

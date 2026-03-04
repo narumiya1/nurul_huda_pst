@@ -82,7 +82,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (controller.isTeacher)
+                      if (controller.isTeacher || controller.isParent)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
@@ -491,7 +491,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (controller.isTeacher) ...[
+                        if (controller.isTeacher || controller.isParent) ...[
                           const SizedBox(height: 4),
                           Text(
                             santriName,

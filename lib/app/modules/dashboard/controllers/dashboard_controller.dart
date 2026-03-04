@@ -15,6 +15,7 @@ import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:epesantren_mob/app/services/user_context_service.dart';
 import 'package:epesantren_mob/app/core/user_context.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 class DashboardController extends GetxController {
@@ -100,6 +101,50 @@ class DashboardController extends GetxController {
       try {
         final data = await _pimpinanRepository.getDashboardStats();
         final stats = data['data'] ?? data;
+
+        if (role == 'pimpinan' || role == 'staff_keuangan') {
+          try {
+            final financeData =
+                await _pimpinanRepository.getFinancing(filter: 'bulanan');
+            final summary =
+                financeData['data']?['summary'] ?? financeData['summary'];
+
+            if (summary != null) {
+              final formatter = NumberFormat.compactCurrency(
+                symbol: 'Rp',
+                decimalDigits: 0,
+                locale: 'id_ID',
+              );
+
+              String saldo = formatter.format(summary['total_saldo'] ?? 0);
+              String masuk =
+                  formatter.format(summary['total_masuk_month'] ?? 0);
+
+              quickStats.value = {
+                'stat1': {
+                  'label': 'Saldo Kas',
+                  'value': saldo,
+                  'icon': 'account_balance_wallet'
+                },
+                'stat2': {
+                  'label': 'Masuk (Bln)',
+                  'value': masuk,
+                  'icon': 'trending_up'
+                },
+                'stat3': {
+                  'label': 'Santri',
+                  'value': stats['santri_count']?.toString() ?? '0',
+                  'icon': 'people'
+                },
+              };
+              return;
+            }
+          } catch (fe) {
+            debugPrint('Error loading finance stats: $fe');
+            // Fallback to standard stats if finance fails
+          }
+        }
+
         quickStats.value = {
           'stat1': {
             'label': 'Santri',
@@ -120,28 +165,53 @@ class DashboardController extends GetxController {
         return;
       } catch (e) {
         // Handle error silently or with a proper logger
+        debugPrint('Error loading dashboard stats: $e');
       }
     } else if (isGuru) {
       try {
         final data = await _guruRepository.getDashboardStats();
         if (data != null) {
-          quickStats.value = {
-            'stat1': {
-              'label': 'Total Kelas',
-              'value': data['total_kelas']?.toString() ?? '0',
-              'icon': 'room'
-            },
-            'stat2': {
-              'label': 'Total Mapel',
-              'value': data['total_mapel']?.toString() ?? '0',
-              'icon': 'assignment'
-            },
-            'stat3': {
-              'label': 'Siswa Diampu',
-              'value': data['total_siswa']?.toString() ?? '0',
-              'icon': 'groups'
-            },
-          };
+          if (isGuruPesantren &&
+              !isGuruSekolah &&
+              (data['total_kelas'] == 0 || data['total_kelas'] == null)) {
+            // Stats for pesantren teacher
+            quickStats.value = {
+              'stat1': {
+                'label': 'Total Santri',
+                'value': data['total_santri']?.toString() ?? '0',
+                'icon': 'people'
+              },
+              'stat2': {
+                'label': 'Setoran Tahfidz',
+                'value': data['tahfidz_today']?.toString() ?? '0',
+                'icon': 'mic'
+              },
+              'stat3': {
+                'label': 'Pelanggaran',
+                'value': data['violations_today']?.toString() ?? '0',
+                'icon': 'error_outline'
+              },
+            };
+          } else {
+            // Standard school teacher stats
+            quickStats.value = {
+              'stat1': {
+                'label': 'Total Kelas',
+                'value': data['total_kelas']?.toString() ?? '0',
+                'icon': 'room'
+              },
+              'stat2': {
+                'label': 'Total Mapel',
+                'value': data['total_mapel']?.toString() ?? '0',
+                'icon': 'assignment'
+              },
+              'stat3': {
+                'label': 'Siswa Diampu',
+                'value': data['total_siswa']?.toString() ?? '0',
+                'icon': 'groups'
+              },
+            };
+          }
           return;
         }
       } catch (e) {
@@ -221,10 +291,12 @@ class DashboardController extends GetxController {
           if (Get.isRegistered<UserContextService>() &&
               Get.find<UserContextService>().isDualRole) {
             final taskType = t['type']?.toString().toUpperCase() ?? 'PONDOK';
-            if (currentMode == ActiveMode.sekolah && taskType != 'SCHOOL')
+            if (currentMode == ActiveMode.sekolah && taskType != 'SCHOOL') {
               return false;
-            if (currentMode == ActiveMode.pondok && taskType == 'SCHOOL')
+            }
+            if (currentMode == ActiveMode.pondok && taskType == 'SCHOOL') {
               return false;
+            }
           }
           return true;
         }).toList();
@@ -342,22 +414,60 @@ class DashboardController extends GetxController {
         final children = await _orangtuaRepository.getMyChildren();
         childrenList
             .assignAll(children.map((e) => e as Map<String, dynamic>).toList());
+
+        int totalUnpaidBills = 0;
+        double totalAttendanceRate = 0;
+        int childrenCount = children.length;
+
+        if (childrenCount > 0) {
+          // Fetch summaries in parallel for up to 3 children to avoid long waits
+          final summariesToFetch = childrenCount > 3 ? 3 : childrenCount;
+          final summaryFutures = <Future<dynamic>>[];
+
+          for (int i = 0; i < summariesToFetch; i++) {
+            final child = children[i];
+            summaryFutures.add(_orangtuaRepository.getChildSummary(
+              child['id'],
+              tipe: child['tipe']?.toString().toLowerCase(),
+            ));
+          }
+
+          final summaries = await Future.wait(summaryFutures);
+
+          for (var summary in summaries) {
+            if (summary != null && summary['stats'] != null) {
+              totalUnpaidBills += int.tryParse(
+                      summary['stats']['unpaid_bills']?.toString() ?? '0') ??
+                  0;
+              totalAttendanceRate += double.tryParse(
+                      summary['stats']['attendance_rate']?.toString() ?? '0') ??
+                  0;
+            }
+          }
+        }
+
         quickStats.value = {
           'stat1': {
             'label': 'Anak',
             'value': children.length.toString(),
             'icon': 'family_restroom'
           },
-          'stat2': {'label': 'Tagihan', 'value': 'Cek', 'icon': 'payments'},
+          'stat2': {
+            'label': 'Tagihan',
+            'value': totalUnpaidBills > 0 ? '$totalUnpaidBills Item' : 'Lunas',
+            'icon': 'payments'
+          },
           'stat3': {
-            'label': 'Laporan',
-            'value': 'Tersedia',
+            'label': 'Kehadiran',
+            'value': childrenCount > 0
+                ? '${(totalAttendanceRate / (childrenCount > 3 ? 3 : childrenCount)).round()}%'
+                : '-',
             'icon': 'description'
           },
         };
         return;
       } catch (e) {
-        // Handle error
+        debugPrint('Error loading parent stats: $e');
       }
     } else if (role == 'roissantri') {
       try {

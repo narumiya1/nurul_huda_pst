@@ -8,9 +8,13 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
 
   // Helper method to capitalize each word in a string
   String _capitalizeWords(String text) {
-    if (text.isEmpty) return text;
+    if (text.isEmpty) {
+      return text;
+    }
     return text.split(' ').map((word) {
-      if (word.isEmpty) return word;
+      if (word.isEmpty) {
+        return word;
+      }
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
   }
@@ -35,6 +39,13 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
         tabs.add(const Tab(
             icon: Icon(Icons.assignment_outlined, size: 20), text: 'Tugas'));
         tabViews.add(_buildTugasSantriTab());
+
+        if (controller.isRois) {
+          tabs.add(const Tab(
+              icon: Icon(Icons.verified_user_outlined, size: 20),
+              text: 'Perizinan'));
+          tabViews.add(_buildVerifikasiIzinTab());
+        }
       }
 
       // Sekolah specific
@@ -2141,6 +2152,164 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               foregroundColor: Colors.white,
             ),
             child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerifikasiIzinTab() {
+    return Obx(() {
+      if (controller.isLoadingPerizinan.value &&
+          controller.perizinanList.isEmpty) {
+        return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary));
+      }
+
+      if (controller.perizinanList.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.verified_user_outlined,
+                  size: 64,
+                  color: AppColors.textSecondary.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              const Text(
+                'Belum ada pengajuan perizinan',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => controller.fetchPerizinan(),
+                child: const Text('Segarkan'),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: () => controller.fetchPerizinan(),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: controller.perizinanList.length,
+          itemBuilder: (context, index) {
+            final izin = controller.perizinanList[index];
+            final status = izin['status'] ?? 'pending';
+            final isVerified = status == 'verified' ||
+                status == 'approved' ||
+                status == 'disetujui';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppShadows.cardShadow,
+                border: Border.all(
+                    color: isVerified
+                        ? AppColors.success.withValues(alpha: 0.2)
+                        : AppColors.accentOrange.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          izin['santri']?['nama'] ?? 'Nama Santri',
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (isVerified
+                                  ? AppColors.success
+                                  : AppColors.accentOrange)
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          status.toString().toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isVerified
+                                ? AppColors.success
+                                : AppColors.accentOrange,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  _buildDetailRow(Icons.calendar_today_outlined, 'Tanggal',
+                      izin['tanggal'] ?? '-'),
+                  _buildDetailRow(Icons.info_outline, 'Keterangan',
+                      izin['keterangan'] ?? '-'),
+                  if (!isVerified) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => controller.verifyPerizinan(izin['id']),
+                        icon: const Icon(Icons.check_circle_outline, size: 18),
+                        label: const Text('Verifikasi Izin'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          const Text(': ', style: TextStyle(color: AppColors.textSecondary)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),

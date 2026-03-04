@@ -75,6 +75,14 @@ class PelanggaranController extends GetxController {
     ].contains(roleName.toLowerCase());
   }
 
+  bool get isParent {
+    final role = userData.value?['role'];
+    String roleName = '';
+    if (role is String) roleName = role;
+    if (role is Map) roleName = role['role_name'] ?? '';
+    return roleName.toLowerCase() == 'orangtua';
+  }
+
   Future<void> fetchPelanggaran() async {
     try {
       isLoading.value = true;

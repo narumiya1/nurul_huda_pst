@@ -97,6 +97,7 @@ class DashboardController extends GetxController {
     if (role == 'superadmin' ||
         role == 'pimpinan' ||
         role == 'staff_pesantren' ||
+        role == 'staff_sekolah' ||
         role == 'staff_keuangan') {
       try {
         final data = await _pimpinanRepository.getDashboardStats();

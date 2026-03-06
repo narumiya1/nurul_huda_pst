@@ -13,14 +13,14 @@ class ApiConfig {
   // static const useHttps = true;
 
   // === LOCAL SERVER (Android Emulator) ===
-  static const baseUrlAddress = "127.0.0.1";
-  static const port = "8000";
-  static const useHttps = false;
+  // static const baseUrlAddress = "127.0.0.1";
+  // static const port = "8000";
+  // static const useHttps = false;
 
   // === REMOTE SERVER ===
-  // static const baseUrlAddress = "api-epesantren.asmuldev.web.id";
-  // static const port = "";
-  // static const useHttps = true;
+  static const baseUrlAddress = "e-pesantren.test";
+  static const port = "";
+  static const useHttps = true;
 
   static const api = "v1/api/";
 }

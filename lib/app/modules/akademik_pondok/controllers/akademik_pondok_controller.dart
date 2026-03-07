@@ -466,14 +466,8 @@ class AkademikPondokController extends GetxController {
           role == 'guru' ||
           role == 'guru_pesantren' ||
           role == 'guru_sekolah') {
-        // PERBAIKAN: Pisahkan data berdasarkan context menu (PONDOK vs SCHOOL)
-        if (menuType.value == 'PONDOK') {
-          // Jika di area Pondok, jangan tampilkan nilai sekolah
-          // Nanti bisa diganti dengan getNilaiPondok() jika fitur sudah ada
-          rekapNilai.clear();
-          groupedRekapNilai.clear();
-          return;
-        }
+        // Tampilkan nilai yang ada meskipun di area Pondok untuk saat ini
+        // (sampai getNilaiPondok() diimplementasikan secara terpisah)
 
         final rawNilai = await _santriRepository.getNilaiSekolah(
             semester: semester, tahun: tahun);

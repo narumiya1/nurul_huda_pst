@@ -186,24 +186,24 @@ class HomePage extends GetView<DashboardController> {
                                     radius: 30,
                                     backgroundColor:
                                         AppColors.primary.withOpacity(0.1),
-                                    backgroundImage: child['foto'] != null
-                                        ? NetworkImage(child['foto']
+                                    backgroundImage: child['foto'] != null &&
+                                            child['foto']
                                                 .toString()
-                                                .startsWith('http')
+                                                .trim()
+                                                .isNotEmpty
+                                        ? NetworkImage(child['foto'].toString().startsWith('http')
                                             ? child['foto'].toString()
                                             : ApiHelper.buildUri(endpoint: '')
                                                     .toString()
                                                     .replaceAll(
                                                         '/v1/api/', '') +
-                                                (child['foto']
-                                                        .toString()
-                                                        .startsWith('/')
+                                                (child['foto'].toString().startsWith('/')
                                                     ? child['foto'].toString()
                                                     : '/${child['foto']}'))
                                         : null,
-                                    child: child['foto'] == null
-                                        ? const Icon(Icons.person,
-                                            color: AppColors.primary, size: 30)
+                                    child: child['foto'] == null ||
+                                            child['foto'].toString().trim().isEmpty
+                                        ? const Icon(Icons.person, color: AppColors.primary, size: 30)
                                         : null),
                               ),
                               const SizedBox(width: 16),

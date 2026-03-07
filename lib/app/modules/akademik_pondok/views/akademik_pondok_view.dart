@@ -341,7 +341,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'orangtua',
           'roissantri'
         ],
-        'category': 'SCHOOL',
+        'category': 'ALL',
       },
       {
         'index': 3,

@@ -14,7 +14,6 @@ import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:epesantren_mob/app/services/user_context_service.dart';
-import 'package:epesantren_mob/app/core/user_context.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
@@ -44,10 +43,21 @@ class DashboardController extends GetxController {
   final isUploading = false.obs;
   final userData = Rxn<Map<String, dynamic>>();
   final quickStats = <String, dynamic>{}.obs;
-  final jadwalGuru = <Map<String, dynamic>>[].obs; // Add this
-  final attendanceHistory = <Map<String, dynamic>>[].obs; // Add this
-  final childrenList = <Map<String, dynamic>>[].obs; // Add this
-  final nis = ''.obs; // Add this
+  final jadwalGuru = <Map<String, dynamic>>[].obs;
+  final attendanceHistory = <Map<String, dynamic>>[].obs;
+  final childrenList = <Map<String, dynamic>>[].obs;
+  final nis = ''.obs;
+
+  // Separate info sections for santri/siswa
+  final sekolahInfo = <String, dynamic>{}.obs;
+  final pondokInfo = <String, dynamic>{}.obs;
+  final hasSiswaData = false.obs;
+  final hasSantriData = false.obs;
+  final pendingTasksCount = 0.obs;
+  final hafalanInfo = ''.obs;
+
+  // Pimpinan filter: 'all', 'santri', 'siswa'
+  final pimpinanStatsFilter = 'all'.obs;
 
   @override
   void onInit() {
@@ -229,9 +239,6 @@ class DashboardController extends GetxController {
         final allTasks = [...taskResults[0], ...taskResults[1]];
         final tahfidz = await _santriRepository.getMyTahfidz();
 
-        String kelasName = '-';
-        String subInfo = ''; // For Room/School info
-
         if (profile != null) {
           // Extract NIS
           if (profile['santri'] != null && profile['santri']['nis'] != null) {
@@ -241,173 +248,125 @@ class DashboardController extends GetxController {
             nis.value = profile['siswa']['nis'].toString();
           }
 
-          // Santri Info
+          // === SEKOLAH INFO ===
+          if (profile['siswa'] != null) {
+            hasSiswaData.value = true;
+            final sw = profile['siswa'];
+            String schoolClass = '-';
+            String schoolName = '-';
+            String schoolNIS = '-';
+            String schoolTingkat = '-';
+
+            final k = sw['kelas'];
+            if (k is Map && k['nama_kelas'] != null) {
+              schoolClass = k['nama_kelas'];
+            }
+            final s = sw['sekolah'];
+            if (s != null && s['nama_sekolah'] != null) {
+              schoolName = s['nama_sekolah'];
+            }
+            if (sw['nis'] != null) schoolNIS = sw['nis'].toString();
+            if (sw['tingkat'] != null) {
+              schoolTingkat = sw['tingkat'].toString();
+            } else if (sw['kelas_tingkat'] != null) {
+              schoolTingkat = sw['kelas_tingkat'].toString();
+            }
+
+            sekolahInfo.value = {
+              'kelas': schoolClass,
+              'sekolah': schoolName,
+              'nis': schoolNIS,
+              'tingkat': schoolTingkat,
+            };
+          } else {
+            hasSiswaData.value = false;
+            sekolahInfo.clear();
+          }
+
+          // === PONDOK INFO ===
           if (profile['santri'] != null) {
+            hasSantriData.value = true;
             final s = profile['santri'];
+            String pondokClass = '-';
+            String kamarName = '-';
+            String blokName = '-';
+            String pondokTingkat = '-';
+            String pondokNIS = '-';
+
             final kObj = s['kelas_obj'] ?? s['kelasObj'] ?? s['kelas'];
             if (kObj is Map && kObj['nama_kelas'] != null) {
-              kelasName = kObj['nama_kelas'];
+              pondokClass = kObj['nama_kelas'];
             } else if (s['kelas'] is String) {
-              kelasName = s['kelas'];
+              pondokClass = s['kelas'];
             }
 
             final kamar = s['kamar'];
             if (kamar != null) {
-              final blok = kamar['blok']?['nama_blok'] ?? '';
-              subInfo =
-                  "Km. ${kamar['nama_kamar']}${blok.isNotEmpty ? ' ($blok)' : ''}";
-            }
-          }
-
-          // Siswa Info
-          if (profile['siswa'] != null) {
-            final sw = profile['siswa'];
-            if (kelasName == '-') {
-              final k = sw['kelas'];
-              if (k is Map && k['nama_kelas'] != null) {
-                kelasName = k['nama_kelas'];
+              kamarName = kamar['nama_kamar'] ?? '-';
+              final blok = kamar['blok'];
+              if (blok != null) {
+                blokName = blok['nama_blok'] ?? '-';
               }
             }
 
-            final sekolah = sw['sekolah'];
-            if (sekolah != null && sekolah['nama_sekolah'] != null) {
-              if (subInfo.isEmpty) {
-                subInfo = sekolah['nama_sekolah'];
-              } else {
-                subInfo += " | ${sekolah['nama_sekolah']}";
-              }
+            final tingkat = s['tingkat'];
+            if (tingkat is Map && tingkat['nama_tingkat'] != null) {
+              pondokTingkat = tingkat['nama_tingkat'];
+            } else if (tingkat is String) {
+              pondokTingkat = tingkat;
             }
+
+            if (s['nis'] != null) pondokNIS = s['nis'].toString();
+
+            pondokInfo.value = {
+              'kelas': pondokClass,
+              'kamar': kamarName,
+              'blok': blokName,
+              'tingkat': pondokTingkat,
+              'nis': pondokNIS,
+            };
+          } else {
+            hasSantriData.value = false;
+            pondokInfo.clear();
           }
         }
 
         // Count pending tasks
-        int pendingTasks = 0;
-
-        // Filter tasks based on mode if dual role
-        final currentMode = Get.isRegistered<UserContextService>()
-            ? Get.find<UserContextService>().activeMode.value
-            : ActiveMode.pondok;
-
-        final filteredTasks = allTasks.where((t) {
-          if (Get.isRegistered<UserContextService>() &&
-              Get.find<UserContextService>().isDualRole) {
-            final taskType = t['type']?.toString().toUpperCase() ?? 'PONDOK';
-            if (currentMode == ActiveMode.sekolah && taskType != 'SCHOOL') {
-              return false;
-            }
-            if (currentMode == ActiveMode.pondok && taskType == 'SCHOOL') {
-              return false;
-            }
-          }
-          return true;
-        }).toList();
-
-        if (filteredTasks.isNotEmpty) {
-          pendingTasks = filteredTasks.where((t) {
+        int pendingCount = 0;
+        if (allTasks.isNotEmpty) {
+          pendingCount = allTasks.where((t) {
             final isSubmitted = t['my_submission'] != null ||
                 (t['is_submitted'] == true) ||
                 (t['status'] == 'Selesai');
             return !isSubmitted;
           }).length;
         }
+        pendingTasksCount.value = pendingCount;
 
         // Tahfidz info
-        String hafalanInfo = '0 Juz';
         if (tahfidz.isNotEmpty) {
-          hafalanInfo = '${tahfidz['total_juz'] ?? 0} Juz';
+          hafalanInfo.value = '${tahfidz['total_juz'] ?? 0} Juz';
+        } else {
+          hafalanInfo.value = '0 Juz';
         }
 
-        // Final filtering for dual role
-        if (Get.isRegistered<UserContextService>() &&
-            Get.find<UserContextService>().isDualRole) {
-          if (currentMode == ActiveMode.sekolah) {
-            // Sekolah mode: Show School Class and School Tasks
-            String schoolClass = '-';
-            String schoolName = '';
-            if (profile != null && profile['siswa'] != null) {
-              final sw = profile['siswa'];
-              final k = sw['kelas'];
-              if (k is Map && k['nama_kelas'] != null) {
-                schoolClass = k['nama_kelas'];
-              }
-              final s = sw['sekolah'];
-              if (s != null && s['nama_sekolah'] != null) {
-                schoolName = s['nama_sekolah'];
-              }
-            }
-
-            quickStats.value = {
-              'stat1': {
-                'label': 'Kelas',
-                'value': schoolClass,
-                'sub_value': schoolName,
-                'icon': 'school'
-              },
-              'stat2': {
-                'label': 'Tugas Sekolah',
-                'value': pendingTasks.toString(),
-                'icon': 'assignment'
-              },
-            };
-          } else {
-            // Pondok mode
-            String pondokClass = '-';
-            String roomInfo = '';
-            if (profile != null && profile['santri'] != null) {
-              final s = profile['santri'];
-              final kObj = s['kelas_obj'] ?? s['kelas'];
-              if (kObj is Map && kObj['nama_kelas'] != null) {
-                pondokClass = kObj['nama_kelas'];
-              }
-              final kamar = s['kamar'];
-              if (kamar != null) {
-                roomInfo = "Km. ${kamar['nama_kamar']}";
-              }
-            }
-
-            quickStats.value = {
-              'stat1': {
-                'label': 'Kelas Pondok',
-                'value': pondokClass,
-                'sub_value': roomInfo,
-                'icon': 'room'
-              },
-              'stat2': {
-                'label': 'Tugas Pondok',
-                'value': pendingTasks.toString(),
-                'icon': 'assignment'
-              },
-              'stat3': {
-                'label': 'Hafalan',
-                'value': hafalanInfo,
-                'icon': 'auto_stories'
-              },
-            };
-          }
-          return;
+        // Keep quickStats for backward compatibility (used in KTP card etc.)
+        String mainKelas = '-';
+        if (hasSantriData.value) {
+          mainKelas = pondokInfo['kelas'] ?? '-';
+        } else if (hasSiswaData.value) {
+          mainKelas = sekolahInfo['kelas'] ?? '-';
         }
-
         quickStats.value = {
           'stat1': {
             'label': 'Kelas',
-            'value': kelasName,
-            'sub_value': subInfo,
-            'icon': role == 'siswa' ? 'school' : 'room'
-          },
-          'stat2': {
-            'label': 'Tugas Pending',
-            'value': pendingTasks.toString(),
-            'icon': 'assignment'
-          },
-          'stat3': {
-            'label': 'Hafalan',
-            'value': hafalanInfo,
-            'icon': 'auto_stories'
+            'value': mainKelas,
+            'icon': hasSantriData.value ? 'room' : 'school'
           },
         };
+
         return;
       } catch (e) {
-        // Handle error
         debugPrint('Error loading stats: $e');
       }
     } else if (role == 'orangtua') {

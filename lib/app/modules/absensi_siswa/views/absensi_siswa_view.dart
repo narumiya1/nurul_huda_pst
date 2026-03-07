@@ -25,8 +25,8 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
             init: AbsensiSiswaController(SantriRepository()),
             builder: (ctrl) => TabBar(
               controller: ctrl.tabController,
-              indicatorColor: AppColors.primary,
-              labelColor: AppColors.primary,
+              indicatorColor: AppColors.accentBlue,
+              labelColor: AppColors.accentBlue,
               unselectedLabelColor: AppColors.textSecondary,
               indicatorWeight: 3,
               labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -51,9 +51,9 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
         if (controller.currentTabIndex.value == 1) {
           return FloatingActionButton.extended(
             onPressed: () => _showPermissionForm(context),
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.accentBlue,
             icon: const Icon(Icons.add_task),
-            label: const Text('Ajukan Izin'),
+            label: const Text('Izin Sekolah'),
           );
         }
         return const SizedBox.shrink();
@@ -65,13 +65,13 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
     return Obx(() {
       if (controller.isLoading.value) {
         return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: CircularProgressIndicator(color: AppColors.accentBlue),
         );
       }
 
       return RefreshIndicator(
         onRefresh: () async => controller.fetchAbsensi(),
-        color: AppColors.primary,
+        color: AppColors.accentBlue,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           physics: const AlwaysScrollableScrollPhysics(),
@@ -262,7 +262,7 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
     return Obx(() {
       return RefreshIndicator(
         onRefresh: () async => controller.fetchPerizinan(),
-        color: AppColors.primary,
+        color: AppColors.accentBlue,
         child: controller.perizinanList.isEmpty
             ? ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -276,7 +276,7 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
                           Icon(Icons.assignment_turned_in_outlined,
                               size: 64, color: Colors.grey[300]),
                           const SizedBox(height: 16),
-                          const Text('Belum ada riwayat perizinan',
+                          const Text('Belum ada riwayat perizinan sekolah',
                               style: TextStyle(color: Colors.grey)),
                         ],
                       ),
@@ -365,7 +365,7 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Ajukan Perizinan',
+                  'Ajukan Izin Sekolah',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
@@ -477,7 +477,7 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
                         onPressed: controller.submitPerizinan,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: AppColors.accentBlue,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

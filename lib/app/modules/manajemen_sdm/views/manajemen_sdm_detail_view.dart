@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../helpers/api_helpers.dart';
 
 class ManajemenSdmDetailView extends StatelessWidget {
   const ManajemenSdmDetailView({super.key});
@@ -82,7 +83,13 @@ class ManajemenSdmDetailView extends StatelessWidget {
                                 ? NetworkImage(
                                     _getPhotoUrl(details)!.startsWith('http')
                                         ? _getPhotoUrl(details)!
-                                        : 'http://10.0.2.2:8000${_getPhotoUrl(details)!.startsWith('/') ? _getPhotoUrl(details)! : '/${_getPhotoUrl(details)!}'}',
+                                        : ApiHelper.buildUri(endpoint: '')
+                                                .toString()
+                                                .replaceAll('/v1/api/', '') +
+                                            (_getPhotoUrl(details)!
+                                                    .startsWith('/')
+                                                ? _getPhotoUrl(details)!
+                                                : '/${_getPhotoUrl(details)!}'),
                                   )
                                 : null,
                             child: _getPhotoUrl(details) == null

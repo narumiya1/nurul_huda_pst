@@ -588,7 +588,7 @@ class AktivitasView extends GetView<AktivitasController> {
         itemBuilder: (context, index) {
           final item = controller.aktivitasList[index];
           final isLast = index == controller.aktivitasList.length - 1;
-          // Map keys from backend (or dummy if not running)
+          // Map keys from backend response
           // Backend fields: judul, items, jam_mulai, lokasi, tipe, hari, tanggal_fixed
           final time = item['jam_mulai']?.toString().substring(0, 5) ?? '-';
           final endTime = item['jam_selesai']?.toString().substring(0, 5) ?? '';

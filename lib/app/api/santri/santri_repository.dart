@@ -11,9 +11,18 @@ class SantriRepository {
     return ApiHelper.tokenHeader(token ?? '');
   }
 
-  Future<List<dynamic>> getPerizinan() async {
+  Map<String, String> _getAuthHeaderMultipart() {
+    final token = LocalStorage.getToken();
+    return ApiHelper.tokenHeaderMultipart(token ?? '');
+  }
+
+  Future<List<dynamic>> getPerizinan({String? tipe}) async {
     try {
-      final uri = ApiHelper.buildUri(endpoint: 'santri/my-perizinan');
+      final queryParams = <String, String>{};
+      if (tipe != null) queryParams['tipe'] = tipe;
+
+      final uri = ApiHelper.buildUri(
+          endpoint: 'santri/my-perizinan', params: queryParams);
       final response = await _apiHelper.getData(
         uri: uri,
         builder: (data) =>
@@ -235,7 +244,7 @@ class SantriRepository {
           fields: finalFields,
           files: smallFiles,
           builder: (data) => data,
-          header: _getAuthHeader(),
+          header: _getAuthHeaderMultipart(),
         );
         return response['success'] == true;
       } else {
@@ -294,7 +303,7 @@ class SantriRepository {
           },
           files: {'file': tempChunk},
           builder: (data) => data,
-          header: _getAuthHeader(),
+          header: _getAuthHeaderMultipart(),
         );
 
         await tempChunk.delete();
@@ -418,7 +427,7 @@ class SantriRepository {
     }
   }
 
-  Future<bool> payBill(int billId,
+  Future<bool> payBill(String billId,
       {File? proof, String? notes, String method = 'Transfer'}) async {
     try {
       final uri = ApiHelper.buildUri(endpoint: 'santri/my-bills/$billId/pay');
@@ -437,7 +446,7 @@ class SantriRepository {
         fields: fields,
         files: files,
         builder: (data) => data,
-        header: _getAuthHeader(),
+        header: _getAuthHeaderMultipart(),
       );
 
       return response['meta']?['code'] == 200 || response['success'] == true;

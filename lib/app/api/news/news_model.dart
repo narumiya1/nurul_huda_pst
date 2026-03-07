@@ -1,3 +1,5 @@
+import 'package:epesantren_mob/app/helpers/config.dart';
+
 class BeritaModel {
   final int? id;
   final String? title;
@@ -33,11 +35,11 @@ class BeritaModel {
     if (image == null || image!.isEmpty) return null;
     if (image!.startsWith('http')) return image;
 
-    // Default to 10.0.2.2 for emulator if not specified,
-    // better to use config/ApiHelper if available.
-    // Since this is a model, maybe just return what it is and let view handle it.
-    // BUT looking at other parts, we prefix it.
-    return 'http://10.0.2.2:8000${image!.startsWith('/') ? image! : '/$image'}';
+    // Build URL dynamically from ApiConfig
+    const scheme = ApiConfig.useHttps ? 'https' : 'http';
+    final portSuffix = ApiConfig.port.isNotEmpty ? ':${ApiConfig.port}' : '';
+    final path = image!.startsWith('/') ? image! : '/$image';
+    return '$scheme://${ApiConfig.baseUrlAddress}$portSuffix$path';
   }
 
   Map<String, dynamic> toJson() {

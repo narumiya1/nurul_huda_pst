@@ -12,6 +12,7 @@ class WelcomeView extends GetView<WelcomeController> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: Container(
@@ -28,17 +29,31 @@ class WelcomeView extends GetView<WelcomeController> {
             ),
           ),
           child: SafeArea(
-            child: Column(
-              children: [
-                // Top Section
-                Expanded(
-                  flex: 3,
-                  child: _buildTopSection(size),
-                ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          // Top Section
+                          Expanded(
+                            flex: 3,
+                            child: _buildTopSection(size),
+                          ),
 
-                // Bottom Card Section
-                _buildBottomCard(context),
-              ],
+                          // Bottom Card Section
+                          _buildBottomCard(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

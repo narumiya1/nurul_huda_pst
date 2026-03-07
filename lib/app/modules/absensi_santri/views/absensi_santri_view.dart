@@ -53,7 +53,7 @@ class AbsensiSantriView extends GetView<AbsensiSantriController> {
             onPressed: () => _showPermissionForm(context),
             backgroundColor: AppColors.primary,
             icon: const Icon(Icons.add_task),
-            label: const Text('Ajukan Izin'),
+            label: const Text('Izin Pondok'),
           );
         }
         return const SizedBox.shrink();
@@ -276,7 +276,7 @@ class AbsensiSantriView extends GetView<AbsensiSantriController> {
                           Icon(Icons.assignment_turned_in_outlined,
                               size: 64, color: Colors.grey[300]),
                           const SizedBox(height: 16),
-                          const Text('Belum ada riwayat perizinan',
+                          const Text('Belum ada riwayat perizinan pondok',
                               style: TextStyle(color: Colors.grey)),
                         ],
                       ),
@@ -365,7 +365,7 @@ class AbsensiSantriView extends GetView<AbsensiSantriController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Ajukan Perizinan',
+                  'Ajukan Izin Pondok',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),

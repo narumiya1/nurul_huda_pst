@@ -1,4 +1,6 @@
 import 'package:epesantren_mob/app/modules/dashboard/controllers/dashboard_controller.dart';
+import 'package:epesantren_mob/app/services/user_context_service.dart';
+import 'package:epesantren_mob/app/core/user_context.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../core/theme/app_theme.dart';
@@ -29,8 +31,21 @@ class CustomBottomNav extends GetView<DashboardController> {
             _navItem(Icons.home_rounded, Icons.home_outlined, "Beranda", 0),
             _navItem(Icons.chat_bubble_rounded,
                 Icons.chat_bubble_outline_rounded, "Pesan", 1),
-            _navItem(Icons.notifications_rounded, Icons.notifications_outlined,
-                "Notifikasi", 2),
+            Builder(builder: (context) {
+              final userContext = Get.find<UserContextService>();
+              final isSantriSiswa = [
+                UserType.santriOnly,
+                UserType.siswaOnly,
+                UserType.santriSiswa
+              ].contains(userContext.userType);
+
+              if (isSantriSiswa) {
+                return _navItem(Icons.account_balance_wallet_rounded,
+                    Icons.account_balance_wallet_outlined, "Keuangan", 2);
+              }
+              return _navItem(Icons.notifications_rounded,
+                  Icons.notifications_outlined, "Notifikasi", 2);
+            }),
             _navItem(Icons.person_rounded, Icons.person_outline_rounded,
                 "Profil", 3),
           ],

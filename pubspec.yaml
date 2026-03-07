@@ -1,5 +1,5 @@
 name: epesantren_mob
-description: "A new Flutter project."
+description: "Sentral Nurul Huda - Aplikasi manajemen pesantren dan sekolah terintegrasi."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -93,7 +93,7 @@ flutter:
   fonts:
     - family: SFPro
       fonts:
-        - asset: fonts/SFPRODISPLAYREGULAR.OTF
+        - asset: fonts/sfprodisplayregular.otf
   # fonts:
   #   - family: Schyler
   #     fonts:

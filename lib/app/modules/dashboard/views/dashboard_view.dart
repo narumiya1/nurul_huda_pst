@@ -10,6 +10,13 @@ import '../controllers/dashboard_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/modules/profil/views/profil_view.dart';
+import 'package:epesantren_mob/app/modules/keuangan/views/keuangan_view.dart';
+import 'package:epesantren_mob/app/modules/keuangan/controllers/keuangan_controller.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_api.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
+import 'package:epesantren_mob/app/api/pimpinan/pimpinan_api.dart';
+import 'package:epesantren_mob/app/api/pimpinan/pimpinan_repository.dart';
+import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -21,6 +28,25 @@ class DashboardView extends GetView<DashboardController> {
       case 1:
         return const ChatPage();
       case 2:
+        final userCtx = Get.find<UserContextService>();
+        final isSantriSiswa = [
+          UserType.santriOnly,
+          UserType.siswaOnly,
+          UserType.santriSiswa
+        ].contains(userCtx.userType);
+
+        if (isSantriSiswa) {
+          if (!Get.isRegistered<KeuanganController>()) {
+            Get.lazyPut<KeuanganController>(
+              () => KeuanganController(
+                PimpinanRepository(PimpinanApi()),
+                SantriRepository(),
+                OrangtuaRepository(OrangtuaApi()),
+              ),
+            );
+          }
+          return const KeuanganView();
+        }
         return const NotifikasiPage();
       case 3:
         return const ProfilView();
@@ -83,6 +109,7 @@ class HomePage extends GetView<DashboardController> {
                     _buildModeToggle(), // Mode toggle for dual-role users
                     _buildJadwalGuru(),
                     const SizedBox(height: 24),
+                    _buildStudentInfoSections(),
                     _buildQuickStats(),
                     _buildChildrenList(),
                     const SizedBox(height: 28),
@@ -373,19 +400,35 @@ class HomePage extends GetView<DashboardController> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: AppShadows.softShadow,
-                ),
-                child: const Badge(
-                  smallSize: 8,
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.textSecondary,
-                    size: 24,
+              GestureDetector(
+                onTap: () {
+                  final userCtx = Get.find<UserContextService>();
+                  final isSantriSiswa = [
+                    UserType.santriOnly,
+                    UserType.siswaOnly,
+                    UserType.santriSiswa
+                  ].contains(userCtx.userType);
+                  if (isSantriSiswa) {
+                    Get.to(() => const NotifikasiPage());
+                  } else {
+                    controller.changeIndex(
+                        2); // Regular users use tab 2 for notifikasi
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: AppShadows.softShadow,
+                  ),
+                  child: const Badge(
+                    smallSize: 8,
+                    child: Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.textSecondary,
+                      size: 24,
+                    ),
                   ),
                 ),
               ),
@@ -861,10 +904,6 @@ class HomePage extends GetView<DashboardController> {
       // Only show for guru
       if (!controller.isGuru) return const SizedBox.shrink();
 
-      // Only show if there is schedule data (currently we need to add schedule data to dashboard controller)
-      // Since the user asked to put it here, we will mock it for now or fetch it if possible.
-      // But wait, the controller doesn't have jadwal data yet. Let's assume we will add it.
-      // For now, let's just make the UI and bind it to a new controller variable.
       if (controller.jadwalGuru.isEmpty) return const SizedBox.shrink();
 
       return Column(
@@ -951,8 +990,307 @@ class HomePage extends GetView<DashboardController> {
     });
   }
 
+  /// Two separate info sections showing Sekolah and Pondok data for santri/siswa
+  Widget _buildStudentInfoSections() {
+    return Obx(() {
+      final role = controller.userRole;
+      // Only show for santri/siswa roles
+      if (role != 'santri' && role != 'siswa') {
+        return const SizedBox.shrink();
+      }
+
+      final hasSekolah = controller.hasSiswaData.value;
+      final hasPondok = controller.hasSantriData.value;
+
+      if (!hasSekolah && !hasPondok) return const SizedBox.shrink();
+
+      UserContextService? ucs;
+      if (Get.isRegistered<UserContextService>()) {
+        ucs = Get.find<UserContextService>();
+      }
+
+      bool showSekolah = hasSekolah;
+      bool showPondok = hasPondok;
+
+      if (ucs != null && ucs.isDualRole) {
+        showSekolah = ucs.isSekolahMode;
+        showPondok = ucs.isPondokMode;
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // === SEKOLAH INFO ===
+          if (showSekolah) ...[
+            _buildInfoSectionCard(
+              title: 'Info Sekolah',
+              icon: Icons.school_rounded,
+              color: const Color(0xFF3B82F6),
+              items: [
+                _InfoItem(
+                  icon: Icons.class_rounded,
+                  label: 'Kelas',
+                  value: controller.sekolahInfo['kelas'] ?? '-',
+                ),
+                _InfoItem(
+                  icon: Icons.apartment_rounded,
+                  label: 'Sekolah',
+                  value: controller.sekolahInfo['sekolah'] ?? '-',
+                ),
+                _InfoItem(
+                  icon: Icons.badge_rounded,
+                  label: 'NIS',
+                  value: controller.sekolahInfo['nis'] ?? '-',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // === PONDOK INFO ===
+          if (showPondok) ...[
+            _buildInfoSectionCard(
+              title: 'Info Pesantren',
+              icon: Icons.mosque_rounded,
+              color: const Color(0xFF10B981),
+              items: [
+                _InfoItem(
+                  icon: Icons.class_rounded,
+                  label: 'Kelas',
+                  value: controller.pondokInfo['kelas'] ?? '-',
+                ),
+                _InfoItem(
+                  icon: Icons.meeting_room_rounded,
+                  label: 'Kamar',
+                  value: controller.pondokInfo['kamar'] ?? '-',
+                ),
+                _InfoItem(
+                  icon: Icons.domain_rounded,
+                  label: 'Blok',
+                  value: controller.pondokInfo['blok'] ?? '-',
+                ),
+                _InfoItem(
+                  icon: Icons.badge_rounded,
+                  label: 'NIS',
+                  value: controller.pondokInfo['nis'] ?? '-',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // === ACTIVITY SUMMARY ROW ===
+          Row(
+            children: [
+              Expanded(
+                child: _buildMiniStatCard(
+                  icon: Icons.assignment_outlined,
+                  value: controller.pendingTasksCount.value.toString(),
+                  label: 'Tugas Pending',
+                  color: AppColors.accentPurple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (hasPondok)
+                Expanded(
+                  child: _buildMiniStatCard(
+                    icon: Icons.auto_stories_outlined,
+                    value: controller.hafalanInfo.value.isEmpty
+                        ? '0 Juz'
+                        : controller.hafalanInfo.value,
+                    label: 'Hafalan',
+                    color: AppColors.accentOrange,
+                  ),
+                ),
+              if (hasPondok) const SizedBox(width: 12),
+              Expanded(
+                child: _buildMiniStatCard(
+                  icon: Icons.verified_user_outlined,
+                  value: hasSekolah && hasPondok
+                      ? 'Santri+Siswa'
+                      : hasPondok
+                          ? 'Santri'
+                          : 'Siswa',
+                  label: 'Status',
+                  color: AppColors.accentBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+        ],
+      );
+    });
+  }
+
+  /// Beautiful info section card with icon grid
+  Widget _buildInfoSectionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required List<_InfoItem> items,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withValues(alpha: 0.7)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Info Items Grid
+          Wrap(
+            spacing: 0,
+            runSpacing: 8,
+            children: items.map((item) {
+              return SizedBox(
+                width: items.length <= 3
+                    ? (MediaQuery.of(Get.context!).size.width - 72) / 3
+                    : (MediaQuery.of(Get.context!).size.width - 72) /
+                        items.length.clamp(2, 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(item.icon,
+                        size: 14, color: color.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            item.value,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Compact stat card for activity summary row
+  Widget _buildMiniStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withValues(alpha: 0.7)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Colors.white, size: 14),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickStats() {
     return Obx(() {
+      // Hide for santri/siswa since they use the new _buildStudentInfoSections
+      final role = controller.userRole;
+      if (role == 'santri' || role == 'siswa') {
+        return const SizedBox.shrink();
+      }
+
       if (controller.quickStats.isEmpty) return const SizedBox.shrink();
 
       final stats = controller.quickStats;
@@ -1699,4 +2037,17 @@ class NotifikasiPage extends GetView<DashboardController> {
       ),
     );
   }
+}
+
+/// Data class for info items in the student info sections
+class _InfoItem {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 }

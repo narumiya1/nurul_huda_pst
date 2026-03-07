@@ -90,21 +90,9 @@ class AdministrasiController extends GetxController {
         return;
       }
 
-      // Fallback or Initial Mock Data (Optional, but kept for safety if API fails)
-      archiveList.assignAll([
-        {
-          'title': 'Surat Masuk: Pengajuan Dana Bos',
-          'type': 'Surat Masuk',
-          'number': '201/ADM/2026',
-          'date': '2026-01-18',
-          'status': 'Approved',
-          'sender': 'Kemenag Pusat',
-          'recipient': 'Kepala Pesantren',
-          'content': 'Sehubungan dengan program bantuan operasional sekolah...',
-          'attachment': 'dana_bos_2026.pdf'
-        },
-      ]);
-      filteredArchives.assignAll(archiveList);
+      // No data returned from API, show empty state
+      archiveList.clear();
+      filteredArchives.clear();
     } catch (e) {
       debugPrint('Error fetching administrasi data: $e');
       Get.snackbar('Error', 'Gagal memuat data administrasi');

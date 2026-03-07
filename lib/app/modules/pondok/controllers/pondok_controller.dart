@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../../helpers/local_storage.dart';
 import '../../../api/pimpinan/pimpinan_api.dart';
@@ -108,12 +109,24 @@ class PondokController extends GetxController {
 
         dormList.assignAll(formattedList);
       } else {
-        // Fallback to mock data
-        _loadMockData();
+        dormStats.value = {
+          'total_asrama': 0,
+          'total_kamar': 0,
+          'total_santri': 0,
+          'kapasitas_tersedia': 0,
+        };
+        dormList.clear();
       }
     } catch (e) {
-      // Fallback to mock data on error
-      _loadMockData();
+      debugPrint('Error fetching pondok data: $e');
+      dormStats.value = {
+        'total_asrama': 0,
+        'total_kamar': 0,
+        'total_santri': 0,
+        'kapasitas_tersedia': 0,
+      };
+      dormList.clear();
+      Get.snackbar('Error', 'Gagal memuat data pondok');
     } finally {
       isLoading.value = false;
     }
@@ -192,39 +205,5 @@ class PondokController extends GetxController {
     } finally {
       isLoading.value = false;
     }
-  }
-
-  void _loadMockData() {
-    dormStats.value = {
-      'total_asrama': 2,
-      'total_kamar': 5,
-      'total_santri': 50,
-      'kapasitas_tersedia': 10,
-    };
-
-    dormList.assignAll([
-      {
-        'id': 1,
-        'name': 'Blok A (Abu Bakar)',
-        'lokasi': 'Timur Masjid',
-        'total_rooms': 3,
-        'occupied_rooms': 2,
-        'total_santri': 28,
-        'kapasitas': 30,
-        'rois': '-',
-        'status': 'Available',
-      },
-      {
-        'id': 2,
-        'name': 'Blok B (Umar Bin Khattab)',
-        'lokasi': 'Selatan Masjid',
-        'total_rooms': 2,
-        'occupied_rooms': 2,
-        'total_santri': 24,
-        'kapasitas': 24,
-        'rois': '-',
-        'status': 'Full',
-      },
-    ]);
   }
 }

@@ -148,69 +148,19 @@ class KeuanganController extends GetxController {
             return;
           }
         } catch (e) {
-          // Handle error silently
+          debugPrint('Error fetching keuangan data: $e');
         }
 
-        // Fallback to mock data if API fails or not pimpinan role
-        cashStats.value = {
-          'saldo': 150000000,
-          'masuk_bulan_ini': 45000000,
-          'keluar_bulan_ini': 12000000,
-          'tagihan_aktif': 85000000,
-        };
-        // ... rest of mock data for transactions
-
-        var rawTransactions = [
-          {
-            'title': 'Pembayaran SPP - Ahmad',
-            'amount': 500000,
-            'type': 'Masuk',
-            'date': '2026-01-18',
-            'category': 'SPP'
-          },
-          {
-            'title': 'Listrik & Air Januari',
-            'amount': 2500000,
-            'type': 'Keluar',
-            'date': '2026-01-17',
-            'category': 'Operasional'
-          },
-          {
-            'title': 'Pembayaran SPP - Siti',
-            'amount': 450000,
-            'type': 'Masuk',
-            'date': '2026-01-17',
-            'category': 'SPP'
-          },
-          {
-            'title': 'Gaji Staff Kebersihan',
-            'amount': 4000000,
-            'type': 'Keluar',
-            'date': '2026-01-15',
-            'category': 'Gaji'
-          },
-          {
-            'title': 'Uang Makan - Budi',
-            'amount': 300000,
-            'type': 'Masuk',
-            'date': '2026-01-14',
-            'category': 'Konsumsi'
-          },
-        ];
-
-        // Apply local filtering for mock demo
-        var filtered = rawTransactions.where((item) {
-          bool matchType = selectedType.value == 'Semua' ||
-              item['type'] == selectedType.value;
-          bool matchSearch = searchQuery.value.isEmpty ||
-              item['title']
-                  .toString()
-                  .toLowerCase()
-                  .contains(searchQuery.value.toLowerCase());
-          return matchType && matchSearch;
-        }).toList();
-
-        transactions.assignAll(filtered);
+        // If API fails, show empty state
+        if (cashStats.isEmpty) {
+          cashStats.value = {
+            'saldo': 0,
+            'masuk_bulan_ini': 0,
+            'keluar_bulan_ini': 0,
+            'tagihan_aktif': 0,
+          };
+          transactions.clear();
+        }
       } else {
         // SANTRI, SISWA, OR ORANGTUA
         try {
@@ -228,19 +178,36 @@ class KeuanganController extends GetxController {
               if (childBills != null && childBills is List) {
                 rawBills.addAll(childBills
                     .map((map) {
-                      String status = map['status'] ?? 'Unpaid';
-                      if (status.toLowerCase() == 'pending') status = 'Unpaid';
+                      String status =
+                          map['status_pembayaran'] ?? map['status'] ?? 'Unpaid';
+                      if (status.toLowerCase() == 'pending' ||
+                          status.toLowerCase() == 'belum_lunas') {
+                        status = 'Unpaid';
+                      }
+                      if (status.toLowerCase() == 'lunas') {
+                        status = 'Paid';
+                      }
 
                       return {
                         'id': map['id'],
                         'title':
-                            "${map['judul'] ?? map['nama_tagihan'] ?? 'Tagihan'} ($childName)",
-                        'amount': int.tryParse(
-                                (map['total_tagihan'] ?? map['jumlah'] ?? 0)
-                                    .toString()) ??
-                            0,
+                            "${map['jenis_pembayaran'] ?? map['judul'] ?? map['nama_tagihan'] ?? 'Tagihan'} ($childName)",
+                        'amount': ((double.tryParse(
+                                        (map['jumlah_harus_dibayar'] ??
+                                                map['total_tagihan'] ??
+                                                map['jumlah'] ??
+                                                0)
+                                            .toString()) ??
+                                    0.0) -
+                                (double.tryParse(
+                                        (map['jumlah_sudah_dibayar'] ?? 0)
+                                            .toString()) ??
+                                    0.0))
+                            .toInt(),
                         'status': status.capitalizeFirst,
-                        'date': map['created_at']?.split(' ')[0] ?? '',
+                        'date': map['tanggal'] ??
+                            map['created_at']?.split(' ')[0] ??
+                            '',
                         'period': map['bulan'] ?? '-',
                         'description': map['catatan'] ?? '',
                         'transaction_id': map['transaksi_id'],
@@ -257,18 +224,36 @@ class KeuanganController extends GetxController {
               rawBills = response.map((map) {
                 // Cast to Map first if needed, dynamic list item usually dynamic
                 final item = map as Map<String, dynamic>;
-                String status = item['status'] ?? 'Unpaid';
-                if (status.toLowerCase() == 'pending') status = 'Unpaid';
+                String status =
+                    item['status_pembayaran'] ?? item['status'] ?? 'Unpaid';
+                if (status.toLowerCase() == 'pending' ||
+                    status.toLowerCase() == 'belum_lunas') {
+                  status = 'Unpaid';
+                }
+                if (status.toLowerCase() == 'lunas') {
+                  status = 'Paid';
+                }
 
                 return {
                   'id': item['id'],
-                  'title': item['judul'] ?? item['nama_tagihan'] ?? 'Tagihan',
-                  'amount': int.tryParse(
-                          (item['total_tagihan'] ?? item['jumlah'] ?? 0)
-                              .toString()) ??
-                      0,
+                  'title': item['jenis_pembayaran'] ??
+                      item['judul'] ??
+                      item['nama_tagihan'] ??
+                      'Tagihan',
+                  'amount': ((double.tryParse((item['jumlah_harus_dibayar'] ??
+                                      item['total_tagihan'] ??
+                                      item['jumlah'] ??
+                                      0)
+                                  .toString()) ??
+                              0.0) -
+                          (double.tryParse((item['jumlah_sudah_dibayar'] ?? 0)
+                                  .toString()) ??
+                              0.0))
+                      .toInt(),
                   'status': status.capitalizeFirst,
-                  'date': item['created_at']?.split(' ')[0] ?? '',
+                  'date': item['tanggal'] ??
+                      item['created_at']?.split(' ')[0] ??
+                      '',
                   'period': item['bulan'] ?? '-',
                   'description': item['catatan'] ?? '',
                   'transaction_id': item['transaction_id'],
@@ -326,25 +311,8 @@ class KeuanganController extends GetxController {
             .toList());
       }
     } catch (e) {
-      // Fallback mock data
-      paymentMethods.assignAll([
-        {
-          'id': 1,
-          'bank_name': 'Bank BRI',
-          'account_number': '0123456789012345',
-          'account_holder': 'Yayasan Nurul Huda',
-          'description': 'Rekening Utama Pesantren',
-          'is_active': true,
-        },
-        {
-          'id': 2,
-          'bank_name': 'Bank Mandiri',
-          'account_number': '1234567890123456',
-          'account_holder': 'Yayasan Nurul Huda',
-          'description': 'Rekening Alternatif',
-          'is_active': true,
-        },
-      ]);
+      debugPrint('Error fetching payment methods: $e');
+      paymentMethods.clear();
     }
   }
 
@@ -372,7 +340,7 @@ class KeuanganController extends GetxController {
     }
   }
 
-  Future<void> submitPayment(int billId, XFile? proof, String? notes) async {
+  Future<void> submitPayment(String billId, XFile? proof, String? notes) async {
     try {
       if (proof == null) {
         Get.snackbar('Error', 'Bukti pembayaran wajib diunggah',

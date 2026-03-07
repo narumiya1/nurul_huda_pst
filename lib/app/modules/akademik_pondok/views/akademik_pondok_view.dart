@@ -302,33 +302,23 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
   }
 
   String _getPageTitle(int index) {
-    if (controller.selectedIndex.value == -1) {
-      if (controller.menuType.value == 'SCHOOL') return 'Area Sekolah';
-      if (controller.menuType.value == 'PONDOK') return 'Area Pondok';
-      return 'Area Akademik';
+    if (controller.selectedSiswaForDetail.value != null && index == 1) {
+      return 'Detail Nilai Siswa';
     }
 
     switch (index) {
-      case 0:
-        return 'Rekap Nilai';
       case 1:
-        return 'Agenda Kegiatan';
+        return 'Rekap Nilai';
       case 2:
-        return 'Progress Tahfidz';
+        return 'Tahfidz';
       case 3:
-        return 'Laporan Absensi';
-      case 4:
-        return controller.userRole.value == 'pimpinan'
-            ? 'Data Kurikulum'
-            : 'Materi Pelajaran';
+        return 'Laporan Absensi Sekolah';
       case 5:
-        return 'Tugas Sekolah';
-      case 6:
-        return 'Jadwal Pelajaran';
-      case 7:
-        return 'Jadwal Aktivitas';
+        return 'Tugas & Materi';
+      case 10:
+        return 'Laporan Absensi Pondok';
       default:
-        return 'Detail';
+        return 'Akademik';
     }
   }
 
@@ -355,9 +345,9 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
       },
       {
         'index': 3,
-        'title': 'Absensi', // Riwayat Absensi
-        'icon': Icons.assignment_turned_in_rounded,
-        'color': AppColors.accentOrange,
+        'title': 'Absensi Sekolah',
+        'icon': Icons.school_rounded,
+        'color': AppColors.accentBlue,
         'roles': [
           'pimpinan',
           'santri',
@@ -366,7 +356,22 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'staff_keuangan',
           'roissantri'
         ],
-        'category': 'ALL',
+        'category': 'SCHOOL',
+      },
+      {
+        'index': 10,
+        'title': 'Absensi Pondok',
+        'icon': Icons.home_work_rounded,
+        'color': AppColors.primary,
+        'roles': [
+          'pimpinan',
+          'santri',
+          'siswa',
+          'staff_pesantren',
+          'staff_keuangan',
+          'roissantri'
+        ],
+        'category': 'PONDOK',
       },
       {
         'index': 6,
@@ -461,8 +466,26 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
         'category': 'PONDOK',
       },
       {
+        'index': 11,
+        'title': 'Izin Sekolah',
+        'icon': Icons.assignment_turned_in_rounded,
+        'color': AppColors.accentBlue,
+        'roles': [
+          'pimpinan',
+          'santri',
+          'siswa',
+          'guru',
+          'guru_pesantren',
+          'guru_sekolah',
+          'staff_pesantren',
+          'staff_keuangan',
+          'roissantri'
+        ],
+        'category': 'SCHOOL',
+      },
+      {
         'index': 9,
-        'title': 'Perizinan',
+        'title': 'Izin Pondok',
         'icon': Icons.fact_check_rounded,
         'color': Colors.teal,
         'roles': [
@@ -517,21 +540,17 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             } else if (targetIndex == 8) {
               Get.toNamed(Routes.pelanggaran);
             } else if (targetIndex == 9) {
-              // Perizinan - use role-specific route
-              if (isSantri) {
-                Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 1});
-              } else if (isSiswa) {
-                Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 1});
-              } else {
-                Get.toNamed(Routes.absensi, arguments: {'initialTab': 1});
-              }
+              // Izin Pondok
+              Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 1});
+            } else if (targetIndex == 11) {
+              // Izin Sekolah
+              Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 1});
             } else if (targetIndex == 3 && (isSantri || isSiswa)) {
-              // Absensi - use role-specific route
-              if (isSantri) {
-                Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 0});
-              } else {
-                Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 0});
-              }
+              // Absensi Sekolah
+              Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 0});
+            } else if (targetIndex == 10 && (isSantri || isSiswa)) {
+              // Absensi Pondok
+              Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 0});
             } else {
               controller.selectedIndex.value = targetIndex;
               controller.applyFilters();
@@ -577,11 +596,13 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
       case 2:
         return _buildTahfidzProgress();
       case 3:
+      case 10:
         return _buildAttendanceReport();
+      case 4:
       case 5:
         return _buildTugasSekolah();
       default:
-        return const SizedBox.shrink();
+        return const Center(child: Text('Under Construction'));
     }
   }
 
@@ -1029,7 +1050,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item['judul'] ?? 'Tugas',
+                        Text(item['title'] ?? item['judul'] ?? 'Tugas',
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
@@ -1089,11 +1110,12 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
-                    Text(item['mapel'] is Map
-                        ? item['mapel']['nama_mapel'] ??
-                            item['mapel']['nama'] ??
-                            '-'
-                        : 'Mapel Lain'),
+                    Text(item['subject'] ??
+                        (item['mapel'] is Map
+                            ? item['mapel']['nama_mapel'] ??
+                                item['mapel']['nama'] ??
+                                '-'
+                            : 'Kegiatan')),
                     const SizedBox(height: 4),
                     Text('Deadline: ${item['deadline'] ?? '-'}',
                         style: const TextStyle(

@@ -204,9 +204,8 @@ class TeacherAreaController extends GetxController {
       List<dynamic> data = [];
 
       if (isRois) {
-        // Rois doesn't usually browse classes, they have their rooms.
-        // We can mock a "Kamar" placeholder or fetch their room if API supports it as a list.
-        // For now, if getSantri returns all, we just mock "Kamar Saya"
+        // Rois views their room members, not school classes
+        // Use a special placeholder to represent their room
         kelasList.assignAll([
           {
             'id': -1, // Special ID for "My Room"
@@ -230,19 +229,8 @@ class TeacherAreaController extends GetxController {
       debugPrint('DEBUG: Kelas list response: $data');
 
       if (data.isEmpty) {
-        debugPrint('DEBUG: Kelas list is empty, using fallback mock');
-        kelasList.assignAll([
-          {
-            'id': 1,
-            'nama_kelas': 'VII A (Demo)',
-            'tingkat': {'nama_tingkat': 'VII'}
-          },
-          {
-            'id': 2,
-            'nama_kelas': 'VIII B (Demo)',
-            'tingkat': {'nama_tingkat': 'VIII'}
-          },
-        ]);
+        debugPrint('DEBUG: Kelas list is empty');
+        kelasList.clear();
       } else {
         // Handle nested 'kelas' object from API
         final normalized = data.map((e) {
@@ -257,16 +245,7 @@ class TeacherAreaController extends GetxController {
       }
     } catch (e) {
       debugPrint('DEBUG: Error fetching kelas list: $e');
-      // Fallback
       kelasList.clear();
-      // Ensure fallback shows even on error for debugging
-      kelasList.assignAll([
-        {
-          'id': 1,
-          'nama_kelas': 'VII A (Fallback)',
-          'tingkat': {'nama_tingkat': 'VII'}
-        },
-      ]);
     } finally {
       isLoading.value = false;
     }
@@ -394,25 +373,8 @@ class TeacherAreaController extends GetxController {
         List<Map<String, dynamic>> mappedList = [];
 
         if (rawList.isEmpty && refresh) {
-          debugPrint('DEBUG: List empty, using fallback demo data');
-          // Demo data only on refresh/first load if empty
-          mappedList = [
-            {
-              'id': 101,
-              'details': {'full_name': 'Siswa Demo 1'},
-              'username': 'siswa1'
-            },
-            {
-              'id': 102,
-              'details': {'full_name': 'Siswa Demo 2'},
-              'username': 'siswa2'
-            },
-            {
-              'id': 103,
-              'details': {'full_name': 'Siswa Demo 3'},
-              'username': 'siswa3'
-            },
-          ];
+          debugPrint('DEBUG: List empty, no siswa data');
+          mappedList = [];
         } else {
           mappedList = rawList.map((e) {
             final map = e as Map<String, dynamic>;
@@ -447,8 +409,13 @@ class TeacherAreaController extends GetxController {
             }
           } else {
             try {
+              final sekolahId = selectedKelas.value?['sekolah_id'];
+              if (sekolahId == null) {
+                debugPrint('Warning: sekolah_id is null for selected kelas');
+                // Still continue to fetch, but skip sekolah filter
+              }
               final existingAttendance = await _guruRepository.getAbsensi(
-                sekolahId: selectedKelas.value?['sekolah_id'] ?? 1,
+                sekolahId: sekolahId ?? selectedKelas.value?['id'] ?? 0,
                 kelasId: kelasId,
                 tanggal: DateTime.now().toString().split(' ')[0],
               );
@@ -577,8 +544,14 @@ class TeacherAreaController extends GetxController {
                 })
             .toList();
 
+        final sekolahId = selectedKelas.value!['sekolah_id'];
+        if (sekolahId == null) {
+          Get.snackbar('Error', 'Data sekolah tidak ditemukan untuk kelas ini',
+              backgroundColor: Colors.red, colorText: Colors.white);
+          return;
+        }
         final data = {
-          'sekolah_id': selectedKelas.value!['sekolah_id'] ?? 1,
+          'sekolah_id': sekolahId,
           'kelas_id': selectedKelas.value!['id'],
           'tanggal': DateTime.now().toString().split(' ')[0],
           'students': students,
@@ -926,8 +899,19 @@ class TeacherAreaController extends GetxController {
       tingkatSantriList.assignAll(tingkatData);
 
       // Fetch mapel pondok
-      final mapelData = await _guruRepository.getMapelPondok();
-      mapelPondokList.assignAll(mapelData);
+      final mapelData = await _guruRepository.getMyMapel();
+      final List<dynamic> extractedMapel =
+          mapelData.map((e) => e['mapel'] ?? e).toList();
+
+      // Filter out duplicate mapels if any based on id
+      final uniqueMapels = <int, dynamic>{};
+      for (var mapel in extractedMapel) {
+        if (mapel != null && mapel['id'] != null) {
+          uniqueMapels[mapel['id']] = mapel;
+        }
+      }
+
+      mapelPondokList.assignAll(uniqueMapels.values.toList());
     } catch (e) {
       debugPrint('Error fetching dropdowns: $e');
     }

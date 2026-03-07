@@ -108,7 +108,7 @@ class AbsensiSiswaController extends GetxController
 
   Future<void> fetchPerizinan() async {
     try {
-      final data = await _santriRepository.getPerizinan();
+      final data = await _santriRepository.getPerizinan(tipe: 'Sekolah');
       perizinanList
           .assignAll(data.map((e) => e as Map<String, dynamic>).toList());
     } catch (e) {
@@ -132,6 +132,7 @@ class AbsensiSiswaController extends GetxController
         'tanggal_keluar': tanggalKeluarController.text,
         'tanggal_kembali': tanggalKembaliController.text,
         'penjemput': penjemputController.text,
+        'tipe': 'Sekolah',
       });
 
       Get.back();

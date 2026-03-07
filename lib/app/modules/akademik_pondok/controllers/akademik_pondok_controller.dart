@@ -395,17 +395,7 @@ class AkademikPondokController extends GetxController {
       }
     } catch (e) {
       debugPrint('Error fetching kurikulum: $e');
-      if (dataKurikulum.isEmpty) {
-        dataKurikulum.assignAll([
-          {
-            'mapel': 'Contoh Materi',
-            'pengajar': '-',
-            'kitab': 'Silakan muat ulang',
-            'tingkat': '-',
-            'type': 'Info'
-          }
-        ]);
-      }
+      dataKurikulum.clear();
     }
   }
 
@@ -500,36 +490,9 @@ class AkademikPondokController extends GetxController {
       filteredRekapNilai.assignAll(rekapNilai);
     } catch (e) {
       debugPrint('Error fetching rekap nilai: $e');
-      final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' ||
-          role == 'siswa' ||
-          role == 'guru' ||
-          role == 'guru_pesantren' ||
-          role == 'guru_sekolah') {
-        final dummy = [
-          {
-            'is_personal': true,
-            'mapel': 'Fiqih',
-            'nilai': 85,
-            'tingkat': 'VII',
-            'semester': 'Ganjil',
-            'tahun': '2025/2026',
-            'jenis': 'UTS',
-          }
-        ];
-        _processMappedNilai(dummy);
-      } else {
-        rekapNilai.assignAll([
-          {
-            'tingkat': 'VII',
-            'rata_rata': 84.5,
-            'tertinggi': 98.0,
-            'terendah': 65.0
-          },
-        ]);
-        groupedRekapNilai.clear();
-      }
-      filteredRekapNilai.assignAll(rekapNilai);
+      rekapNilai.clear();
+      groupedRekapNilai.clear();
+      filteredRekapNilai.clear();
     }
   }
 
@@ -637,14 +600,7 @@ class AkademikPondokController extends GetxController {
         }
       }
     } catch (e) {
-      agendaKegiatan.assignAll([
-        {
-          'time': '04:30',
-          'title': 'Shalat Subuh',
-          'location': 'Masjid',
-          'category': 'Ibadah'
-        },
-      ]);
+      agendaKegiatan.clear();
     }
   }
 
@@ -709,15 +665,7 @@ class AkademikPondokController extends GetxController {
         }).toList());
       }
     } catch (e) {
-      progressTahfidz.assignAll([
-        {
-          'nama': 'Kelompok Abu Bakar',
-          'target': 30,
-          'achieved': 12.5,
-          'percent': 0.42,
-          'type': 'Pemula'
-        },
-      ]);
+      progressTahfidz.clear();
     }
   }
 
@@ -734,9 +682,7 @@ class AkademikPondokController extends GetxController {
         ]);
       }
     } catch (e) {
-      laporanAbsensi.assignAll([
-        {'label': 'Hadir', 'value': 280, 'color': 'green'},
-      ]);
+      laporanAbsensi.clear();
     }
   }
 

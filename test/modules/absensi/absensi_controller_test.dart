@@ -29,7 +29,7 @@ class MockSantriRepository extends SantriRepository {
   }
 
   @override
-  Future<List<dynamic>> getPerizinan() async {
+  Future<List<dynamic>> getPerizinan({String? tipe}) async {
     return [
       {'jenis_izin': 'Sakit', 'status': 'pending'}
     ];

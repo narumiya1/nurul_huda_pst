@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../api/santri/santri_repository.dart';
 import '../controllers/absensi_siswa_controller.dart';
 
 class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
@@ -22,7 +21,6 @@ class AbsensiSiswaView extends GetView<AbsensiSiswaController> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: GetBuilder<AbsensiSiswaController>(
-            init: AbsensiSiswaController(SantriRepository()),
             builder: (ctrl) => TabBar(
               controller: ctrl.tabController,
               indicatorColor: AppColors.accentBlue,

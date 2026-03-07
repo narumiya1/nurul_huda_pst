@@ -7,9 +7,9 @@ import 'package:epesantren_mob/app/helpers/local_storage.dart';
 class AbsensiSantriController extends GetxController
     with GetSingleTickerProviderStateMixin {
   final SantriRepository _santriRepository;
-  final _orangtuaRepository = Get.find<OrangtuaRepository>();
+  final OrangtuaRepository _orangtuaRepository;
 
-  AbsensiSantriController(this._santriRepository);
+  AbsensiSantriController(this._santriRepository, this._orangtuaRepository);
 
   late TabController tabController;
 

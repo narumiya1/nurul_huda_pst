@@ -704,8 +704,7 @@ class HomePage extends GetView<DashboardController> {
                                     Text(
                                       schoolName,
                                       style: TextStyle(
-                                        color:
-                                            Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withOpacity(0.8),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -731,12 +730,11 @@ class HomePage extends GetView<DashboardController> {
                                     width: 90,
                                     height: 110,
                                     decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withOpacity(0.15),
+                                        color: Colors.white.withOpacity(0.15),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                            color: Colors.white
-                                                .withOpacity(0.5),
+                                            color:
+                                                Colors.white.withOpacity(0.5),
                                             width: 2),
                                         image: photoUrl != null
                                             ? DecorationImage(
@@ -811,8 +809,8 @@ class HomePage extends GetView<DashboardController> {
                                     Obx(() => Text(
                                           "NIS: ${controller.userData.value?['username'] ?? '-'}",
                                           style: TextStyle(
-                                              color: Colors.white
-                                                  .withOpacity(0.9),
+                                              color:
+                                                  Colors.white.withOpacity(0.9),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                               fontFamily: 'SFPro'),
@@ -826,8 +824,7 @@ class HomePage extends GetView<DashboardController> {
                                       return Text(
                                         "KELAS: $kelas",
                                         style: TextStyle(
-                                          color: Colors.white
-                                              .withOpacity(0.7),
+                                          color: Colors.white.withOpacity(0.7),
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -1181,8 +1178,7 @@ class HomePage extends GetView<DashboardController> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(item.icon,
-                        size: 14, color: color.withOpacity(0.7)),
+                    Icon(item.icon, size: 14, color: color.withOpacity(0.7)),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Column(
@@ -1193,8 +1189,7 @@ class HomePage extends GetView<DashboardController> {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary
-                                  .withOpacity(0.7),
+                              color: AppColors.textSecondary.withOpacity(0.7),
                             ),
                           ),
                           Text(
@@ -1555,8 +1550,7 @@ class HomePage extends GetView<DashboardController> {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
-                                  color:
-                                      AppColors.primary.withOpacity(0.1),
+                                  color: AppColors.primary.withOpacity(0.1),
                                   child: const Icon(Icons.broken_image,
                                       color: AppColors.primary, size: 30),
                                 ),
@@ -1820,7 +1814,9 @@ class HomePage extends GetView<DashboardController> {
                           arguments: {'type': 'SCHOOL'});
                       break;
                     case 'Pondok':
-                      if (role == 'santri' || role == 'siswa') {
+                      if (role == 'santri' ||
+                          role == 'siswa' ||
+                          role == 'orangtua') {
                         Get.toNamed(Routes.akademikPondok,
                             arguments: {'type': 'PONDOK'});
                       } else {

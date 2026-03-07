@@ -121,7 +121,7 @@ class OrangtuaApi {
   Future<dynamic> getChildTasks(int santriId, {String? tipe}) async {
     final uri = ApiHelper.buildUri(
         endpoint: 'orangtua/child-tasks/$santriId',
-        params: tipe != null ? {'tipe': tipe} : null);
+        params: tipe != null ? {'type': tipe} : null);
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,

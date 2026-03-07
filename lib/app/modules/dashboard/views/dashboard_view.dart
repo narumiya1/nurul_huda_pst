@@ -187,7 +187,19 @@ class HomePage extends GetView<DashboardController> {
                                     backgroundColor:
                                         AppColors.primary.withOpacity(0.1),
                                     backgroundImage: child['foto'] != null
-                                        ? NetworkImage(child['foto'])
+                                        ? NetworkImage(child['foto']
+                                                .toString()
+                                                .startsWith('http')
+                                            ? child['foto'].toString()
+                                            : ApiHelper.buildUri(endpoint: '')
+                                                    .toString()
+                                                    .replaceAll(
+                                                        '/v1/api/', '') +
+                                                (child['foto']
+                                                        .toString()
+                                                        .startsWith('/')
+                                                    ? child['foto'].toString()
+                                                    : '/${child['foto']}'))
                                         : null,
                                     child: child['foto'] == null
                                         ? const Icon(Icons.person,

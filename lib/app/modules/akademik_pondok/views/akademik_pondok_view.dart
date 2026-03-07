@@ -550,16 +550,32 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
               Get.toNamed(Routes.pelanggaran);
             } else if (targetIndex == 9) {
               // Izin Pondok
-              Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 1});
+              Get.toNamed(Routes.absensiSantri, arguments: {
+                'initialTab': 1,
+                'childId': controller.selectedChildId.value,
+                'childTipe': controller.selectedChildTipe.value,
+              });
             } else if (targetIndex == 11) {
               // Izin Sekolah
-              Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 1});
+              Get.toNamed(Routes.absensiSiswa, arguments: {
+                'initialTab': 1,
+                'childId': controller.selectedChildId.value,
+                'childTipe': controller.selectedChildTipe.value,
+              });
             } else if (targetIndex == 3 && (isStudent || role == 'orangtua')) {
               // Absensi Sekolah
-              Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 0});
+              Get.toNamed(Routes.absensiSiswa, arguments: {
+                'initialTab': 0,
+                'childId': controller.selectedChildId.value,
+                'childTipe': controller.selectedChildTipe.value,
+              });
             } else if (targetIndex == 10 && (isStudent || role == 'orangtua')) {
               // Absensi Pondok
-              Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 0});
+              Get.toNamed(Routes.absensiSantri, arguments: {
+                'initialTab': 0,
+                'childId': controller.selectedChildId.value,
+                'childTipe': controller.selectedChildTipe.value,
+              });
             } else {
               controller.selectedIndex.value = targetIndex;
               controller.applyFilters();

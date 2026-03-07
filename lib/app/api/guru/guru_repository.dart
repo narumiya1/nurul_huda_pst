@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:epesantren_mob/app/api/guru/guru_api.dart';
 
 class GuruRepository {
@@ -149,10 +150,13 @@ class GuruRepository {
   }
 
   /// Create new tugas santri
-  Future<bool> createTugasSantri(Map<String, dynamic> data) async {
+  Future<bool> createTugasSantri(Map<String, dynamic> data,
+      {File? file}) async {
     try {
-      final response = await _guruApi.createTugasSantri(data);
-      return response['success'] == true || response['status'] == true;
+      final response = await _guruApi.createTugasSantri(data, file: file);
+      return response['success'] == true ||
+          response['status'] == true ||
+          response != null;
     } catch (e) {
       rethrow;
     }
@@ -230,7 +234,10 @@ class GuruRepository {
     try {
       final response = await _guruApi.getMapelPondok();
       if (response['success'] == true || response['status'] == true) {
-        return response['data'] ?? [];
+        final data = response['data'];
+        if (data is List) return data;
+        if (data is Map && data['data'] is List) return data['data'];
+        return [];
       }
       if (response is List) return response;
       return [];

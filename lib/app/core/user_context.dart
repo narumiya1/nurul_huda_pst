@@ -130,12 +130,16 @@ class UserContext {
   static String _extractRole(Map<String, dynamic> userData) {
     final role = userData['role'];
     if (role == null) return 'netizen';
-    if (role is String) return role.toLowerCase().replaceAll(' ', '_');
+    if (role is String) {
+      String res = role.toLowerCase().replaceAll(' ', '_');
+      return res == 'orang_tua' ? 'orangtua' : res;
+    }
     if (role is Map) {
-      return (role['role_name'] ?? 'netizen')
+      String res = (role['role_name'] ?? 'netizen')
           .toString()
           .toLowerCase()
           .replaceAll(' ', '_');
+      return res == 'orang_tua' ? 'orangtua' : res;
     }
     return 'netizen';
   }

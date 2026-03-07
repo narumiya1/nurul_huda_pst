@@ -160,16 +160,32 @@ class SantriRepository {
     }
   }
 
-  Future<bool> submitTugasPondok(Map<String, dynamic> payload) async {
+  Future<bool> submitTugasPondok(Map<String, dynamic> payload,
+      {File? file}) async {
     try {
       final uri = ApiHelper.buildUri(endpoint: 'submit-tugas-santri');
+
+      if (file != null) {
+        final fields = payload.map((k, v) => MapEntry(k, v.toString()));
+        final response = await _apiHelper.postImageData(
+          uri: uri,
+          files: {'file': file},
+          fields: fields,
+          builder: (data) => data,
+          header: _getAuthHeaderMultipart(),
+        );
+        return response['status'] == true ||
+            response['success'] == true ||
+            response != null;
+      }
+
       final response = await _apiHelper.postData(
         uri: uri,
         jsonBody: payload,
         builder: (data) => data,
         header: _getAuthHeader(),
       );
-      return response['success'] == true;
+      return response['status'] == true || response['success'] == true;
     } catch (e) {
       debugPrint('Error submitting tugas pondok: $e');
       return false;

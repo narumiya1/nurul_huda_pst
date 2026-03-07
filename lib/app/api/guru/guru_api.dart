@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:epesantren_mob/app/helpers/api_helpers.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
@@ -7,6 +8,11 @@ class GuruApi {
   Map<String, String> _getAuthHeader() {
     final token = LocalStorage.getToken();
     return ApiHelper.tokenHeader(token ?? '');
+  }
+
+  Map<String, String> _getAuthHeaderMultipart() {
+    final token = LocalStorage.getToken();
+    return ApiHelper.tokenHeaderMultipart(token ?? '');
   }
 
   Future<dynamic> getDashboardStats() async {
@@ -113,7 +119,7 @@ class GuruApi {
 
   /// Get detail of a tugas santri
   Future<dynamic> getTugasSantriDetail(int id) async {
-    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/$id');
+    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri-detail/$id');
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
@@ -122,8 +128,22 @@ class GuruApi {
   }
 
   /// Create new tugas santri
-  Future<dynamic> createTugasSantri(Map<String, dynamic> data) async {
-    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
+  Future<dynamic> createTugasSantri(Map<String, dynamic> data,
+      {File? file}) async {
+    final uri = ApiHelper.buildUri(endpoint: 'create-tugas-santri');
+
+    if (file != null) {
+      // Map all data to String for multipart fields
+      final fields = data.map((key, value) => MapEntry(key, value.toString()));
+      return await _apiHelper.postImageData(
+        uri: uri,
+        files: {'file': file},
+        fields: fields,
+        builder: (data) => data,
+        header: _getAuthHeaderMultipart(),
+      );
+    }
+
     return await _apiHelper.postData(
       uri: uri,
       builder: (data) => data,
@@ -134,8 +154,8 @@ class GuruApi {
 
   /// Update tugas santri
   Future<dynamic> updateTugasSantri(Map<String, dynamic> data) async {
-    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri');
-    return await _apiHelper.patchData(
+    final uri = ApiHelper.buildUri(endpoint: 'update-tugas-santri');
+    return await _apiHelper.postData(
       uri: uri,
       builder: (data) => data,
       jsonBody: data,
@@ -145,8 +165,8 @@ class GuruApi {
 
   /// Delete tugas santri
   Future<dynamic> deleteTugasSantri(int id) async {
-    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/$id');
-    return await _apiHelper.deleteData(
+    final uri = ApiHelper.buildUri(endpoint: 'delete-tugas-santri/$id');
+    return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,
       header: _getAuthHeader(),
@@ -155,7 +175,7 @@ class GuruApi {
 
   /// Grade a tugas santri submission
   Future<dynamic> gradeTugasSantri(Map<String, dynamic> data) async {
-    final uri = ApiHelper.buildUri(endpoint: 'tugas-santri/grade');
+    final uri = ApiHelper.buildUri(endpoint: 'grade-tugas-santri');
     return await _apiHelper.postData(
       uri: uri,
       builder: (data) => data,
@@ -188,7 +208,8 @@ class GuruApi {
 
   /// Get mapel pondok list
   Future<dynamic> getMapelPondok() async {
-    final uri = ApiHelper.buildUri(endpoint: 'mapels');
+    final uri =
+        ApiHelper.buildUri(endpoint: 'mapel', params: {'per_page': '100'});
     return await _apiHelper.getData(
       uri: uri,
       builder: (data) => data,

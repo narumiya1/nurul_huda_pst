@@ -142,14 +142,18 @@ class AkademikPondokController extends GetxController {
     final user = LocalStorage.getUser();
     if (user != null) {
       final role = user['role'];
+      String normalized = 'netizen';
       if (role is String) {
-        userRole.value = role.toLowerCase().replaceAll(' ', '_');
+        normalized = role.toLowerCase().replaceAll(' ', '_');
       } else if (role is Map) {
-        userRole.value = (role['role_name'] ?? 'netizen')
+        normalized = (role['role_name'] ?? 'netizen')
             .toString()
             .toLowerCase()
             .replaceAll(' ', '_');
       }
+      // Normalize 'orang_tua' to 'orangtua' used in checks
+      if (normalized == 'orang_tua') normalized = 'orangtua';
+      userRole.value = normalized;
     }
   }
 
@@ -207,10 +211,15 @@ class AkademikPondokController extends GetxController {
 
       final bool success;
       if (isPondok) {
-        success = await _santriRepository.submitTugasPondok({
-          'tugas_santri_id': tugasId,
-          'jawaban_teks': jawaban,
-        });
+        success = await _santriRepository.submitTugasPondok(
+          {
+            'tugas_id': tugasId,
+            'catatan': jawaban,
+          },
+          file: selectedAssignmentFiles.isNotEmpty
+              ? selectedAssignmentFiles.first
+              : null,
+        );
       } else {
         success = await _santriRepository.submitTugas(
           fields,
@@ -382,9 +391,43 @@ class AkademikPondokController extends GetxController {
         return;
       }
 
+      if (role == 'orangtua' && selectedChildId.value != null) {
+        // Parents can see curriculum relevant to their child
+        final response = await _pimpinanRepository.getKurikulum();
+        dynamic rawData = response['data'];
+
+        // Handle paginated responses where data is wrapped in another data field
+        List kurikulumData = [];
+        if (rawData is List) {
+          kurikulumData = rawData;
+        } else if (rawData is Map && rawData['data'] is List) {
+          kurikulumData = rawData['data'];
+        }
+
+        if (kurikulumData.isNotEmpty) {
+          dataKurikulum.assignAll(kurikulumData.map((item) {
+            return {
+              'mapel': item['name'] ?? 'Tanpa Nama',
+              'pengajar': '-',
+              'kitab': '-',
+              'tingkat': item['tingkat']?.toString() ?? '-',
+              'type': item['category'] ?? 'Umum',
+            };
+          }).toList());
+        }
+        return;
+      }
+
       final response = await _pimpinanRepository.getKurikulum();
-      if (response['data'] != null) {
-        final List kurikulumData = response['data'] ?? [];
+      dynamic rawData = response['data'];
+      List kurikulumData = [];
+      if (rawData is List) {
+        kurikulumData = rawData;
+      } else if (rawData is Map && rawData['data'] is List) {
+        kurikulumData = rawData['data'];
+      }
+
+      if (kurikulumData.isNotEmpty) {
         dataKurikulum.assignAll(kurikulumData.map((item) {
           return {
             'mapel': item['name'] ?? 'Tanpa Nama',
@@ -582,6 +625,30 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchAgenda() async {
     try {
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'orangtua' && selectedChildId.value != null) {
+        final response = await _orangtuaRepository.getChildSchedule(
+          selectedChildId.value!,
+          tipe: selectedChildTipe.value,
+        );
+        if (response != null && response is List) {
+          agendaKegiatan.assignAll(response.map((item) {
+            String category = 'Umum';
+            final tipe = item['tipe']?.toString() ?? '';
+            if (tipe == 'harian' || tipe == 'mingguan') category = 'Pondok';
+            return {
+              'time': item['jam_mulai'] ?? (item['jam'] ?? '00:00'),
+              'title': item['judul'] ?? (item['nama_kegiatan'] ?? 'Kegiatan'),
+              'location': item['lokasi'] ?? '-',
+              'category': category,
+              'description': item['deskripsi'] ?? '',
+              'day': item['hari'] ?? '',
+            };
+          }).toList());
+          return;
+        }
+      }
+
       final response = await _pimpinanRepository.getAgenda();
       if (response['data'] != null) {
         final List list = response['data'] is List ? response['data'] : [];
@@ -609,13 +676,27 @@ class AkademikPondokController extends GetxController {
   Future<void> _fetchTahfidz() async {
     try {
       final role = userRole.value.toLowerCase().trim();
-      if (role == 'santri' ||
-          role == 'siswa' ||
-          role == 'guru' ||
-          role == 'guru_pesantren' ||
-          role == 'guru_sekolah') {
-        final progress = await _santriRepository.getMyTahfidz();
-        if (progress.isNotEmpty) {
+      if ((role == 'santri' ||
+              role == 'siswa' ||
+              role == 'guru' ||
+              role == 'guru_pesantren' ||
+              role == 'guru_sekolah') ||
+          (role == 'orangtua' && selectedChildId.value != null)) {
+        dynamic progress;
+        if (role == 'orangtua') {
+          // For parents, tahfidz info might be in summary
+          final summary = await _orangtuaRepository.getChildSummary(
+            selectedChildId.value!,
+            tipe: selectedChildTipe.value,
+          );
+          if (summary != null && summary['tahfidz'] != null) {
+            progress = summary['tahfidz'];
+          }
+        } else {
+          progress = await _santriRepository.getMyTahfidz();
+        }
+
+        if (progress != null && progress is Map && progress.isNotEmpty) {
           final List<Map<String, dynamic>> items = [];
           items.add({
             'nama': 'Total Hafalan',
@@ -633,17 +714,29 @@ class AkademikPondokController extends GetxController {
           if (riwayat != null && riwayat.isNotEmpty) {
             for (var item in riwayat.take(4)) {
               items.add({
-                'nama': 'Surah ${item['surah']}',
+                'nama': 'Surah ${item['surah'] ?? item['nama_surah'] ?? '-'}',
                 'target': 1,
                 'achieved': 1,
                 'percent': 1.0,
-                'type': 'Setoran Baru: ${item['tanggal']}'
+                'type': 'Setoran Baru: ${item['tanggal'] ?? '-'}'
               });
             }
           }
           progressTahfidz.assignAll(items);
           return;
         }
+
+        // If data is empty for student/parent, don't fall through to pimpinan API
+        if (role == 'santri' || role == 'siswa' || role == 'orangtua') {
+          progressTahfidz.clear();
+          return;
+        }
+      }
+
+      // Only pimpinan/staff should reach here
+      if (role != 'pimpinan' && role != 'staff_pesantren') {
+        progressTahfidz.clear();
+        return;
       }
 
       final response = await _pimpinanRepository.getTahfidz();
@@ -811,6 +904,26 @@ class AkademikPondokController extends GetxController {
     try {
       selectedTugasId.value = tugasId;
       isLoading.value = true;
+
+      final role = userRole.value.toLowerCase().trim();
+      if (role == 'orangtua') {
+        // Parents should only see their child's submission, which is already in raw_data
+        final task = tugasList.firstWhereOrNull((t) => t['id'] == tugasId);
+        if (task != null && task['raw_data'] != null) {
+          final raw = task['raw_data'] as Map<String, dynamic>;
+          final subs = raw['submissions'];
+          if (subs is List) {
+            submissionsList
+                .assignAll(subs.map((e) => e as Map<String, dynamic>).toList());
+          } else {
+            submissionsList.clear();
+          }
+          return;
+        }
+        submissionsList.clear();
+        return;
+      }
+
       final response = await _santriRepository.getTugasSubmissions(tugasId);
       submissionsList
           .assignAll(response.map((e) => e as Map<String, dynamic>).toList());

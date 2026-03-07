@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:epesantren_mob/app/helpers/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/guru/guru_api.dart';
@@ -871,6 +874,7 @@ class TeacherAreaController extends GetxController {
   final selectedMapelPondok = Rxn<Map<String, dynamic>>();
   final selectedTanggalMulai = Rxn<DateTime>();
   final selectedDeadline = Rxn<DateTime>();
+  final selectedTugasFile = Rxn<File>();
 
   // Lists for dropdowns
   final tingkatSantriList = <dynamic>[].obs;
@@ -897,8 +901,13 @@ class TeacherAreaController extends GetxController {
   Future<void> fetchTugasSantriDropdowns() async {
     try {
       // Fetch tingkat santri
-      final tingkatData = await _guruRepository.getTingkatSantri();
-      tingkatSantriList.assignAll(tingkatData);
+      final rawTingkat = await _guruRepository.getTingkatSantri();
+      if (rawTingkat.isNotEmpty) {
+        tingkatSantriList.assignAll(rawTingkat.map((e) {
+          if (e is Map) return Map<String, dynamic>.from(e);
+          return <String, dynamic>{'nama': e.toString()};
+        }).toList());
+      }
 
       // Fetch mapel pondok
       // Try to get mapels assigned to this teacher first
@@ -918,10 +927,15 @@ class TeacherAreaController extends GetxController {
       }).toList();
 
       // Filter out duplicate mapels if any based on id
-      final uniqueMapels = <int, dynamic>{};
+      final uniqueMapels = <String, dynamic>{};
       for (var mapel in extractedMapel) {
-        if (mapel != null && mapel is Map && mapel['id'] != null) {
-          uniqueMapels[mapel['id']] = mapel;
+        if (mapel != null && mapel is Map) {
+          final id = mapel['id']?.toString() ??
+              mapel['mapel_id']?.toString() ??
+              mapel['sekolah_mapel_id']?.toString();
+          if (id != null) {
+            uniqueMapels[id] = Map<String, dynamic>.from(mapel);
+          }
         }
       }
 
@@ -933,10 +947,17 @@ class TeacherAreaController extends GetxController {
     }
   }
 
-  Future<void> fetchKelasSantriByTingkat(int tingkatId) async {
+  Future<void> fetchKelasSantriByTingkat(dynamic tingkatId) async {
     try {
-      final data = await _guruRepository.getKelasSantri(tingkatId: tingkatId);
-      kelasSantriList.assignAll(data);
+      final id = int.tryParse(tingkatId.toString());
+      if (id == null) return;
+      final data = await _guruRepository.getKelasSantri(tingkatId: id);
+      if (data.isNotEmpty) {
+        kelasSantriList.assignAll(data.map((e) {
+          if (e is Map) return Map<String, dynamic>.from(e);
+          return <String, dynamic>{'nama': e.toString()};
+        }).toList());
+      }
     } catch (e) {
       debugPrint('Error fetching kelas santri: $e');
     }
@@ -979,7 +1000,8 @@ class TeacherAreaController extends GetxController {
         'deadline': selectedDeadline.value!.toIso8601String().split('T')[0],
       };
 
-      final success = await _guruRepository.createTugasSantri(data);
+      final success = await _guruRepository.createTugasSantri(data,
+          file: selectedTugasFile.value);
 
       if (success) {
         Get.snackbar('Sukses', 'Tugas berhasil dibuat!',
@@ -1078,6 +1100,30 @@ class TeacherAreaController extends GetxController {
     selectedMapelPondok.value = null;
     selectedTanggalMulai.value = null;
     selectedDeadline.value = null;
+    selectedTugasFile.value = null;
     kelasSantriList.clear();
+  }
+
+  Future<void> pickTugasFile() async {
+    try {
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png', 'jpeg'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        selectedTugasFile.value = File(result.files.single.path!);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil file: $e');
+    }
+  }
+
+  void removeTugasFile() {
+    selectedTugasFile.value = null;
+  }
+
+  Future<void> downloadFile(String path, {String? filename}) async {
+    await FileHelper.downloadAndOpenFile(path, filename: filename);
   }
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:epesantren_mob/app/api/santri/santri_repository.dart';
+import 'package:epesantren_mob/app/api/orangtua/orangtua_repository.dart';
 import 'package:epesantren_mob/app/helpers/local_storage.dart';
 
 class AbsensiSiswaController extends GetxController
     with GetSingleTickerProviderStateMixin {
   final SantriRepository _santriRepository;
+  final _orangtuaRepository = Get.find<OrangtuaRepository>();
 
   AbsensiSiswaController(this._santriRepository);
 
@@ -74,8 +76,20 @@ class AbsensiSiswaController extends GetxController
   Future<void> fetchAbsensi() async {
     try {
       isLoading.value = true;
-      // Use backend filtering by passing tipe parameter
-      final data = await _santriRepository.getMyAbsensi(tipe: 'Sekolah');
+      List<dynamic> data = [];
+
+      final args = Get.arguments;
+      final childId = args is Map ? args['childId'] : null;
+      final childTipe = args is Map ? args['childTipe'] : null;
+
+      if (userRole == 'orangtua' && childId != null) {
+        data = await _orangtuaRepository.getChildAbsensi(
+          childId,
+          tipe: childTipe,
+        );
+      } else {
+        data = await _santriRepository.getMyAbsensi(tipe: 'Sekolah');
+      }
 
       debugPrint('=== SISWA ABSENSI DEBUG ===');
       debugPrint('Total data received: ${data.length}');
@@ -84,8 +98,7 @@ class AbsensiSiswaController extends GetxController
       final filtered = data.where((e) {
         final map = e as Map<String, dynamic>;
         final tipe = map['tipe'];
-        debugPrint('Data tipe: $tipe');
-        return tipe == 'Sekolah';
+        return tipe == 'Sekolah' || tipe == 'Siswa';
       }).map((e) {
         final map = e as Map<String, dynamic>;
         return {
@@ -97,7 +110,6 @@ class AbsensiSiswaController extends GetxController
         };
       }).toList();
 
-      debugPrint('Filtered data count: ${filtered.length}');
       absensiList.assignAll(filtered);
     } catch (e) {
       debugPrint('Error fetching siswa attendance: $e');

@@ -122,7 +122,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                      initialValue: controller.selectedKelas.value,
+                      value: controller.selectedKelas.value,
                       decoration: InputDecoration(
                         hintText: 'Pilih kelas...',
                         border: OutlineInputBorder(
@@ -388,7 +388,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             children: [
               Expanded(
                 child: Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                      initialValue: controller.selectedKelasRiwayat.value,
+                      value: controller.selectedKelasRiwayat.value,
                       decoration: InputDecoration(
                         hintText: 'Semua Kelas',
                         prefixIcon: const Icon(Icons.filter_list, size: 20),
@@ -507,8 +507,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                       contentPadding: const EdgeInsets.all(16),
                       leading: CircleAvatar(
                         radius: 24,
-                        backgroundColor:
-                            AppColors.primary.withOpacity(0.1),
+                        backgroundColor: AppColors.primary.withOpacity(0.1),
                         child: Text(
                           santriName.isNotEmpty
                               ? santriName[0].toUpperCase()
@@ -546,8 +545,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withOpacity(0.1),
+                                    color: AppColors.primary.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -622,7 +620,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                initialValue: controller.selectedKelasTahfidz.value,
+                value: controller.selectedKelasTahfidz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih kelas...',
                   border: OutlineInputBorder(
@@ -729,8 +727,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                 leading: CircleAvatar(
                                   backgroundColor: isSelected
                                       ? AppColors.primary
-                                      : AppColors.primary
-                                          .withOpacity(0.1),
+                                      : AppColors.primary.withOpacity(0.1),
                                   child: Text(
                                     name.isNotEmpty
                                         ? name[0].toUpperCase()
@@ -776,7 +773,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Obx(() => DropdownButtonFormField<int>(
-                initialValue: controller.selectedJuz.value,
+                value: controller.selectedJuz.value,
                 decoration: InputDecoration(
                   hintText: 'Pilih juz...',
                   border: OutlineInputBorder(
@@ -830,8 +827,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     .map((k) => ChoiceChip(
                           label: Text(k.replaceAll('_', ' ').capitalize!),
                           selected: controller.selectedKualitas.value == k,
-                          selectedColor:
-                              AppColors.primary.withOpacity(0.2),
+                          selectedColor: AppColors.primary.withOpacity(0.2),
                           onSelected: (_) =>
                               controller.selectedKualitas.value = k,
                         ))
@@ -898,7 +894,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<Map<String, dynamic>>(
-                        initialValue: controller.selectedKelas.value,
+                        value: controller.selectedKelas.value,
                         decoration: InputDecoration(
                           hintText: 'Kelas...',
                           isDense: true,
@@ -923,7 +919,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<Map<String, dynamic>>(
-                        initialValue: controller.selectedMapel.value,
+                        value: controller.selectedMapel.value,
                         decoration: InputDecoration(
                           hintText: 'Mapel...',
                           isDense: true,
@@ -950,7 +946,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: controller.selectedSemesterNilai.value,
+                        value: controller.selectedSemesterNilai.value,
                         decoration: InputDecoration(
                           isDense: true,
                           border: OutlineInputBorder(
@@ -972,7 +968,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: controller.selectedJenisPenilaian.value,
+                        value: controller.selectedJenisPenilaian.value,
                         decoration: InputDecoration(
                           isDense: true,
                           border: OutlineInputBorder(
@@ -1417,6 +1413,29 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                     ),
                   ],
                 ),
+                if (tugas['file_path'] != null) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () => controller.downloadFile(tugas['file_path']),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.attach_file,
+                            size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Lihat Lampiran Materi/Soal',
+                          style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1486,8 +1505,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor:
-                                AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withOpacity(0.1),
                             child: Text(
                               santriName.isNotEmpty
                                   ? santriName[0].toUpperCase()
@@ -1620,8 +1638,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                            initialValue:
-                                controller.selectedTingkatSantri.value,
+                            value: controller.selectedTingkatSantri.value,
                             decoration: InputDecoration(
                               hintText: 'Pilih tingkat',
                               border: OutlineInputBorder(
@@ -1651,7 +1668,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                            initialValue: controller.selectedKelasSantri.value,
+                            value: controller.selectedKelasSantri.value,
                             decoration: InputDecoration(
                               hintText:
                                   controller.selectedTingkatSantri.value == null
@@ -1678,7 +1695,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Obx(() => DropdownButtonFormField<Map<String, dynamic>>(
-                            initialValue: controller.selectedMapelPondok.value,
+                            value: controller.selectedMapelPondok.value,
                             decoration: InputDecoration(
                               hintText: 'Pilih mata pelajaran',
                               border: OutlineInputBorder(
@@ -1797,6 +1814,61 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                 ],
                               ),
                             ),
+                          )),
+                      const SizedBox(height: 16),
+                      const Text('Lampiran (opsional)',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Obx(() => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (controller.selectedTugasFile.value != null)
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.description,
+                                          color: Colors.blue, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          controller
+                                              .selectedTugasFile.value!.path
+                                              .split('/')
+                                              .last,
+                                          style: const TextStyle(fontSize: 12),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close,
+                                            color: Colors.red, size: 20),
+                                        onPressed: () =>
+                                            controller.removeTugasFile(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              OutlinedButton.icon(
+                                onPressed: () => controller.pickTugasFile(),
+                                icon: const Icon(Icons.attach_file),
+                                label: Text(
+                                    controller.selectedTugasFile.value == null
+                                        ? 'Pilih File'
+                                        : 'Ganti File'),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 45),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            ],
                           )),
                     ],
                   ),
@@ -1922,8 +1994,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                       child: Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor:
-                                AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withOpacity(0.1),
                             child: Text(
                               santriName.isNotEmpty
                                   ? santriName[0].toUpperCase()
@@ -1949,6 +2020,29 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                   style: TextStyle(
                                       fontSize: 12, color: Colors.grey[600]),
                                 ),
+                                if (sub['file_path'] != null) ...[
+                                  const SizedBox(height: 4),
+                                  InkWell(
+                                    onTap: () => controller
+                                        .downloadFile(sub['file_path']),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.attach_file,
+                                            size: 12, color: AppColors.primary),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Lihat Lampiran Santri',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -2172,8 +2266,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.verified_user_outlined,
-                  size: 64,
-                  color: AppColors.textSecondary.withOpacity(0.5)),
+                  size: 64, color: AppColors.textSecondary.withOpacity(0.5)),
               const SizedBox(height: 16),
               const Text(
                 'Belum ada pengajuan perizinan',

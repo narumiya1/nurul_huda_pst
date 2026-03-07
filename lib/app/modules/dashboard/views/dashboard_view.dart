@@ -1816,7 +1816,9 @@ class HomePage extends GetView<DashboardController> {
                     case 'Pondok':
                       if (role == 'santri' ||
                           role == 'siswa' ||
-                          role == 'orangtua') {
+                          role == 'orangtua' ||
+                          role == 'roissantri' ||
+                          role == 'rois_santri') {
                         Get.toNamed(Routes.akademikPondok,
                             arguments: {'type': 'PONDOK'});
                       } else {

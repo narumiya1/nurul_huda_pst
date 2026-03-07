@@ -354,7 +354,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'siswa',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'SCHOOL',
       },
@@ -369,7 +370,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'siswa',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'PONDOK',
       },
@@ -387,7 +389,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'guru',
           'guru_pesantren',
           'guru_sekolah',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'SCHOOL',
       },
@@ -443,7 +446,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'guru_sekolah',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'PONDOK',
       },
@@ -461,7 +465,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'guru_sekolah',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'PONDOK',
       },
@@ -479,7 +484,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'guru_sekolah',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'SCHOOL',
       },
@@ -497,7 +503,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           'guru_sekolah',
           'staff_pesantren',
           'staff_keuangan',
-          'roissantri'
+          'roissantri',
+          'orangtua'
         ],
         'category': 'PONDOK',
       },
@@ -530,8 +537,10 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
           onTap: () {
             final targetIndex = menu['index'] as int;
             final role = controller.userRole.value.toLowerCase().trim();
-            final isSantri = role == 'santri';
-            final isSiswa = role == 'siswa';
+            final isStudent = role == 'santri' ||
+                role == 'siswa' ||
+                role == 'roissantri' ||
+                role == 'rois_santri';
 
             if (targetIndex == 6) {
               Get.toNamed(Routes.jadwalPelajaran);
@@ -545,10 +554,10 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             } else if (targetIndex == 11) {
               // Izin Sekolah
               Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 1});
-            } else if (targetIndex == 3 && (isSantri || isSiswa)) {
+            } else if (targetIndex == 3 && (isStudent || role == 'orangtua')) {
               // Absensi Sekolah
               Get.toNamed(Routes.absensiSiswa, arguments: {'initialTab': 0});
-            } else if (targetIndex == 10 && (isSantri || isSiswa)) {
+            } else if (targetIndex == 10 && (isStudent || role == 'orangtua')) {
               // Absensi Pondok
               Get.toNamed(Routes.absensiSantri, arguments: {'initialTab': 0});
             } else {

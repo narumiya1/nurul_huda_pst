@@ -143,10 +143,12 @@ class AkademikPondokController extends GetxController {
     if (user != null) {
       final role = user['role'];
       if (role is String) {
-        userRole.value = role.toLowerCase();
+        userRole.value = role.toLowerCase().replaceAll(' ', '_');
       } else if (role is Map) {
-        userRole.value =
-            (role['role_name'] ?? 'netizen').toString().toLowerCase();
+        userRole.value = (role['role_name'] ?? 'netizen')
+            .toString()
+            .toLowerCase()
+            .replaceAll(' ', '_');
       }
     }
   }
@@ -671,6 +673,37 @@ class AkademikPondokController extends GetxController {
 
   Future<void> _fetchLaporanAbsensiData() async {
     try {
+      final role = userRole.value;
+      if (role == 'orangtua' && selectedChildId.value != null) {
+        final List<dynamic> history = await _orangtuaRepository.getChildAbsensi(
+            selectedChildId.value!,
+            tipe: selectedChildTipe.value);
+
+        if (history.isNotEmpty) {
+          int hadir = 0, izin = 0, sakit = 0, alpa = 0;
+          for (var item in history) {
+            final status = (item['status'] ?? '').toString().toLowerCase();
+            if (status == 'hadir') {
+              hadir++;
+            } else if (status == 'izin') {
+              izin++;
+            } else if (status == 'sakit') {
+              sakit++;
+            } else if (status == 'alpa' || status == 'mangkir') {
+              alpa++;
+            }
+          }
+
+          laporanAbsensi.assignAll([
+            {'label': 'Hadir', 'value': hadir, 'color': 'green'},
+            {'label': 'Izin', 'value': izin, 'color': 'blue'},
+            {'label': 'Sakit', 'value': sakit, 'color': 'orange'},
+            {'label': 'Alpa', 'value': alpa, 'color': 'red'},
+          ]);
+        }
+        return;
+      }
+
       final response = await _pimpinanRepository.getLaporanAbsensi();
       if (response['summary'] != null) {
         final s = response['summary'];

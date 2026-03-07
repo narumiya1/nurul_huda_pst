@@ -31,18 +31,20 @@ class TeacherAreaController extends GetxController {
     if (role == null) {
       return 'netizen';
     }
+    String roleStr = '';
     if (role is String) {
-      return role.toLowerCase();
+      roleStr = role;
+    } else if (role is Map) {
+      roleStr = (role['role_name'] ?? 'netizen').toString();
+    } else {
+      roleStr = 'netizen';
     }
-    if (role is Map) {
-      return (role['role_name'] ?? 'netizen').toString().toLowerCase();
-    }
-    return 'netizen';
+    return roleStr.toLowerCase().replaceAll(' ', '_');
   }
 
   bool get isGuruPesantren => userRole == 'guru_pesantren';
   bool get isGuruSekolah => userRole == 'guru_sekolah';
-  bool get isRois => userRole == 'roissantri';
+  bool get isRois => userRole == 'roissantri' || userRole == 'rois_santri';
 
   // Input Nilai
   final mapelList = <Map<String, dynamic>>[].obs;
@@ -899,19 +901,33 @@ class TeacherAreaController extends GetxController {
       tingkatSantriList.assignAll(tingkatData);
 
       // Fetch mapel pondok
-      final mapelData = await _guruRepository.getMyMapel();
-      final List<dynamic> extractedMapel =
-          mapelData.map((e) => e['mapel'] ?? e).toList();
+      // Try to get mapels assigned to this teacher first
+      List<dynamic> mapelData = await _guruRepository.getMyMapel();
+
+      // Fallback to all pondok mapels if none found for teacher
+      if (mapelData.isEmpty) {
+        debugPrint('DEBUG: getMyMapel empty, falling back to getMapelPondok');
+        mapelData = await _guruRepository.getMapelPondok();
+      }
+
+      final List<dynamic> extractedMapel = mapelData.map((e) {
+        if (e is Map) {
+          return e['mapel'] ?? e;
+        }
+        return e;
+      }).toList();
 
       // Filter out duplicate mapels if any based on id
       final uniqueMapels = <int, dynamic>{};
       for (var mapel in extractedMapel) {
-        if (mapel != null && mapel['id'] != null) {
+        if (mapel != null && mapel is Map && mapel['id'] != null) {
           uniqueMapels[mapel['id']] = mapel;
         }
       }
 
       mapelPondokList.assignAll(uniqueMapels.values.toList());
+      debugPrint(
+          'DEBUG: Fetched ${mapelPondokList.length} mapels for dropdown');
     } catch (e) {
       debugPrint('Error fetching dropdowns: $e');
     }

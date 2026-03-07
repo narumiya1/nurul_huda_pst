@@ -767,11 +767,8 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
             children: [
               const Icon(Icons.info_outline, size: 48, color: Colors.grey),
               const SizedBox(height: 16),
-              Text(
-                  'DEBUG: Role: ${controller.userRole.value} | Raw: ${controller.rekapNilai.length} | Grouped: ${controller.groupedRekapNilai.length}',
-                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
-              const SizedBox(height: 8),
-              const Text('Tidak ada data nilai'),
+              const Text('Tidak ada data nilai saat ini.',
+                  style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => controller.fetchAllData(),

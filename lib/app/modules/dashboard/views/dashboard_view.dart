@@ -169,7 +169,7 @@ class HomePage extends GetView<DashboardController> {
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
+                                    color: Colors.black.withOpacity(0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   )
@@ -179,14 +179,13 @@ class HomePage extends GetView<DashboardController> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.2),
+                                      color: AppColors.primary.withOpacity(0.2),
                                       width: 2),
                                 ),
                                 child: CircleAvatar(
                                     radius: 30,
-                                    backgroundColor: AppColors.primary
-                                        .withValues(alpha: 0.1),
+                                    backgroundColor:
+                                        AppColors.primary.withOpacity(0.1),
                                     backgroundImage: child['foto'] != null
                                         ? NetworkImage(child['foto'])
                                         : null,
@@ -220,7 +219,7 @@ class HomePage extends GetView<DashboardController> {
                                             color: (child['tipe'] == 'Santri'
                                                     ? AppColors.primary
                                                     : Colors.blue)
-                                                .withValues(alpha: 0.1),
+                                                .withOpacity(0.1),
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -318,10 +317,10 @@ class HomePage extends GetView<DashboardController> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
+            color: isActive ? color.withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: isActive
-                ? Border.all(color: color.withValues(alpha: 0.3), width: 1)
+                ? Border.all(color: color.withOpacity(0.3), width: 1)
                 : null,
           ),
           child: Row(
@@ -452,7 +451,7 @@ class HomePage extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
+            color: AppColors.primary.withOpacity(0.25),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -469,7 +468,7 @@ class HomePage extends GetView<DashboardController> {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
+                color: Colors.white.withOpacity(0.08),
               ),
             ),
           ),
@@ -481,7 +480,7 @@ class HomePage extends GetView<DashboardController> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withOpacity(0.05),
               ),
             ),
           ),
@@ -492,14 +491,14 @@ class HomePage extends GetView<DashboardController> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                      color: Colors.white.withOpacity(0.4), width: 1.5),
                 ),
                 child: Obx(() {
                   final photoUrl =
                       controller.userData.value?['details']?['photo_url'];
                   return CircleAvatar(
                     radius: 30,
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    backgroundColor: Colors.white.withOpacity(0.15),
                     backgroundImage: photoUrl != null
                         ? NetworkImage(photoUrl.toString().startsWith('http')
                             ? photoUrl.toString()
@@ -528,7 +527,7 @@ class HomePage extends GetView<DashboardController> {
                     Text(
                       "Assalamu'alaikum! 👋",
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -548,11 +547,10 @@ class HomePage extends GetView<DashboardController> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1),
+                            color: Colors.white.withOpacity(0.2), width: 1),
                       ),
                       child: Obx(() => Text(
                             controller.userRoleLabel,
@@ -574,11 +572,10 @@ class HomePage extends GetView<DashboardController> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1),
+                            color: Colors.white.withOpacity(0.2), width: 1),
                       ),
                       child: const Icon(
                         Icons.qr_code_scanner_rounded,
@@ -630,7 +627,7 @@ class HomePage extends GetView<DashboardController> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.35),
+                    color: Colors.black.withOpacity(0.35),
                     blurRadius: 25,
                     offset: const Offset(0, 15),
                   )
@@ -668,7 +665,7 @@ class HomePage extends GetView<DashboardController> {
                       child: Container(
                         height: 5,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: Colors.white.withOpacity(0.3),
                         ),
                       ),
                     ),
@@ -708,7 +705,7 @@ class HomePage extends GetView<DashboardController> {
                                       schoolName,
                                       style: TextStyle(
                                         color:
-                                            Colors.white.withValues(alpha: 0.8),
+                                            Colors.white.withOpacity(0.8),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -735,11 +732,11 @@ class HomePage extends GetView<DashboardController> {
                                     height: 110,
                                     decoration: BoxDecoration(
                                         color: Colors.white
-                                            .withValues(alpha: 0.15),
+                                            .withOpacity(0.15),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                             color: Colors.white
-                                                .withValues(alpha: 0.5),
+                                                .withOpacity(0.5),
                                             width: 2),
                                         image: photoUrl != null
                                             ? DecorationImage(
@@ -815,7 +812,7 @@ class HomePage extends GetView<DashboardController> {
                                           "NIS: ${controller.userData.value?['username'] ?? '-'}",
                                           style: TextStyle(
                                               color: Colors.white
-                                                  .withValues(alpha: 0.9),
+                                                  .withOpacity(0.9),
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                               fontFamily: 'SFPro'),
@@ -830,7 +827,7 @@ class HomePage extends GetView<DashboardController> {
                                         "KELAS: $kelas",
                                         style: TextStyle(
                                           color: Colors.white
-                                              .withValues(alpha: 0.7),
+                                              .withOpacity(0.7),
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -889,7 +886,7 @@ class HomePage extends GetView<DashboardController> {
               icon: const Icon(Icons.close_rounded,
                   color: Colors.white, size: 32),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                backgroundColor: Colors.white.withOpacity(0.2),
               ),
             )
           ],
@@ -934,7 +931,7 @@ class HomePage extends GetView<DashboardController> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1137,7 +1134,7 @@ class HomePage extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.08),
+            color: color.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -1153,7 +1150,7 @@ class HomePage extends GetView<DashboardController> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.7)],
+                    colors: [color, color.withOpacity(0.7)],
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1185,7 +1182,7 @@ class HomePage extends GetView<DashboardController> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(item.icon,
-                        size: 14, color: color.withValues(alpha: 0.7)),
+                        size: 14, color: color.withOpacity(0.7)),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Column(
@@ -1197,7 +1194,7 @@ class HomePage extends GetView<DashboardController> {
                               fontSize: 9,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textSecondary
-                                  .withValues(alpha: 0.7),
+                                  .withOpacity(0.7),
                             ),
                           ),
                           Text(
@@ -1237,7 +1234,7 @@ class HomePage extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1250,7 +1247,7 @@ class HomePage extends GetView<DashboardController> {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color, color.withValues(alpha: 0.7)],
+                colors: [color, color.withOpacity(0.7)],
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1359,82 +1356,80 @@ class HomePage extends GetView<DashboardController> {
     required Color color,
     String? subValue,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color,
-                    color.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color,
+                  color.withOpacity(0.7),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 18),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (subValue != null && subValue.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                subValue,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
-                  color: color,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (subValue != null && subValue.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              subValue,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                color: color,
               ),
-            ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -1473,7 +1468,7 @@ class HomePage extends GetView<DashboardController> {
               "Lihat Semua",
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.primary.withValues(alpha: 0.8),
+                color: AppColors.primary.withOpacity(0.8),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1501,7 +1496,7 @@ class HomePage extends GetView<DashboardController> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: Colors.black.withOpacity(0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1542,7 +1537,7 @@ class HomePage extends GetView<DashboardController> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -1561,13 +1556,13 @@ class HomePage extends GetView<DashboardController> {
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
                                   color:
-                                      AppColors.primary.withValues(alpha: 0.1),
+                                      AppColors.primary.withOpacity(0.1),
                                   child: const Icon(Icons.broken_image,
                                       color: AppColors.primary, size: 30),
                                 ),
                               )
                             : Container(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: AppColors.primary.withOpacity(0.1),
                                 child: const Icon(Icons.image,
                                     color: AppColors.primary, size: 40),
                               ),
@@ -1580,8 +1575,8 @@ class HomePage extends GetView<DashboardController> {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withValues(alpha: 0.1),
-                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black.withOpacity(0.1),
+                                Colors.black.withOpacity(0.8),
                               ],
                             ),
                           ),
@@ -1790,7 +1785,7 @@ class HomePage extends GetView<DashboardController> {
 
       return Container(
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.03),
+          color: AppColors.primary.withOpacity(0.03),
           borderRadius: BorderRadius.circular(24),
         ),
         child: ListView.separated(
@@ -1871,9 +1866,9 @@ class HomePage extends GetView<DashboardController> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withValues(alpha: 0.2)),
+                  border: Border.all(color: color.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
@@ -1884,7 +1879,7 @@ class HomePage extends GetView<DashboardController> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: color.withValues(alpha: 0.1),
+                            color: color.withOpacity(0.1),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -1911,7 +1906,7 @@ class HomePage extends GetView<DashboardController> {
                     ),
                     Icon(
                       Icons.chevron_right_rounded,
-                      color: color.withValues(alpha: 0.5),
+                      color: color.withOpacity(0.5),
                     ),
                   ],
                 ),
@@ -1929,7 +1924,7 @@ class CardPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = Colors.white.withOpacity(0.2)
       ..strokeWidth = 1.0;
 
     for (var i = 0; i < size.width; i += 20) {
@@ -1961,7 +1956,7 @@ class ChatPage extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -2009,7 +2004,7 @@ class NotifikasiPage extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.accentOrange.withValues(alpha: 0.1),
+                color: AppColors.accentOrange.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

@@ -194,7 +194,7 @@ class AbsensiView extends GetView<AbsensiController> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.1),
+                                color: color.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -282,7 +282,7 @@ class AbsensiView extends GetView<AbsensiController> {
                         selected: controller.selectedJenisIzin.value == type,
                         onSelected: (val) =>
                             controller.selectedJenisIzin.value = type,
-                        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                        selectedColor: AppColors.primary.withOpacity(0.2),
                         labelStyle: TextStyle(
                             color: controller.selectedJenisIzin.value == type
                                 ? AppColors.primary
@@ -428,7 +428,7 @@ class AbsensiView extends GetView<AbsensiController> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),
@@ -481,7 +481,7 @@ class AbsensiView extends GetView<AbsensiController> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(_getStatusIcon(status.toLowerCase()), color: color),
@@ -510,7 +510,7 @@ class AbsensiView extends GetView<AbsensiController> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

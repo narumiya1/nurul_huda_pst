@@ -116,7 +116,7 @@ class JadwalPelajaranView extends GetView<JadwalPelajaranController> {
                                         horizontal: 12, vertical: 8),
                                     decoration: BoxDecoration(
                                       color: AppColors.primary
-                                          .withValues(alpha: 0.1),
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

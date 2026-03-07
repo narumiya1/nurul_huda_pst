@@ -52,8 +52,8 @@ class ManajemenSdmDetailView extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       _getRoleColor(role),
-                      _getRoleColor(role).withValues(alpha: 0.8),
-                      _getRoleColor(role).withValues(alpha: 0.6),
+                      _getRoleColor(role).withOpacity(0.8),
+                      _getRoleColor(role).withOpacity(0.6),
                     ],
                   ),
                 ),
@@ -71,14 +71,14 @@ class ManajemenSdmDetailView extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white.withOpacity(0.5),
                               width: 2,
                             ),
                           ),
                           child: CircleAvatar(
                             radius: 35,
                             backgroundColor:
-                                Colors.white.withValues(alpha: 0.2),
+                                Colors.white.withOpacity(0.2),
                             backgroundImage: _getPhotoUrl(details) != null
                                 ? NetworkImage(
                                     _getPhotoUrl(details)!.startsWith('http')
@@ -124,7 +124,7 @@ class ManajemenSdmDetailView extends StatelessWidget {
                           user['email'] ?? '-',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -410,7 +410,7 @@ class ManajemenSdmDetailView extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -424,7 +424,7 @@ class ManajemenSdmDetailView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: AppColors.primary, size: 22),
@@ -451,9 +451,9 @@ class ManajemenSdmDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         text,
@@ -477,7 +477,7 @@ class ManajemenSdmDetailView extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: AppColors.textLight.withValues(alpha: 0.8),
+                color: AppColors.textLight.withOpacity(0.8),
                 fontSize: 13,
               ),
             ),

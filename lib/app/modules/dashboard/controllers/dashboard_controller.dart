@@ -86,7 +86,7 @@ class DashboardController extends GetxController {
           final kelas = item['kelas'];
           return {
             'jam':
-                "${item['jam_mulai']?.toString().substring(0, 5) ?? '??'} - ${item['jam_selesai']?.toString().substring(0, 5) ?? '??'}",
+                "${(item['jam_mulai']?.toString() ?? '??').padLeft(5, '0').substring(0, 5)} - ${(item['jam_selesai']?.toString() ?? '??').padLeft(5, '0').substring(0, 5)}",
             'mapel': (mapel is Map ? mapel['nama'] : mapel) ?? '-',
             'kelas': (kelas is Map ? kelas['nama_kelas'] : kelas) ?? '-',
             'ruang': item['ruang'] ?? '-',
@@ -467,9 +467,12 @@ class DashboardController extends GetxController {
   String get userRole {
     final role = userData.value?['role'];
     if (role == null) return 'netizen';
-    if (role is String) return role.toLowerCase();
+    if (role is String) return role.toLowerCase().replaceAll(' ', '_');
     if (role is Map) {
-      return (role['role_name'] ?? 'netizen').toString().toLowerCase();
+      return (role['role_name'] ?? 'netizen')
+          .toString()
+          .toLowerCase()
+          .replaceAll(' ', '_');
     }
     return 'netizen';
   }
@@ -688,7 +691,7 @@ class DashboardController extends GetxController {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: AppColors.primary, size: 32),

@@ -59,7 +59,7 @@ class PsbCekStatusView extends GetView<PsbController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -160,7 +160,7 @@ class PsbCekStatusView extends GetView<PsbController> {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
                     radius: 28,
                     child: Text(
                       (data['nama_lengkap'] ?? 'N')[0].toUpperCase(),
@@ -281,14 +281,14 @@ class PsbCekStatusView extends GetView<PsbController> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.success.withValues(alpha: 0.15),
-            AppColors.success.withValues(alpha: 0.05),
+            AppColors.success.withOpacity(0.15),
+            AppColors.success.withOpacity(0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.success.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +298,7 @@ class PsbCekStatusView extends GetView<PsbController> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.2),
+                  color: AppColors.success.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -366,9 +366,9 @@ class PsbCekStatusView extends GetView<PsbController> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.15),
+              color: Colors.amber.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              border: Border.all(color: Colors.amber.withOpacity(0.4)),
             ),
             child: const Row(
               children: [
@@ -466,9 +466,9 @@ class PsbCekStatusView extends GetView<PsbController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -559,7 +559,7 @@ class PsbCekStatusView extends GetView<PsbController> {
               Container(
                 width: 2,
                 height: 50,
-                color: color.withValues(alpha: 0.3),
+                color: color.withOpacity(0.3),
               ),
           ],
         ),
@@ -628,8 +628,8 @@ class PsbCekStatusView extends GetView<PsbController> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: isUploaded
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : Colors.grey.withValues(alpha: 0.1),
+                        ? AppColors.success.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -653,8 +653,8 @@ class PsbCekStatusView extends GetView<PsbController> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: isUploaded
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : Colors.orange.withValues(alpha: 0.1),
+                        ? AppColors.success.withOpacity(0.1)
+                        : Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

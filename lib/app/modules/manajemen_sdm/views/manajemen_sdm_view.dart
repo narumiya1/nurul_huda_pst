@@ -36,8 +36,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                     end: Alignment.bottomRight,
                     colors: [
                       AppColors.primary,
-                      AppColors.primary.withValues(alpha: 0.8),
-                      AppColors.accentPurple.withValues(alpha: 0.6),
+                      AppColors.primary.withOpacity(0.8),
+                      AppColors.accentPurple.withOpacity(0.6),
                     ],
                   ),
                 ),
@@ -51,7 +51,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Colors.white.withOpacity(0.1),
                         ),
                       ),
                     ),
@@ -63,7 +63,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Colors.white.withOpacity(0.05),
                         ),
                       ),
                     ),
@@ -102,13 +102,13 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: AppColors.textLight.withValues(alpha: 0.1),
+                          color: AppColors.textLight.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.people_outline,
                           size: 60,
-                          color: AppColors.textLight.withValues(alpha: 0.5),
+                          color: AppColors.textLight.withOpacity(0.5),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -124,7 +124,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                       Text(
                         'Pilih kategori di atas untuk melihat data',
                         style: TextStyle(
-                          color: AppColors.textLight.withValues(alpha: 0.7),
+                          color: AppColors.textLight.withOpacity(0.7),
                           fontSize: 13,
                         ),
                       ),
@@ -289,7 +289,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.textLight.withValues(alpha: 0.2)),
+          border: Border.all(color: AppColors.textLight.withOpacity(0.2)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -297,7 +297,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -320,7 +320,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textLight.withValues(alpha: 0.8),
+                      color: AppColors.textLight.withOpacity(0.8),
                     ),
                   ),
                 ],
@@ -329,7 +329,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
-              color: AppColors.textLight.withValues(alpha: 0.5),
+              color: AppColors.textLight.withOpacity(0.5),
             ),
           ],
         ),
@@ -346,7 +346,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -360,7 +360,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -412,16 +412,16 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: isSelected ? color : color.withValues(alpha: 0.08),
+            color: isSelected ? color : color.withOpacity(0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? color : color.withValues(alpha: 0.2),
+              color: isSelected ? color : color.withOpacity(0.2),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: color.withValues(alpha: 0.3),
+                      color: color.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -435,8 +435,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : color.withValues(alpha: 0.1),
+                      ? Colors.white.withOpacity(0.2)
+                      : color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -482,7 +482,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -493,12 +493,12 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
           decoration: InputDecoration(
             hintText: 'Cari nama atau email...',
             hintStyle: TextStyle(
-              color: AppColors.textLight.withValues(alpha: 0.6),
+              color: AppColors.textLight.withOpacity(0.6),
               fontSize: 14,
             ),
             prefixIcon: Icon(
               Icons.search_rounded,
-              color: AppColors.textLight.withValues(alpha: 0.6),
+              color: AppColors.textLight.withOpacity(0.6),
             ),
             filled: true,
             fillColor: Colors.white,
@@ -527,7 +527,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -563,13 +563,13 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                             end: Alignment.bottomRight,
                             colors: [
                               roleColor,
-                              roleColor.withValues(alpha: 0.7),
+                              roleColor.withOpacity(0.7),
                             ],
                           ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: roleColor.withValues(alpha: 0.3),
+                              color: roleColor.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -607,8 +607,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                             Text(
                               user['email'] ?? '',
                               style: TextStyle(
-                                color:
-                                    AppColors.textLight.withValues(alpha: 0.7),
+                                color: AppColors.textLight.withOpacity(0.7),
                                 fontSize: 12,
                               ),
                               maxLines: 1,
@@ -621,14 +620,14 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               children: [
                                 _buildTag(
                                   role,
-                                  roleColor.withValues(alpha: 0.1),
+                                  roleColor.withOpacity(0.1),
                                   roleColor,
                                 ),
                                 _buildTag(
                                   status,
                                   status == 'Aktif'
-                                      ? AppColors.success.withValues(alpha: 0.1)
-                                      : AppColors.error.withValues(alpha: 0.1),
+                                      ? AppColors.success.withOpacity(0.1)
+                                      : AppColors.error.withOpacity(0.1),
                                   status == 'Aktif'
                                       ? AppColors.success
                                       : AppColors.error,
@@ -648,7 +647,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                         child: Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 14,
-                          color: AppColors.textLight.withValues(alpha: 0.5),
+                          color: AppColors.textLight.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -787,7 +786,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00B894).withValues(alpha: 0.1),
+                      color: const Color(0xFF00B894).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.face_outlined,
@@ -943,7 +942,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                 'Pilih orang tua yang sudah terdaftar atau tambahkan nanti',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textLight.withValues(alpha: 0.7),
+                  color: AppColors.textLight.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 12),
@@ -996,8 +995,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               },
                               icon: const Icon(Icons.search),
                               style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFF1ABC9C)
-                                    .withValues(alpha: 0.1),
+                                backgroundColor:
+                                    const Color(0xFF1ABC9C).withOpacity(0.1),
                               ),
                             ),
                           ],
@@ -1010,8 +1009,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                             child: Text(
                               'Orang tua tidak ditemukan',
                               style: TextStyle(
-                                  color: AppColors.textLight
-                                      .withValues(alpha: 0.7)),
+                                  color: AppColors.textLight.withOpacity(0.7)),
                             ),
                           )
                         else
@@ -1410,7 +1408,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                 'Pilih orang tua yang sudah terdaftar',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textLight.withValues(alpha: 0.7),
+                  color: AppColors.textLight.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1463,8 +1461,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               },
                               icon: const Icon(Icons.search),
                               style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFF1ABC9C)
-                                    .withValues(alpha: 0.1),
+                                backgroundColor:
+                                    const Color(0xFF1ABC9C).withOpacity(0.1),
                               ),
                             ),
                           ],
@@ -1478,7 +1476,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               'Orang tua tidak ditemukan',
                               style: TextStyle(
                                   color: AppColors.textLight
-                                      .withValues(alpha: 0.7)),
+                                      .withOpacity(0.7)),
                             ),
                           )
                         else
@@ -1632,7 +1630,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF9B59B6).withValues(alpha: 0.1),
+                      color: const Color(0xFF9B59B6).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.account_balance_outlined,
@@ -1804,7 +1802,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3498DB).withValues(alpha: 0.1),
+                      color: const Color(0xFF3498DB).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.school_outlined,
@@ -1913,7 +1911,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                                 }
                               },
                               selectedColor: const Color(0xFF3498DB)
-                                  .withValues(alpha: 0.2),
+                                  .withOpacity(0.2),
                               checkmarkColor: const Color(0xFF3498DB),
                             );
                           }).toList(),
@@ -2019,7 +2017,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1ABC9C).withValues(alpha: 0.1),
+                      color: const Color(0xFF1ABC9C).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.family_restroom_outlined,
@@ -2132,7 +2130,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                 'Pilih santri yang merupakan anak/tanggungan dari orang tua ini',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textLight.withValues(alpha: 0.7),
+                  color: AppColors.textLight.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 12),
@@ -2184,8 +2182,8 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               },
                               icon: const Icon(Icons.search),
                               style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFF1ABC9C)
-                                    .withValues(alpha: 0.1),
+                                backgroundColor:
+                                    const Color(0xFF1ABC9C).withOpacity(0.1),
                               ),
                             ),
                           ],
@@ -2198,7 +2196,7 @@ class ManajemenSdmView extends GetView<ManajemenSdmController> {
                               'Tidak ada santri ditemukan',
                               style: TextStyle(
                                   color: AppColors.textLight
-                                      .withValues(alpha: 0.7)),
+                                      .withOpacity(0.7)),
                             ),
                           )
                         else

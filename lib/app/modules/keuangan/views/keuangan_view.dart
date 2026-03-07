@@ -151,7 +151,7 @@ class KeuanganView extends GetView<KeuanganController> {
     return Chip(
       label: Text(label,
           style: const TextStyle(fontSize: 10, color: AppColors.primary)),
-      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+      backgroundColor: AppColors.primary.withOpacity(0.1),
       deleteIcon: const Icon(Icons.close, size: 12, color: AppColors.primary),
       onDeleted: onDeleted,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -198,7 +198,7 @@ class KeuanganView extends GetView<KeuanganController> {
                         selected: isSelected,
                         onSelected: (val) =>
                             controller.applyFilters(type: type),
-                        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                        selectedColor: AppColors.primary.withOpacity(0.2),
                         labelStyle: TextStyle(
                             color: isSelected
                                 ? AppColors.primary
@@ -222,7 +222,7 @@ class KeuanganView extends GetView<KeuanganController> {
                         selected: isSelected,
                         onSelected: (val) =>
                             controller.applyFilters(status: status),
-                        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                        selectedColor: AppColors.primary.withOpacity(0.2),
                         labelStyle: TextStyle(
                             color: isSelected
                                 ? AppColors.primary
@@ -268,7 +268,7 @@ class KeuanganView extends GetView<KeuanganController> {
             gradient: LinearGradient(
               colors: [
                 AppColors.primary,
-                AppColors.primary.withValues(alpha: 0.8)
+                AppColors.primary.withOpacity(0.8)
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -276,7 +276,7 @@ class KeuanganView extends GetView<KeuanganController> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
+                color: AppColors.primary.withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -325,10 +325,10 @@ class KeuanganView extends GetView<KeuanganController> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.accentOrange.withValues(alpha: 0.1),
+            color: AppColors.accentOrange.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: AppColors.accentOrange.withValues(alpha: 0.2)),
+                color: AppColors.accentOrange.withOpacity(0.2)),
           ),
           child: Row(
             children: [
@@ -400,10 +400,10 @@ class KeuanganView extends GetView<KeuanganController> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.05),
+                color: AppColors.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
                 border:
-                    Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    Border.all(color: AppColors.primary.withOpacity(0.2)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -487,7 +487,7 @@ class KeuanganView extends GetView<KeuanganController> {
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.primary.withValues(alpha: 0.1),
+                                      AppColors.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(Icons.account_balance,
@@ -563,7 +563,7 @@ class KeuanganView extends GetView<KeuanganController> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
+                  color: AppColors.warning.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -615,7 +615,7 @@ class KeuanganView extends GetView<KeuanganController> {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
+            color: color.withOpacity(0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 14),
@@ -626,7 +626,7 @@ class KeuanganView extends GetView<KeuanganController> {
           children: [
             Text(label,
                 style: TextStyle(
-                    color: color.withValues(alpha: 0.7), fontSize: 11)),
+                    color: color.withOpacity(0.7), fontSize: 11)),
             Text(amount,
                 style: TextStyle(
                     color: color, fontWeight: FontWeight.bold, fontSize: 13)),
@@ -668,7 +668,7 @@ class KeuanganView extends GetView<KeuanganController> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: (isIncome ? AppColors.success : AppColors.error)
-                      .withValues(alpha: 0.1),
+                      .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -748,7 +748,7 @@ class KeuanganView extends GetView<KeuanganController> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: (isPaid ? AppColors.success : AppColors.warning)
-                        .withValues(alpha: 0.1),
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -790,7 +790,7 @@ class KeuanganView extends GetView<KeuanganController> {
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: (isPaid ? AppColors.success : AppColors.warning)
-                            .withValues(alpha: 0.1),
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -993,7 +993,7 @@ class KeuanganView extends GetView<KeuanganController> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
+                              color: AppColors.success.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.check,

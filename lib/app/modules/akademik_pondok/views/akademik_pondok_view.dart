@@ -569,7 +569,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (menu['color'] as Color).withValues(alpha: 0.1),
+                    color: (menu['color'] as Color).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(menu['icon'] as IconData,
@@ -790,7 +790,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.menu_book_rounded,
@@ -809,7 +809,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.05),
+                            color: AppColors.primary.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -971,7 +971,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: item['percent'],
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
                     color: AppColors.primary,
                     minHeight: 10,
                     borderRadius: BorderRadius.circular(5),
@@ -1063,7 +1063,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                                 color: (item['source'] == 'Sekolah'
                                         ? Colors.blue
                                         : Colors.teal)
-                                    .withValues(alpha: 0.1),
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -1085,7 +1085,7 @@ class AkademikPondokView extends GetView<AkademikPondokController> {
                                 color: (isDone
                                         ? AppColors.success
                                         : AppColors.accentOrange)
-                                    .withValues(alpha: 0.1),
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(

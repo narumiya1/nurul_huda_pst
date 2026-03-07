@@ -52,11 +52,15 @@ class UserContext {
     final roleLower = role.toLowerCase();
 
     // Check santri data
-    final santriData = userData['santri'] as Map<String, dynamic>?;
+    final santriRaw = userData['santri'];
+    final Map<String, dynamic>? santriData =
+        (santriRaw is Map) ? Map<String, dynamic>.from(santriRaw) : null;
     final hasSantri = santriData != null && santriData.isNotEmpty;
 
     // Check siswa data
-    final siswaData = userData['siswa'] as Map<String, dynamic>?;
+    final siswaRaw = userData['siswa'];
+    final Map<String, dynamic>? siswaData =
+        (siswaRaw is Map) ? Map<String, dynamic>.from(siswaRaw) : null;
     final hasSiswa = siswaData != null && siswaData.isNotEmpty;
 
     // Check is_siswa_juga flag from santri data
@@ -126,9 +130,12 @@ class UserContext {
   static String _extractRole(Map<String, dynamic> userData) {
     final role = userData['role'];
     if (role == null) return 'netizen';
-    if (role is String) return role;
+    if (role is String) return role.toLowerCase().replaceAll(' ', '_');
     if (role is Map) {
-      return (role['role_name'] ?? 'netizen').toString();
+      return (role['role_name'] ?? 'netizen')
+          .toString()
+          .toLowerCase()
+          .replaceAll(' ', '_');
     }
     return 'netizen';
   }

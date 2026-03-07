@@ -68,7 +68,7 @@ class PsbFormView extends GetView<PsbController> {
               boxShadow: isCurrent
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
+                        color: AppColors.primary.withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       )
@@ -273,7 +273,7 @@ class PsbFormView extends GetView<PsbController> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
+              ? AppColors.primary.withOpacity(0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -326,10 +326,10 @@ class PsbFormView extends GetView<PsbController> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
+              color: AppColors.primary.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
               border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  Border.all(color: AppColors.primary.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,9 +368,9 @@ class PsbFormView extends GetView<PsbController> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.pink.withValues(alpha: 0.05),
+              color: Colors.pink.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.pink.withValues(alpha: 0.2)),
+              border: Border.all(color: Colors.pink.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,13 +533,13 @@ class PsbFormView extends GetView<PsbController> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withValues(alpha: 0.1),
-                  AppColors.primary.withValues(alpha: 0.05),
+                  AppColors.primary.withOpacity(0.1),
+                  AppColors.primary.withOpacity(0.05),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  Border.all(color: AppColors.primary.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,8 +600,8 @@ class PsbFormView extends GetView<PsbController> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: hasFile
-                  ? AppColors.success.withValues(alpha: 0.1)
-                  : Colors.grey.withValues(alpha: 0.1),
+                  ? AppColors.success.withOpacity(0.1)
+                  : Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -696,7 +696,7 @@ class PsbFormView extends GetView<PsbController> {
             width: 60,
             height: 80,
             decoration: BoxDecoration(
-              color: hasFile ? null : Colors.grey.withValues(alpha: 0.1),
+              color: hasFile ? null : Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey.shade300),
               image: hasFile
@@ -810,7 +810,7 @@ class PsbFormView extends GetView<PsbController> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

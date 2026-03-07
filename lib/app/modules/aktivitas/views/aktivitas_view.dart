@@ -86,12 +86,12 @@ class AktivitasView extends GetView<AktivitasController> {
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : AppColors.textLight.withValues(alpha: 0.1),
+                  : AppColors.textLight.withOpacity(0.1),
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.2),
+                      color: AppColors.primary.withOpacity(0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     )
@@ -170,7 +170,7 @@ class AktivitasView extends GetView<AktivitasController> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getTypeColor(type).withValues(alpha: 0.1),
+                            color: _getTypeColor(type).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -266,7 +266,7 @@ class AktivitasView extends GetView<AktivitasController> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 18, color: AppColors.primary),
@@ -512,7 +512,7 @@ class AktivitasView extends GetView<AktivitasController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -642,7 +642,7 @@ class AktivitasView extends GetView<AktivitasController> {
                       Expanded(
                         child: Container(
                           width: 2,
-                          color: AppColors.textLight.withValues(alpha: 0.3),
+                          color: AppColors.textLight.withOpacity(0.3),
                         ),
                       ),
                   ],
@@ -671,7 +671,7 @@ class AktivitasView extends GetView<AktivitasController> {
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _getTypeColor(type)
-                                      .withValues(alpha: 0.1),
+                                      .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(

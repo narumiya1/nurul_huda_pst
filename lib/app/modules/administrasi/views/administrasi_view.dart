@@ -125,7 +125,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.download_for_offline_outlined,
-              size: 64, color: AppColors.textLight.withValues(alpha: 0.5)),
+              size: 64, color: AppColors.textLight.withOpacity(0.5)),
           const SizedBox(height: 16),
           const Text('Belum ada file yang diunduh',
               style: TextStyle(color: AppColors.textSecondary)),
@@ -151,7 +151,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
+                  color: AppColors.success.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.picture_as_pdf, color: AppColors.error),
@@ -216,7 +216,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
                       label: Text(t),
                       selected: isSelected,
                       onSelected: (val) => controller.applyFilters(type: t),
-                      selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                      selectedColor: AppColors.primary.withOpacity(0.2),
                       labelStyle: TextStyle(
                           color: isSelected
                               ? AppColors.primary
@@ -243,7 +243,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
                       label: Text(s),
                       selected: isSelected,
                       onSelected: (val) => controller.applyFilters(status: s),
-                      selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                      selectedColor: AppColors.primary.withOpacity(0.2),
                       labelStyle: TextStyle(
                           color: isSelected
                               ? AppColors.primary
@@ -538,7 +538,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.description_outlined,
@@ -593,7 +593,7 @@ class AdministrasiView extends GetView<AdministrasiController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

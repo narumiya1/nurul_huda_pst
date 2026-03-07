@@ -18,7 +18,7 @@ class CustomBottomNav extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -68,7 +68,7 @@ class CustomBottomNav extends GetView<DashboardController> {
         ),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primary.withValues(alpha: 0.1)
+              ? AppColors.primary.withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),

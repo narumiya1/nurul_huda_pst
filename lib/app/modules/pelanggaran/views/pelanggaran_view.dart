@@ -108,7 +108,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: severityColor.withValues(alpha: 0.1),
+                              color: severityColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -321,7 +321,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                                   backgroundColor: isSelected
                                       ? AppColors.primary
                                       : AppColors.primary
-                                          .withValues(alpha: 0.1),
+                                          .withOpacity(0.1),
                                   child: Text(
                                     name.isNotEmpty
                                         ? name[0].toUpperCase()
@@ -382,7 +382,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                         selected: controller.selectedKategori.value == k,
                         onSelected: (_) =>
                             controller.selectedKategori.value = k,
-                        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                        selectedColor: AppColors.primary.withOpacity(0.2),
                       );
                     }).toList(),
                   )),
@@ -509,7 +509,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: severityColor.withValues(alpha: 0.1),
+                      color: severityColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: severityColor),
                     ),
@@ -565,7 +565,7 @@ class PelanggaranView extends GetView<PelanggaranController> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 20, color: AppColors.primary),

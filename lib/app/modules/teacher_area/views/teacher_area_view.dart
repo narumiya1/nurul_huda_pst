@@ -209,7 +209,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                             children: [
                               CircleAvatar(
                                 backgroundColor:
-                                    AppColors.primary.withValues(alpha: 0.1),
+                                    AppColors.primary.withOpacity(0.1),
                                 child: Text(
                                   name.isNotEmpty ? name[0].toUpperCase() : 'S',
                                   style:
@@ -298,7 +298,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isSelected ? bgColor : bgColor.withValues(alpha: 0.1),
+            color: isSelected ? bgColor : bgColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
@@ -508,7 +508,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                       leading: CircleAvatar(
                         radius: 24,
                         backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withOpacity(0.1),
                         child: Text(
                           santriName.isNotEmpty
                               ? santriName[0].toUpperCase()
@@ -547,7 +547,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: AppColors.primary
-                                        .withValues(alpha: 0.1),
+                                        .withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -580,7 +580,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: kualitasColor.withValues(alpha: 0.1),
+                          color: kualitasColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -730,7 +730,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                   backgroundColor: isSelected
                                       ? AppColors.primary
                                       : AppColors.primary
-                                          .withValues(alpha: 0.1),
+                                          .withOpacity(0.1),
                                   child: Text(
                                     name.isNotEmpty
                                         ? name[0].toUpperCase()
@@ -758,7 +758,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                                     borderRadius: BorderRadius.circular(8)),
                                 selected: isSelected,
                                 selectedTileColor:
-                                    AppColors.primary.withValues(alpha: 0.05),
+                                    AppColors.primary.withOpacity(0.05),
                                 onTap: () {
                                   // Use santri.id, not user_id
                                   controller.selectedSantriId.value = s['id'];
@@ -831,7 +831,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           label: Text(k.replaceAll('_', ' ').capitalize!),
                           selected: controller.selectedKualitas.value == k,
                           selectedColor:
-                              AppColors.primary.withValues(alpha: 0.2),
+                              AppColors.primary.withOpacity(0.2),
                           onSelected: (_) =>
                               controller.selectedKualitas.value = k,
                         ))
@@ -1169,7 +1169,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: AppColors.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -1338,7 +1338,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.assignment, color: AppColors.primary),
@@ -1394,7 +1394,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: Colors.blue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -1487,7 +1487,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           CircleAvatar(
                             radius: 16,
                             backgroundColor:
-                                AppColors.primary.withValues(alpha: 0.1),
+                                AppColors.primary.withOpacity(0.1),
                             child: Text(
                               santriName.isNotEmpty
                                   ? santriName[0].toUpperCase()
@@ -1510,7 +1510,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1),
+                                color: Colors.green.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -1923,7 +1923,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                         children: [
                           CircleAvatar(
                             backgroundColor:
-                                AppColors.primary.withValues(alpha: 0.1),
+                                AppColors.primary.withOpacity(0.1),
                             child: Text(
                               santriName.isNotEmpty
                                   ? santriName[0].toUpperCase()
@@ -1957,7 +1957,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1),
+                                color: Colors.green.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -2022,7 +2022,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.grade, color: AppColors.primary),
@@ -2173,7 +2173,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
             children: [
               Icon(Icons.verified_user_outlined,
                   size: 64,
-                  color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                  color: AppColors.textSecondary.withOpacity(0.5)),
               const SizedBox(height: 16),
               const Text(
                 'Belum ada pengajuan perizinan',
@@ -2210,8 +2210,8 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                 boxShadow: AppShadows.cardShadow,
                 border: Border.all(
                     color: isVerified
-                        ? AppColors.success.withValues(alpha: 0.2)
-                        : AppColors.accentOrange.withValues(alpha: 0.2)),
+                        ? AppColors.success.withOpacity(0.2)
+                        : AppColors.accentOrange.withOpacity(0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2235,7 +2235,7 @@ class TeacherAreaView extends GetView<TeacherAreaController> {
                           color: (isVerified
                                   ? AppColors.success
                                   : AppColors.accentOrange)
-                              .withValues(alpha: 0.1),
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
